@@ -6,9 +6,19 @@ requests==2.31.0
 beautifulsoup4==4.12.3
 cachetools==5.3.3
 google-cloud-storage==2.14.0
-google-cloud-secret-manager==2.19.0
+google-cloud-secret-manager==2.23.3
 gitpython==3.1.42
-google-cloud-sdk==0.1.0
+google-ai-generativelanguage==0.6.15
+google-api-core==2.24.2
+google-api-python-client==2.167.0
+google-auth==2.39.0
+google-auth-httplib2==0.2.0
+google-cloud-core==2.4.3
+google-crc32c==1.7.1
+google-generativeai==0.8.5
+google-resumable-media==2.7.2
+googleapis-common-protos==1.70.0
+grpc-google-iam-v1==0.14.2
 
 # Testing dependencies
 pytest==8.1.1
