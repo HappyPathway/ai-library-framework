@@ -40,4 +40,4 @@ jobs:
 
       - name: Run integration tests
         run: |
-          pytest tests/integration/utils/ -v --cov=utils
+          PYTHONPATH=$PWD pytest tests/integration/utils/ -v --cov=utils --import-mode=importlib

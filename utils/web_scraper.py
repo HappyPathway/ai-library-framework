@@ -213,15 +213,23 @@ class WebScraper:
         selector: str,
         attribute: Optional[str] = None
     ) -> List[str]:
-        """Extract text from all matching elements.
+        """Extract text from all matching elements in the HTML.
         
         Args:
-            element: BeautifulSoup element to search
-            selector: CSS selector
-            attribute: Optional attribute to extract instead of text
+            element: BeautifulSoup element to search within
+            selector: CSS selector to find elements
+            attribute: Optional attribute to extract instead of text content
             
         Returns:
-            List of extracted strings
+            List of extracted text strings, empty list if none found
+            
+        Example:
+            ```python
+            scraper = WebScraper()
+            soup = scraper.get_soup('https://example.com')
+            links = scraper.extract_all_text(soup, 'a', attribute='href')
+            paragraphs = scraper.extract_all_text(soup, 'p')
+            ```
         """
         try:
             elements = element.select(selector)

@@ -36,35 +36,51 @@ locally during development.
         self.ensure_directories()
     
     def ensure_directories(self):
-        """Ensure Necessary Directories Exist
-
-This method checks for the existence of required directories (e.g., `data`,
-`documents`, `profiles`, `strategies`) and creates them if they are missing.
-
-Use this method to prepare the local storage environment before performing
-file operations.
-"""
+        """Initialize and ensure existence of required storage directories.
+        
+        Creates a standardized directory structure for storing different types
+        of data including:
+        - data/: For general data files
+        - documents/: For document storage
+        - profiles/: For user/system profiles
+        - strategies/: For strategy configurations
+        
+        This method is called automatically during initialization but can
+        be called again to repair the directory structure if needed.
+        
+        Example:
+            ```python
+            storage = LocalStorage()
+            storage.ensure_directories()  # Recreate any missing directories
+            ```
+            
+        Note:
+            All directories are created with exist_ok=True to prevent race conditions
+        """
         dirs = ['data', 'documents', 'profiles', 'strategies']
         for d in dirs:
             path = self.base_path / d
             path.mkdir(exist_ok=True)
             
     def get_path(self, filename: str) -> Path:
-        """Get Full Path for a File
+        """Get full path for a file in the storage directory.
 
-Args:
-    filename (str): The name of the file.
+        Args:
+            filename: Name of the file to get path for
 
-Returns:
-    Path: The full path to the file within the base directory.
+        Returns:
+            Path: The full absolute path to the file
 
-Example:
-    ```python
-    storage = LocalStorage()
-    path = storage.get_path("example.json")
-    print(path)  # Outputs: /path/to/base/example.json
-    ```
-"""
+        Example:
+            ```python
+            storage = LocalStorage()
+            path = storage.get_path("config.json")
+            print(path)  # /path/to/base/config.json
+            ```
+
+        Note:
+            The path is always relative to the base storage directory
+        """
         return self.base_path / filename
     
     def save_json(self, data: Dict, filename: str) -> bool:

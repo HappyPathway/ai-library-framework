@@ -1,4 +1,35 @@
-"""Setup script for Google Cloud Storage and database initialization."""
+"""Storage Setup and Initialization
+
+This module handles the setup and initialization of storage infrastructure, including:
+- SQLite database creation and initialization
+- Google Cloud Storage (GCS) bucket provisioning
+- Environment configuration management
+- Storage access validation
+
+The module provides core functionality for:
+- Database schema creation using SQLAlchemy models
+- GCS bucket creation with versioning enabled
+- Configuration file management
+- Secret management integration
+- Comprehensive monitoring and logging
+
+Example:
+    ```python
+    from utils.setup_storage import setup_gcs, init_database
+    
+    # Initialize storage infrastructure
+    if setup_gcs() and init_database():
+        print("Storage infrastructure ready")
+        
+    # Load and validate configuration
+    config = load_gcs_config()
+    if config and validate_setup():
+        print(f"Using GCS bucket: {config.GCS_BUCKET_NAME}")
+    ```
+
+Use this module as part of your application's initialization process to ensure
+proper storage setup before core functionality becomes available.
+"""
 import os
 import sys
 import json
@@ -20,7 +51,20 @@ logger = setup_logging('setup_storage')
 monitoring = setup_monitoring('storage')
 
 def init_database() -> bool:
-    """Initialize SQLite database."""
+    """Initialize SQLite database.
+    
+    Creates all necessary database tables using SQLAlchemy models.
+    Tracks the operation using monitoring.
+    
+    Returns:
+        bool: True if initialization successful, False otherwise
+        
+    Example:
+        ```python
+        if init_database():
+            logger.info("Database initialized successfully")
+        ```
+    """
     try:
         monitoring.increment('init_database')
         logger.info("Creating database tables")
@@ -34,7 +78,21 @@ def init_database() -> bool:
         return False
 
 def load_gcs_config() -> Optional[StorageConfig]:
-    """Load GCS configuration from config file."""
+    """Load GCS configuration from config file.
+    
+    Reads and validates GCS configuration from the local config file.
+    Tracks operation using monitoring.
+    
+    Returns:
+        Optional[StorageConfig]: Configuration object or None if file doesn't exist
+        
+    Example:
+        ```python
+        config = load_gcs_config()
+        if config:
+            print(f"Using bucket: {config.GCS_BUCKET_NAME}")
+        ```
+    """
     try:
         monitoring.increment('load_config')
         config_path = Path(__file__).parent.parent.parent / 'config' / 'gcs.json'

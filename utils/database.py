@@ -95,7 +95,21 @@ def get_session() -> Generator[Session, None, None]:
         session.close()
 
 def init_db() -> None:
-    """Initialize the database, creating all tables."""
+    """Initialize the database by creating all defined tables.
+    
+    Uses SQLAlchemy models to create database schema.
+    Should be called during application setup.
+    
+    Example:
+        ```python
+        from utils.database import init_db
+        
+        init_db()  # Creates all tables
+        ```
+        
+    Raises:
+        SQLAlchemyError: If table creation fails
+    """
     Base.metadata.create_all(bind=engine)
 
 def drop_db() -> None:

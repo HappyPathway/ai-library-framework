@@ -246,6 +246,28 @@ class GitHubClient:
         create: bool = False,
         owning_team: Optional[str] = None
     ) -> Repository:
+        """Get or optionally create a GitHub repository.
+        
+        Args:
+            repo_name: Name of the repository
+            create: Whether to create the repo if it doesn't exist
+            owning_team: Name of team to grant access if repo is created
+            
+        Returns:
+            Repository: The GitHub repository object
+            
+        Raises:
+            GithubException: If repository doesn't exist and create=False
+            
+        Example:
+            ```python
+            repo = client.get_repository(
+                "my-service",
+                create=True,
+                owning_team="developers"
+            )
+            ```
+        """
         """Get or create a GitHub repository with optional team permissions.
         
         Args:
@@ -412,6 +434,25 @@ class GitHubClient:
             raise
 
     def set_team_permission(self, repo_name: str, team_name: str, permission: str) -> None:
+        """Set repository permissions for a team.
+        
+        Args:
+            repo_name: Name of the target repository
+            team_name: Name of the team to grant permissions to
+            permission: Permission level ('pull', 'push', 'admin', 'maintain', 'triage')
+            
+        Raises:
+            GithubException: If repository or team doesn't exist
+            
+        Example:
+            ```python
+            client.set_team_permission(
+                "my-service",
+                "developers",
+                "push"
+            )
+            ```
+        """
         """Set a team's permission on a repository.
         
         Args:
