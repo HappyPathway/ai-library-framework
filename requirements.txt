@@ -8,6 +8,7 @@ cachetools==5.3.3
 google-cloud-storage==2.14.0
 google-cloud-secret-manager==2.19.0
 gitpython==3.1.42
+google-cloud-sdk==0.1.0
 
 # Testing dependencies
 pytest==8.1.1
