@@ -33,6 +33,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pytest-asyncio pytest-cov
           pip install -e .[test]
+          pip list  # For debugging purposes
+
+      - name: Setup PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
 
       - name: Setup credentials
         run: |

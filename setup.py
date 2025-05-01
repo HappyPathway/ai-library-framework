@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="template-python-dev",
     version="0.1.0",
-    packages=find_packages(),
+    packages=find_packages(include=["utils", "utils.*"]),
     install_requires=[
         "sqlalchemy>=2.0.28",
         "pydantic>=2.6.3",
