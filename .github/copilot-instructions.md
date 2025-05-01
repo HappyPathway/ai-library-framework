@@ -1,0 +1,476 @@
+# Python Development Best Practices
+
+This document outlines the core best practices and architectural patterns for Python development in this project.
+
+## Core Architecture Principles
+
+### 1. Modular Core Library Pattern
+
+Maintain a central `core` module with reusable building blocks:
+
+- **Abstraction First**: Create abstractions for common functionality (logging, storage, API clients)
+- **Composition Over Inheritance**: Build features by composing core components, not through complex inheritance
+- **Single Responsibility**: Each core module should have a clearly defined purpose and responsibility
+
+Example directory structure:
+```
+project/
+├── core/
+│   ├── __init__.py
+│   ├── logging.py         # Centralized logging configuration
+│   ├── storage.py         # Storage abstractions (cloud, local, etc.)
+│   ├── database.py        # Database connection and session management
+│   ├── api_client.py      # Base API client functionality
+│   ├── monitoring.py      # Instrumentation and metrics
+│   └── schemas.py         # Shared data models
+└── features/
+    ├── feature_a/
+    │   ├── __init__.py
+    │   ├── models.py
+    │   └── service.py
+    └── feature_b/
+        ├── __init__.py
+        ├── models.py
+        └── service.py
+```
+
+### 2. Type-Safe Development with Pydantic
+
+Use Pydantic models for type safety and data validation:
+
+- **Schema-First Design**: Define data models before implementing functionality
+- **Validation at Boundaries**: Validate all external data at system boundaries
+- **Model Categories**: Organize models by their purpose (input, output, domain, etc.)
+- **Common Fields**: Use consistent field names and types across models
+- **Enum Types**: Use enums for fields with predefined options
+
+```python
+from enum import Enum
+from typing import List, Optional
+from pydantic import BaseModel, Field
+
+class StatusType(str, Enum):
+    ACTIVE = "active"
+    PENDING = "pending"
+    ARCHIVED = "archived"
+
+class UserProfile(BaseModel):
+    """User profile data model."""
+    user_id: str
+    name: str
+    email: str
+    status: StatusType = StatusType.PENDING
+    tags: List[str] = Field(default_factory=list)
+    preferences: Optional[dict] = None
+```
+
+### 3. Comprehensive Documentation
+
+Use Google-style docstrings with sphinx-compatible formatting:
+
+- **Module Docstrings**: Include purpose, components, examples, and usage context
+- **Class/Function Docstrings**: Document purpose, parameters, returns, and examples
+- **Type Hints**: Include type annotations for all function parameters and return values
+- **Examples**: Provide usage examples for complex functionality
+
+```python
+"""Storage Management Module
+
+This module provides a unified interface for file storage operations with support
+for both local and cloud storage backends.
+
+Key Components:
+- StorageManager: Base class for storage operations
+- LocalStorage: File system implementation
+- CloudStorage: Cloud storage implementation
+
+Example:
+    ```python
+    from core.storage import CloudStorage
+    
+    storage = CloudStorage(bucket="my-app-data")
+    storage.save_json(data, "user_profiles/user123.json")
+    ```
+
+Use this module for all file storage operations to ensure consistency.
+"""
+
+def save_document(document: dict, path: str) -> bool:
+    """Save a document to the configured storage.
+    
+    Args:
+        document: The document data to save
+        path: The storage path where the document will be saved
+        
+    Returns:
+        bool: True if saved successfully, False otherwise
+        
+    Example:
+        ```python
+        success = save_document({"id": "123", "name": "Test"}, "documents/123.json")
+        ```
+    """
+```
+
+### 4. Error Handling and Logging
+
+Implement consistent error handling and logging:
+
+- **Centralized Logger**: Use a factory function for consistent logger setup
+- **Error Categories**: Group errors by type (user input, system, external)
+- **Context Preservation**: Include relevant context in error logs
+- **Graceful Degradation**: Implement fallbacks for non-critical failures
+- **Monitoring Integration**: Log metrics for important operations
+
+```python
+from core.logging import setup_logging
+
+logger = setup_logging("feature_name")
+
+def process_item(item_id: str) -> dict:
+    """Process an item with comprehensive error handling."""
+    try:
+        logger.info(f"Processing item {item_id}")
+        # Processing logic...
+        return result
+    except ValueError as e:
+        logger.error(f"Invalid input for item {item_id}: {str(e)}")
+        raise InputError(f"Invalid item format: {str(e)}") from e
+    except ExternalServiceError as e:
+        logger.error(f"External service error while processing {item_id}: {str(e)}")
+        monitoring.increment("external_service_errors")
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error processing item {item_id}")
+        monitoring.track_error("process_item", str(e))
+        raise SystemError(f"Processing failure: {str(e)}") from e
+```
+
+### 5. Dependency Injection
+
+Use dependency injection for testable, modular code:
+
+- **Constructor Injection**: Pass dependencies in class constructors
+- **Default Implementation**: Provide sensible defaults for common dependencies
+- **Interface Adherence**: Ensure all implementations follow the same interface
+- **Configuration Separation**: Keep configuration separate from business logic
+
+```python
+class UserService:
+    def __init__(
+        self,
+        storage=None,
+        notification_service=None,
+        logger=None
+    ):
+        self.storage = storage or DefaultStorage()
+        self.notification = notification_service or EmailService()
+        self.logger = logger or setup_logging("user_service")
+    
+    def create_user(self, user_data: dict):
+        # Business logic using injected dependencies
+        self.storage.save(user_data)
+        self.notification.send_welcome(user_data["email"])
+        self.logger.info(f"Created user: {user_data['id']}")
+```
+
+### 6. Testing Patterns
+
+Implement comprehensive test coverage:
+
+- **Unit Tests**: Test individual components in isolation
+- **Integration Tests**: Test interactions between components
+- **End-to-End Tests**: Test complete workflows
+- **Test Fixtures**: Create reusable test data and mocks
+- **Parameterized Tests**: Test multiple input variations efficiently
+
+```python
+class TestUserService:
+    @pytest.fixture
+    def mock_storage(self):
+        return MockStorage()
+        
+    @pytest.fixture
+    def mock_notifications(self):
+        return MockNotificationService()
+        
+    @pytest.fixture
+    def service(self, mock_storage, mock_notifications):
+        return UserService(
+            storage=mock_storage,
+            notification_service=mock_notifications
+        )
+    
+    def test_create_user_success(self, service, mock_storage, mock_notifications):
+        # Test setup
+        user_data = {"id": "123", "email": "test@example.com"}
+        
+        # Execute
+        service.create_user(user_data)
+        
+        # Assert
+        mock_storage.save.assert_called_once_with(user_data)
+        mock_notifications.send_welcome.assert_called_once_with("test@example.com")
+
+    @pytest.mark.parametrize("invalid_input,expected_error", [
+        ({"email": "test@example.com"}, "Missing id"),
+        ({"id": "123"}, "Missing email"),
+    ])
+    def test_create_user_validation(self, service, invalid_input, expected_error):
+        with pytest.raises(ValueError, match=expected_error):
+            service.create_user(invalid_input)
+```
+
+### 7. Monitoring and Instrumentation
+
+Implement systematic monitoring:
+
+- **Success/Failure Metrics**: Track operation outcomes
+- **Performance Metrics**: Monitor execution time for key operations
+- **Resource Usage**: Track memory and resource consumption
+- **Error Rates**: Monitor errors by category and operation
+- **Custom Dimensions**: Add contextual information to metrics
+
+```python
+def process_batch(items: list) -> dict:
+    """Process a batch of items with monitoring."""
+    monitoring.increment("process_batch.started")
+    start_time = time.time()
+    
+    try:
+        results = []
+        success_count = 0
+        
+        for item in items:
+            try:
+                result = process_item(item)
+                results.append(result)
+                success_count += 1
+            except Exception as e:
+                logger.error(f"Item processing failed: {str(e)}")
+                monitoring.track_error("process_item", str(e))
+        
+        elapsed = time.time() - start_time
+        monitoring.track_latency("process_batch", elapsed)
+        monitoring.track_success("process_batch", {
+            "total": len(items),
+            "success": success_count,
+            "failure": len(items) - success_count
+        })
+        
+        return {
+            "success_count": success_count,
+            "failure_count": len(items) - success_count,
+            "results": results
+        }
+        
+    except Exception as e:
+        monitoring.track_error("process_batch", str(e))
+        raise
+```
+
+### 8. Advanced Pydantic Usage Patterns
+
+Leverage Pydantic's advanced features for robust data handling:
+
+- **Model Inheritance**: Use inheritance for model variations with shared fields
+- **Generic Models**: Create reusable model templates with type parameters
+- **Custom Validators**: Implement field-level and model-level validation logic
+- **Config Classes**: Customize model behavior through Config classes
+- **Root Validators**: Validate interdependent fields together
+
+```python
+from typing import TypeVar, Generic, List
+from pydantic import BaseModel, Field, validator, root_validator
+
+T = TypeVar('T')
+
+class PaginatedResponse(Generic[T]):
+    """Generic paginated response model."""
+    items: List[T]
+    page: int = 1
+    total_pages: int
+    total_items: int
+    
+    @validator('page')
+    def page_must_be_positive(cls, v):
+        if v < 1:
+            raise ValueError('Page must be positive')
+        return v
+        
+    @root_validator
+    def check_pagination_consistency(cls, values):
+        """Ensure pagination values are consistent."""
+        if (
+            'total_pages' in values 
+            and 'page' in values
+            and values['page'] > values['total_pages']
+        ):
+            raise ValueError('Page number cannot exceed total pages')
+        return values
+        
+    class Config:
+        """Model configuration."""
+        validate_assignment = True
+        extra = 'forbid'
+```
+
+### 9. MCP Server Implementation Best Practices
+
+Follow these patterns when implementing Model Context Protocol servers:
+
+- **Server Lifecycle Management**: Use async context managers for clean server initialization and teardown
+- **Tool Registration**: Register tools using decorator pattern with clear type hints
+- **Resource Templating**: Define resource templates with consistent URI patterns
+- **Error Handling**: Map internal errors to MCP protocol error responses
+- **Context Object Pattern**: Use context objects to pass request state between components
+
+```python
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+from mcp.server.fastmcp import FastMCP, Context
+
+@asynccontextmanager
+async def server_lifespan(server: FastMCP) -> AsyncIterator[None]:
+    """Server lifespan context manager."""
+    # Initialize services
+    search_service = SearchService()
+    database = Database()
+    
+    try:
+        # Start services
+        await search_service.initialize()
+        await database.connect()
+        
+        # Store services in context
+        server.state.search = search_service
+        server.state.db = database
+        
+        yield
+    finally:
+        # Clean up resources
+        await database.disconnect()
+        await search_service.shutdown()
+
+# Create server with lifespan
+mcp = FastMCP(
+    name="Document Search",
+    instructions="Search and retrieve documents",
+    lifespan=server_lifespan
+)
+
+# Tool implementation
+@mcp.tool()
+async def search_documents(ctx: Context, query: str, limit: int = 10) -> list[dict]:
+    """Search for documents matching the query."""
+    search_service = ctx.server.state.search
+    
+    try:
+        results = await search_service.search(query, limit=limit)
+        return [doc.to_dict() for doc in results]
+    except Exception as e:
+        # Map to appropriate error response
+        raise ctx.error(str(e), code="search_error")
+```
+
+### 10. Pydantic-AI Integration Best Practices
+
+Utilize Pydantic-AI for structured LLM interactions:
+
+- **Structured Output Models**: Define clear output models for AI responses
+- **AI Agent Lifecycle**: Manage AI agent objects properly with initialization and cleanup
+- **Error Handling**: Handle AI-specific errors like rate limits and token limits
+- **Consistent Temperature**: Set appropriate temperature values for deterministic vs. creative outputs
+- **Context Management**: Provide sufficient context for AI operations
+
+```python
+from pydantic import BaseModel, Field
+from pydantic_ai import Agent
+from typing import List, Optional
+
+class AnalysisResult(BaseModel):
+    """Structured analysis result."""
+    key_topics: List[str] = Field(description="Main topics identified in content")
+    sentiment: str = Field(description="Overall sentiment (positive, negative, neutral)")
+    summary: str = Field(description="Brief summary of content")
+    action_items: Optional[List[str]] = Field(
+        default=None, 
+        description="Suggested actions based on content"
+    )
+
+class ContentAnalyzer:
+    """Content analyzer using AI."""
+    
+    def __init__(self, api_key: str, model: str = "claude-3-haiku-20240307"):
+        """Initialize analyzer."""
+        self.agent = Agent(api_key=api_key, model=model)
+        
+    async def analyze_content(self, content: str) -> AnalysisResult:
+        """Analyze content using AI."""
+        try:
+            # Provide clear instructions through system prompt
+            system_prompt = """
+            Analyze the provided content objectively. 
+            Extract key topics, determine overall sentiment,
+            and provide a concise summary. If applicable,
+            suggest action items.
+            """
+            
+            # Use structured output schema
+            result = await self.agent.run(
+                content,
+                output_schema=AnalysisResult,
+                system=system_prompt,
+                temperature=0.1  # Low temperature for deterministic analysis
+            )
+            
+            return result.output
+            
+        except Exception as e:
+            raise AIError(f"Content analysis failed: {str(e)}")
+```
+
+### 11. Using a Virtual Environment and Managing Dependencies
+
+To ensure a clean and isolated Python environment, always use a virtual environment for your project.
+
+#### Setting Up a Virtual Environment
+
+1. Create a virtual environment:
+   ```bash
+   python3 -m venv venv
+   ```
+
+2. Activate the virtual environment:
+   - On macOS/Linux:
+     ```bash
+     source venv/bin/activate
+     ```
+   - On Windows:
+     ```bash
+     venv\Scripts\activate
+     ```
+
+3. Upgrade `pip` to the latest version:
+   ```bash
+   pip install --upgrade pip
+   ```
+
+#### Adding Dependencies to `requirements.txt`
+
+1. Install a new dependency:
+   ```bash
+   pip install <package-name>
+   ```
+
+2. Add the installed dependency to `requirements.txt`:
+   ```bash
+   pip freeze > requirements.txt
+   ```
+
+3. Install all dependencies from `requirements.txt`:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Ensure `requirements.txt` is committed to version control to maintain consistency across environments.
