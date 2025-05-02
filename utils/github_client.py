@@ -2,6 +2,16 @@
 
 This module provides the GitHubClient class which handles all interactions with the GitHub API
 for template repository automation.
+
+Example:
+    >>> from utils.github_client import GitHubClient
+    >>> client = GitHubClient(token="ghp_...")
+    >>> repo = await client.create_repo(
+    ...     org="myorg",
+    ...     name="new-project",
+    ...     template="template-repo",
+    ...     description="New project from template"
+    ... )
 """
 
 import base64
@@ -28,31 +38,25 @@ class GitHubClient:
     - Setting up team access
     - Configuring repository settings
     
-    Attributes:
-        api_base_url (str): Base URL for the GitHub API
-        token (str): GitHub authentication token
-        org_name (str): GitHub organization name
-        commit_author_name (str): Name to use for automated commits
-        commit_author_email (str): Email to use for automated commits
-        client (Github): PyGithub client instance
-        org (Organization): GitHub organization instance
-    
     Example:
-        ```python
-        client = GitHubClient(
-            api_base_url="https://api.github.com",
-            token="ghp_...",
-            org_name="my-org",
-            commit_author_name="Template Bot",
-            commit_author_email="bot@example.com"
-        )
-        
-        repo = client.create_repository_from_template(
-            template_repo_name="template-service",
-            new_repo_name="new-service",
-            private=True
-        )
-        ```
+        >>> client = GitHubClient(token="ghp_...")
+        >>> # Create a new repository from template
+        >>> repo = await client.create_repo(
+        ...     org="myorg", 
+        ...     name="new-repo",
+        ...     template="template-repo"
+        ... )
+        >>> # Configure team access
+        >>> await client.set_team_access(
+        ...     org="myorg",
+        ...     repo="new-repo", 
+        ...     team="developers",
+        ...     permission="push"
+        ... )
+    
+    Attributes:
+        github (Github): The PyGithub client instance
+        rate_limit_pause (float): Seconds to pause when rate limited
     """
 
     def __init__(

@@ -14,18 +14,18 @@ The module provides core functionality for:
 - Comprehensive monitoring and logging
 
 Example:
-    ```python
-    from utils.setup_storage import setup_gcs, init_database
-    
-    # Initialize storage infrastructure
-    if setup_gcs() and init_database():
-        print("Storage infrastructure ready")
-        
-    # Load and validate configuration
-    config = load_gcs_config()
-    if config and validate_setup():
-        print(f"Using GCS bucket: {config.GCS_BUCKET_NAME}")
-    ```
+
+    >>> from utils.setup_storage import setup_gcs, init_database
+    >>> 
+    >>> # Initialize storage infrastructure
+    >>> if setup_gcs() and init_database():
+    ...     print("Storage infrastructure ready")
+    ... 
+    >>> # Load and validate configuration
+    >>> config = load_gcs_config()
+    >>> if config and validate_setup():
+    ...     print(f"Using GCS bucket: {config.GCS_BUCKET_NAME}")
+    ...
 
 Use this module as part of your application's initialization process to ensure
 proper storage setup before core functionality becomes available.
@@ -40,11 +40,19 @@ from google.cloud import storage
 from google.cloud.exceptions import NotFound
 from typing import Optional, Dict, List
 
+from pydantic import BaseModel
+
 from .logging import setup_logging
 from .database import engine, Base
 from .monitoring import setup_monitoring
-from .schemas import StorageConfig
 from .secrets import secret_manager
+
+# Define storage configuration schema
+class StorageConfig(BaseModel):
+    """Storage configuration settings."""
+    GCS_BUCKET_NAME: str
+    GCS_PROJECT_ID: str
+    LOCAL_STORAGE_PATH: Optional[str] = None
 
 # Initialize core components
 logger = setup_logging('setup_storage')

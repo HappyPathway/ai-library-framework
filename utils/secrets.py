@@ -24,23 +24,22 @@ class SecretManager:
     - Access logging and auditing
     
     Example:
-        ```python
-        from utils.secrets import secret_manager
-        
-        # Get a secret
-        api_key = secret_manager.get_secret('API_KEY')
-        if api_key:
-            # Use the secret
-            client.configure(api_key)
-        
-        # Get a secret without caching
-        fresh_token = secret_manager.get_secret('AUTH_TOKEN', use_cache=False)
-        ```
+
+        >>> from utils.secrets import secret_manager
+        >>> 
+        >>> # Get a secret
+        >>> api_key = secret_manager.get_secret('API_KEY')
+        >>> if api_key:
+        ...     # Use the secret
+        ...     client.configure(api_key)
+        ... 
+        >>> # Get a secret without caching
+        >>> fresh_token = secret_manager.get_secret('AUTH_TOKEN', use_cache=False)
     
-    Attributes:
-        _client: Google Secret Manager client
-        _project_id: Google Cloud project ID
-        _cache: Dictionary storing cached secret values
+    Instance Variables:
+        _client (secretmanager.SecretManagerServiceClient): Google Secret Manager client
+        _project_id (str): Google Cloud project ID
+        _cache (dict): Dictionary storing cached secret values
     """
     
     def __init__(self):

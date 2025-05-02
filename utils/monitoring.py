@@ -47,6 +47,13 @@ class MetricsCollector:
         self.counters[metric] += value
         logger.debug(f"{self.name} - {metric}: {self.counters[metric]}")
 
+    def increment_success(self, operation: str) -> None:
+        """Increment success counter for an operation."""
+        if operation not in self.success_counts:
+            self.success_counts[operation] = 0
+        self.success_counts[operation] += 1
+        logger.debug(f"{self.name} - Success {operation}: {self.success_counts[operation]}")
+
     def track_success(self, operation: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """Track a successful operation."""
         if operation not in self.success_counts:

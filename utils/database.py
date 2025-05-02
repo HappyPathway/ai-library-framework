@@ -25,7 +25,7 @@ Use this module to interact with databases reliably and efficiently.
 import os
 from pathlib import Path
 from contextlib import contextmanager
-from typing import Generator
+from typing import Generator, Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session

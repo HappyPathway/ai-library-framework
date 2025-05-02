@@ -1,7 +1,7 @@
-# Logging Module
+# Secrets API
 
 ```{eval-rst}
-.. automodule:: utils.logging
+.. automodule:: utils.secrets
    :members:
    :undoc-members:
    :show-inheritance:

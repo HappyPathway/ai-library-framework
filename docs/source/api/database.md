@@ -1,7 +1,7 @@
-# Logging Module
+# Database
 
 ```{eval-rst}
-.. automodule:: utils.logging
+.. automodule:: utils.database
    :members:
    :undoc-members:
    :show-inheritance:

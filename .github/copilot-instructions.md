@@ -1,21 +1,78 @@
-# Python Development Best Practices
+# GitHub Copilot Instructions
 
-This document outlines the core best practices and architectural patterns for Python development in this project.
+## Role and Behavior
+- Act as a software engineer
+- Provide code suggestions and explanations
+- Use Python and Pydantic for type-safe development
+- Follow best practices for modular design, error handling, and testing
+- Use Sphinx-style docstrings for documentation
+- Use Pydantic-AI for structured LLM interactions
+- Use a virtual environment for Python projects
+- Avoid content that violates copyrights
+- Keep responses short and impersonal
+- If asked for harmful content, respond with "Sorry, I can't assist with that."
 
-## Core Architecture Principles
+## Code Change Instructions
 
-### 1. Modular Core Library Pattern
+When suggesting code changes:
 
-Maintain a central `core` module with reusable building blocks:
+1. Describe changes step by step
+2. Group changes by file
+3. For each file:
+   - Show filepath and summary
+   - Provide code in language-specific block
+   - Use comments for unchanged sections
 
-- **Abstraction First**: Create abstractions for common functionality (logging, storage, API clients)
-- **Composition Over Inheritance**: Build features by composing core components, not through complex inheritance
-- **Single Responsibility**: Each core module should have a clearly defined purpose and responsibility
+### Example Format
+
+```python
+// filepath: /path/to/file.py
+// ...existing code...
+def new_function():
+    pass
+// ...existing code...
+```
+
+# Modular Utils Library Pattern
 
 Example directory structure:
 ```
 project/
-├── core/
+├── utils/
+│   ├── __init__.py
+│   ├── logging.py         # Centralized logging configuration
+│   ├── storage.py         # Storage abstractions (cloud, local, etc.)
+│   ├── database.py        # Database connection and session management
+│   ├── api_client.py      # Base API client functionality
+│   ├── monitoring.py      # Instrumentation and metrics
+│   └── schemas.py         # Shared data models
+└── features/
+    ├── feature_a/
+    │   ├── __init__.py
+    │   ├── models.py
+    │   └── service.py
+    └── feature_b/
+        ├── __init__.py
+        ├── models.py
+        └── service.py
+```
+
+> Note: All Google Cloud Platform (GCP) integrations in utils modules use Application Default Credentials (ADC). 
+> This includes storage.py for GCS operations and database.py for Cloud SQL connections.
+> Local development setup requires running `gcloud auth application-default login`.
+
+### 1. Modular utils Library Pattern
+
+Maintain a central `utils` module with reusable building blocks:
+
+- **Abstraction First**: Create abstractions for common functionality (logging, storage, API clients)
+- **Composition Over Inheritance**: Build features by composing utils components, not through complex inheritance
+- **Single Responsibility**: Each utils module should have a clearly defined purpose and responsibility
+
+Example directory structure:
+```
+project/
+├── utils/
 │   ├── __init__.py
 │   ├── logging.py         # Centralized logging configuration
 │   ├── storage.py         # Storage abstractions (cloud, local, etc.)
@@ -66,49 +123,72 @@ class UserProfile(BaseModel):
 
 ### 3. Comprehensive Documentation
 
-Use Google-style docstrings with sphinx-compatible formatting:
+Use Sphinx-style docstrings for consistent documentation:
 
-- **Module Docstrings**: Include purpose, components, examples, and usage context
-- **Class/Function Docstrings**: Document purpose, parameters, returns, and examples
-- **Type Hints**: Include type annotations for all function parameters and return values
-- **Examples**: Provide usage examples for complex functionality
+- **Module Docstrings**: Include summary, detailed description, components, and examples
+- **Class/Function Docstrings**: Document purpose, parameters, returns, raises, and examples
+- **Type Hints**: Include type annotations and document them in docstrings
+- **Examples**: Provide usage examples in docstring format
 
+Example module docstring:
 ```python
-"""Storage Management Module
+"""Storage Management Module.
 
 This module provides a unified interface for file storage operations with support
 for both local and cloud storage backends.
 
 Key Components:
-- StorageManager: Base class for storage operations
-- LocalStorage: File system implementation
-- CloudStorage: Cloud storage implementation
+    StorageManager: Base class for storage operations
+    LocalStorage: File system implementation
+    CloudStorage: Cloud storage implementation
 
 Example:
-    ```python
-    from core.storage import CloudStorage
-    
-    storage = CloudStorage(bucket="my-app-data")
-    storage.save_json(data, "user_profiles/user123.json")
-    ```
+    >>> from utils.storage import CloudStorage
+    >>> storage = CloudStorage(bucket="my-app-data")
+    >>> storage.save_json(data, "user_profiles/user123.json")
 
-Use this module for all file storage operations to ensure consistency.
+Note:
+    Use this module for all file storage operations to ensure consistency.
 """
+```
 
+Example function docstring:
+```python
 def save_document(document: dict, path: str) -> bool:
     """Save a document to the configured storage.
+
+    :param document: The document data to save
+    :type document: dict
+    :param path: The storage path where the document will be saved
+    :type path: str
+    :return: True if saved successfully, False otherwise
+    :rtype: bool
+    :raises StorageError: If the save operation fails
+    :raises ValueError: If the document format is invalid
     
-    Args:
-        document: The document data to save
-        path: The storage path where the document will be saved
-        
-    Returns:
-        bool: True if saved successfully, False otherwise
-        
     Example:
-        ```python
-        success = save_document({"id": "123", "name": "Test"}, "documents/123.json")
-        ```
+        >>> success = save_document({"id": "123", "name": "Test"}, "documents/123.json")
+        >>> print(success)
+        True
+    """
+```
+
+Example class docstring:
+```python
+class StorageManager:
+    """Base class for storage operations.
+    
+    This class defines the interface for storage operations and provides
+    common functionality for derived storage implementations.
+    
+    :param base_path: Base path for storage operations
+    :type base_path: str
+    :param config: Optional storage configuration
+    :type config: dict
+    
+    Example:
+        >>> manager = StorageManager("/data", config={"compress": True})
+        >>> manager.save("test.txt", "Hello World")
     """
 ```
 
@@ -123,7 +203,7 @@ Implement consistent error handling and logging:
 - **Monitoring Integration**: Log metrics for important operations
 
 ```python
-from core.logging import setup_logging
+from utils.logging import setup_logging
 
 logger = setup_logging("feature_name")
 
@@ -474,3 +554,10 @@ To ensure a clean and isolated Python environment, always use a virtual environm
    ```
 
 4. Ensure `requirements.txt` is committed to version control to maintain consistency across environments.
+
+### Authentication Notes
+
+All Google Cloud Platform (GCP) integrations use Application Default Credentials (ADC):
+- GCS operations in storage.py
+- Cloud SQL connections in database.py
+- Local setup: Run `gcloud auth application-default login`

@@ -9,20 +9,17 @@ This module provides a unified interface for web scraping operations with built-
 - Cookie and session management
 
 Example:
-    ```python
-    from core.web_scraper import WebScraper
-    
-    scraper = WebScraper(rate_limit=2.0)  # 2 seconds between requests
-    
-    # Get parsed HTML
-    soup = scraper.get_soup('https://example.com')
-    if soup:
-        title = scraper.extract_text(soup, 'h1.title')
-        description = scraper.extract_text(soup, 'div.description')
-        
-    # Get raw response with caching
-    response = scraper.get('https://api.example.com/data')
-    ```
+    >>> from core.web_scraper import WebScraper
+    >>> scraper = WebScraper(rate_limit=2.0)  # 2 seconds between requests
+    >>> 
+    >>> # Get parsed HTML
+    >>> soup = scraper.get_soup('https://example.com')
+    >>> if soup:
+    ...     title = scraper.extract_text(soup, 'h1.title')
+    ...     description = scraper.extract_text(soup, 'div.description')
+    ... 
+    >>> # Get raw response with caching
+    >>> response = scraper.get('https://api.example.com/data')
 
 The scraper includes built-in protections against common issues:
 - Respects robots.txt
@@ -224,12 +221,10 @@ class WebScraper:
             List of extracted text strings, empty list if none found
             
         Example:
-            ```python
-            scraper = WebScraper()
-            soup = scraper.get_soup('https://example.com')
-            links = scraper.extract_all_text(soup, 'a', attribute='href')
-            paragraphs = scraper.extract_all_text(soup, 'p')
-            ```
+            >>> scraper = WebScraper()
+            >>> soup = scraper.get_soup('https://example.com')
+            >>> links = scraper.extract_all_text(soup, 'a', attribute='href')
+            >>> paragraphs = scraper.extract_all_text(soup, 'p')
         """
         try:
             elements = element.select(selector)
