@@ -31,33 +31,72 @@ The project should follow this structure for clarity and maintainability:
 
 ```
 template-python-dev/
-├── agent/                      # Core agent functionality
+├── agent/                      # Core agent functionality (future feature)
+├── utils/                      # Core utilities
 │   ├── __init__.py
-│   ├── engine.py               # Main AI engine components
-│   ├── tools/                  # Tool implementations
-│   └── adapters/               # Model provider adapters
-├── utils/                      # Utility modules
+│   ├── core/                   # Core functionality
+│   │   ├── __init__.py
+│   │   ├── logging.py          # Centralized logging configuration
+│   │   └── monitoring.py       # Instrumentation and metrics
+│   ├── ai/                     # AI-related functionality
+│   │   ├── __init__.py
+│   │   ├── engine.py           # Core AI engine (refactored from ai_engine.py)
+│   │   └── tools/              # AI tools implementations
+│   ├── storage/                # Storage-related functionality
+│   │   ├── __init__.py
+│   │   ├── local.py            # Local storage implementation
+│   │   └── setup.py            # Storage setup functionality
+│   ├── cloud/                  # Cloud-related functionality
+│   │   ├── __init__.py
+│   │   ├── gcs.py              # GCS operations
+│   │   └── secrets.py          # Cloud secrets management
+│   ├── messaging/              # Messaging infrastructure
+│   │   ├── __init__.py
+│   │   ├── zmq.py              # ZMQ implementation
+│   │   └── devices.py          # ZMQ devices implementation
+│   ├── database.py             # Database functionality
+│   ├── github_client.py        # GitHub API client
+│   └── web_scraper.py          # Web scraping functionality
+├── schemas/                    # All Pydantic models
 │   ├── __init__.py
-│   ├── logging.py              # Centralized logging configuration
-│   ├── storage.py              # Storage abstractions (cloud, local, etc.)
-│   ├── database.py             # Database connection and session management
-│   ├── messaging/              # Messaging infrastructure (ZMQ, etc.)
-│   └── monitoring.py           # Instrumentation and metrics
-├── schemas/                    # Pydantic data models
-│   ├── __init__.py
-│   ├── agent.py                # Agent-specific models
-│   ├── storage.py              # Storage-related models
-│   └── configs.py              # Configuration models
+│   ├── ai.py                   # AI-related schemas
+│   ├── storage.py              # Storage-related schemas
+│   ├── database.py             # Database-related schemas
+│   ├── messaging/              # Messaging schemas
+│   │   ├── __init__.py
+│   │   ├── zmq.py
+│   │   └── devices.py
+│   └── api/                    # API-related schemas
+│       ├── __init__.py
+│       └── github.py           # GitHub API schemas
 ├── examples/                   # Example agent implementations
 │   ├── simple_agent.py
 │   ├── distributed_agents.py
 │   └── specialized/            # Domain-specific examples
-├── tests/
-│   ├── unit/                   # Unit tests
-│   │   ├── agent/
-│   │   ├── utils/
-│   │   └── schemas/
-│   └── integration/            # Integration tests
+├── tests/                      # Test organization
+│   ├── __init__.py
+│   ├── conftest.py             # Common test fixtures
+│   ├── unit/                   # All unit tests
+│   │   ├── __init__.py
+│   │   ├── utils/              # Unit tests for utils modules
+│   │   │   ├── __init__.py
+│   │   │   ├── ai/             # Tests for AI modules
+│   │   │   ├── core/           # Tests for core modules
+│   │   │   ├── storage/        # Tests for storage modules
+│   │   │   ├── cloud/          # Tests for cloud modules
+│   │   │   └── messaging/      # Tests for messaging modules
+│   │   └── schemas/            # Unit tests for schemas
+│   └── integration/            # All integration tests
+│       ├── __init__.py
+│       ├── conftest.py         # Integration-specific fixtures
+│       └── utils/              # Integration tests for utils modules
+├── setup/                      # Development environment setup
+│   ├── __init__.py
+│   ├── dev_setup.py            # Development environment setup
+│   └── requirements/           # Split requirements files
+│       ├── base.txt            # Core dependencies
+│       ├── dev.txt             # Development dependencies
+│       └── prod.txt            # Production dependencies
 └── docs/                       # Documentation
 ```
 

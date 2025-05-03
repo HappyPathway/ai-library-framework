@@ -17,6 +17,18 @@ This project includes several core utilities for common development tasks:
 - **GCS Config**: Google Cloud Storage configuration management
 - **Setup Storage**: Storage infrastructure initialization
 
+## Project Documentation
+
+```{toctree}
+:maxdepth: 2
+:caption: Project Reference
+
+migration_plan
+ai_module_example
+implementation_plan
+migration_guide
+```
+
 ## API Documentation
 
 ```{toctree}
