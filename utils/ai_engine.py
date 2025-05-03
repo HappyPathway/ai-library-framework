@@ -53,68 +53,73 @@ Note:
     Follow provider-specific guidelines for rate limits and token usage.
 """
 
-import os
 import asyncio
-from typing import Any, AsyncIterator, Dict, Generic, List, Literal, Optional, Type, TypeVar, Union
-from pydantic import BaseModel, Field
-from pydantic_ai import Agent, RunContext
+import os
+from enum import Enum
+from typing import (Any, AsyncIterator, Dict, Generic, List, Literal, Optional,
+                    Type, TypeVar, Union)
+
+import anthropic
+import google.generativeai as genai
+import openai
+from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelRetry, UnexpectedModelBehavior
-from pydantic_ai.usage import UsageLimits
-from pydantic_ai.settings import ModelSettings
-from pydantic_ai.models.gemini import GeminiSafetySettings
-try:
-    from pydantic_ai.monitoring import LogfireMonitoring  # type: ignore
-except ImportError:
-    LogfireMonitoring = None  # type: ignore
 
 from .logging import setup_logging
-from .monitoring import setup_monitoring, MetricsCollector
+from .monitoring import MetricsCollector, setup_monitoring
+from .schemas.ai import (AIResponse, AnthropicSettings, GeminiSafetySettings,
+                         GeminiSettings, OpenAISettings, UsageLimits)
 from .secrets import secret_manager
+
+logger = setup_logging(__name__)
 
 # Initialize logging and monitoring
 logger = setup_logging('ai_engine')
 monitoring = setup_monitoring('ai_engine')
 
+# Optional Logfire class (will be None if not available)
+try:
+    from logfire import LogfireMonitoring
+except ImportError:
+    LogfireMonitoring = None
+
 # Type variable for output types
 T = TypeVar('T')
 
-# Model settings
-class GeminiSettings(BaseModel):
-    """Settings specific to Gemini models."""
-    safety_settings: Optional[List[GeminiSafetySettings]] = None
-    generation_config: Optional[Dict[str, Any]] = None
+# Safety settings for Gemini
 
-class OpenAISettings(BaseModel):
-    """Settings specific to OpenAI models."""
-    temperature: Optional[float] = Field(None, ge=0, le=2)
-    top_p: Optional[float] = Field(None, ge=0, le=1)
-    frequency_penalty: Optional[float] = Field(None, ge=-2, le=2)
-    presence_penalty: Optional[float] = Field(None, ge=-2, le=2)
-    stop: Optional[Union[str, List[str]]] = None
-    max_tokens: Optional[int] = Field(None, gt=0)
-    
-class AnthropicSettings(BaseModel):
-    """Settings specific to Anthropic models."""
-    temperature: Optional[float] = Field(None, ge=0, le=1)
-    max_tokens: Optional[int] = Field(None, gt=0)
-    top_k: Optional[int] = Field(None, gt=0)
-    top_p: Optional[float] = Field(None, ge=0, le=1)
+
+class GeminiHarmCategory(str, Enum):
+    """Categories for Gemini model safety settings."""
+    HARASSMENT = "HARM_CATEGORY_HARASSMENT"
+    HATE_SPEECH = "HARM_CATEGORY_HATE_SPEECH"
+    SEXUALLY_EXPLICIT = "HARM_CATEGORY_SEXUALLY_EXPLICIT"
+    DANGEROUS = "HARM_CATEGORY_DANGEROUS_CONTENT"
+
+
+class GeminiThreshold(str, Enum):
+    """Threshold levels for Gemini safety settings."""
+    BLOCK_NONE = "BLOCK_NONE"
+    BLOCK_LOW = "BLOCK_LOW_AND_ABOVE"
+    BLOCK_MEDIUM = "BLOCK_MEDIUM_AND_ABOVE"
+    BLOCK_HIGH = "BLOCK_HIGH"
+
 
 class AIEngine(Generic[T]):
     """Unified AI Engine for all AI/LLM interactions.
-    
+
     This class provides a unified interface for AI model interactions,
     supporting multiple providers and both structured/unstructured outputs.
-    
+
     :param T: Generic type parameter for output type specification
     :type T: TypeVar
-    
+
     Features:
         - Multiple model providers (OpenAI, Gemini, etc.)
         - Structured and unstructured output
         - Tool registration for agent functionality
         - Comprehensive monitoring and error handling
-    
+
     Example:
         >>> from utils.ai_engine import AIEngine
         >>> engine = AIEngine(
@@ -126,7 +131,7 @@ class AIEngine(Generic[T]):
         ...     prompt="Summarize this article..."
         ... )
     """
-    
+
     # Provider settings mapping
     settings_map = {
         "openai": OpenAISettings(temperature=0.7),
@@ -151,7 +156,7 @@ class AIEngine(Generic[T]):
         retries: int = 2
     ):
         """Initialize the AI engine.
-        
+
         :param feature_name: Name of the feature using this engine
         :type feature_name: str
         :param output_type: Optional Pydantic model for structured output
@@ -165,7 +170,7 @@ class AIEngine(Generic[T]):
         :param retries: Number of retries for failed generations
         :type retries: int
         :raises ValueError: If provider or API key configuration is invalid
-        
+
         Example:
             >>> engine = AIEngine(
             ...     feature_name='text_classifier',
@@ -179,17 +184,17 @@ class AIEngine(Generic[T]):
         self.provider = provider
         self.instructions = instructions
         self.retries = retries
-        
+
         # Set up monitoring for this feature
         self.monitoring = setup_monitoring(f'ai_{feature_name}')
-        
+
         # Set up logfire config
         self.logfire_config = {
             "project_id": "jobsearch-ai",
             "environment": os.getenv("ENVIRONMENT", "development"),
             "api_key": os.getenv("LOGFIRE_API_KEY")
         }
-        
+
         # Configure monitoring with Logfire if available
         if LogfireMonitoring:
             self.logfire = LogfireMonitoring(
@@ -199,7 +204,7 @@ class AIEngine(Generic[T]):
             )
         else:
             self.logfire = None
-        
+
         # Initialize the agent
         self.agent = self._setup_agent()
 
@@ -212,37 +217,86 @@ class AIEngine(Generic[T]):
         """Get API key for the current provider."""
         key_map = {
             "openai": "OPENAI_API_KEY",
-            "gemini": "GOOGLE_API_KEY",
+            "gemini": "GEMINI_API_KEY",
             "anthropic": "ANTHROPIC_API_KEY"
         }
         env_var = key_map.get(self.provider)
         if not env_var:
             raise ValueError(f"Unsupported provider: {self.provider}")
-        
+
         api_key = os.getenv(env_var)
         if not api_key:
-            raise ValueError(f"Missing API key for provider {self.provider}. Set {env_var} environment variable.")
+            raise ValueError(
+                f"Missing API key for provider {self.provider}. Set {env_var} environment variable.")
         return api_key
 
     def _setup_agent(self) -> Agent:
-        """Set up the Agent with proper configuration."""
+        """Set up the Agent with proper configuration.
+
+        This is a key extension point for subclasses, which can override this method
+        to customize how the agent is configured and initialized.
+
+        Returns:
+            Agent: Configured agent object
+
+        Raises:
+            ValueError: If the provider is not supported or API key is missing
+        """
         api_key = self._get_api_key()
-        
+
         # Configure monitoring if Logfire is enabled
+        instrument = self._setup_instrumentation()
+
+        # Get provider-specific settings
+        default_settings = self._get_provider_settings()
+
+        # Configure settings for this instance
+        settings = self._create_settings_instance(default_settings)
+
+    def _setup_instrumentation(self):
+        """Set up instrumentation for the agent.
+
+        Override this method in subclasses to customize instrumentation.
+
+        Returns:
+            Object or None: Instrumentation object if configured, None otherwise
+        """
         instrument = None
         if self.logfire_config and LogfireMonitoring:
             instrument = LogfireMonitoring(
                 project_id=self.logfire_config["project_id"],
                 api_key=self.logfire_config["api_key"]
             )
+        return instrument
 
-        # Get provider-specific settings
+    def _get_provider_settings(self):
+        """Get the default settings for the current provider.
+
+        Override this method in subclasses to customize provider settings.
+
+        Returns:
+            BaseModel: Provider-specific settings
+
+        Raises:
+            ValueError: If the provider is not supported
+        """
         default_settings = self.settings_map.get(self.provider)
         if not default_settings:
             raise ValueError(f"Unsupported provider: {self.provider}")
+        return default_settings
 
-        # Configure settings for this instance
-        settings = type(default_settings)()
+    def _create_settings_instance(self, default_settings):
+        """Create a new instance of settings.
+
+        Override this method in subclasses to customize settings creation.
+
+        Args:
+            default_settings: Default settings for the provider
+
+        Returns:
+            BaseModel: Settings instance
+        """
+        return type(default_settings)()
         settings.temperature = default_settings.temperature
         settings.max_tokens = default_settings.max_tokens
 
@@ -265,27 +319,27 @@ class AIEngine(Generic[T]):
         """Get provider-specific settings."""
         if not settings:
             return {}
-            
+
         if self.provider == "gemini":
             return {
                 "safety_settings": settings.safety_settings,
                 "generation_config": settings.generation_config
             } if isinstance(settings, GeminiSettings) else {}
-            
+
         elif self.provider == "openai":
             return {
                 "frequency_penalty": settings.frequency_penalty,
                 "presence_penalty": settings.presence_penalty,
                 "stop": settings.stop
             } if isinstance(settings, OpenAISettings) else {}
-            
+
         elif self.provider == "anthropic":
             return {
                 "top_k": settings.top_k
             } if isinstance(settings, AnthropicSettings) else {}
-            
+
         return {}
-    
+
     async def generate(
         self,
         prompt: str,
@@ -296,7 +350,7 @@ class AIEngine(Generic[T]):
         stream: bool = False
     ) -> Union[str, BaseModel, AsyncIterator[str]]:
         """Generate content from the LLM.
-        
+
         :param prompt: The input prompt
         :type prompt: str
         :param output_schema: Optional Pydantic model for structured output
@@ -312,14 +366,14 @@ class AIEngine(Generic[T]):
         :raises AIEngineError: If generation fails
         :raises ContentFilterError: If content is filtered by safety settings
         :raises ModelError: If model behaves unexpectedly
-        
+
         Example:
             Simple text generation:
                 >>> text = await engine.generate(
                 ...     prompt="Write a story about...",
                 ...     temperature=0.7
                 ... )
-            
+
             Structured output:
                 >>> from my_schemas import Article
                 >>> article = await engine.generate(
@@ -327,7 +381,7 @@ class AIEngine(Generic[T]):
                 ...     output_schema=Article,
                 ...     system="You are a technical writer"
                 ... )
-            
+
             Streaming response:
                 >>> async for chunk in engine.generate(
                 ...     prompt="Tell me a long story...",
@@ -343,7 +397,7 @@ class AIEngine(Generic[T]):
                         system=system,
                         temperature=temperature
                     )
-        
+
                 result = await self.agent.run(
                     prompt,
                     output_schema=output_schema,
@@ -352,7 +406,7 @@ class AIEngine(Generic[T]):
                 )
                 self.monitoring.increment_success("generate")
                 return result.output if output_schema else result.text
-            
+
         except ModelRetry as e:
             # Handle rate limits with exponential backoff
             self.monitoring.track_error("generate", "rate_limit")
@@ -364,7 +418,7 @@ class AIEngine(Generic[T]):
                 temperature=temperature,
                 stream=stream
             )
-            
+
         except UnexpectedModelBehavior as e:
             # Map to appropriate error type
             if "content filtered" in str(e).lower():
@@ -372,7 +426,7 @@ class AIEngine(Generic[T]):
                 raise ContentFilterError(str(e))
             self.monitoring.track_error("generate", "model_behavior")
             raise ModelError(f"Unexpected model behavior: {str(e)}")
-            
+
         except Exception as e:
             if hasattr(e, "schema_error"):
                 self.monitoring.track_error("generate", "schema_error")
@@ -384,11 +438,12 @@ class AIEngine(Generic[T]):
         self,
         content: str,
         *,
-        analysis_type: Literal["sentiment", "topics", "summary", "entities"] = "summary",
+        analysis_type: Literal["sentiment", "topics",
+                               "summary", "entities"] = "summary",
         schema: Optional[Type[BaseModel]] = None
     ) -> Union[str, BaseModel]:
         """Analyze content using the LLM.
-        
+
         :param content: Content to analyze
         :type content: str
         :param analysis_type: Type of analysis to perform
@@ -398,14 +453,14 @@ class AIEngine(Generic[T]):
         :return: Analysis result
         :rtype: Union[str, BaseModel]
         :raises AIEngineError: If analysis fails
-        
+
         Example:
             Text analysis:
                 >>> sentiment = await engine.analyze(
                 ...     content="This product is amazing!",
                 ...     analysis_type="sentiment"
                 ... )
-            
+
             Structured analysis:
                 >>> from my_schemas import TextAnalysis
                 >>> analysis = await engine.analyze(
@@ -421,13 +476,13 @@ class AIEngine(Generic[T]):
             "summary": "Provide a concise summary of the following text:",
             "entities": "Extract key entities (people, organizations, locations) from the following text:"
         }
-        
+
         system_prompt = f"""
         You are an expert content analyzer.
         {prompts[analysis_type]}
         Provide an objective analysis focusing on {analysis_type}.
         """
-        
+
         return await self.generate(
             content,
             system=system_prompt,
@@ -441,7 +496,7 @@ class AIEngine(Generic[T]):
         extraction_schema: Type[BaseModel],
     ) -> BaseModel:
         """Extract structured data from content.
-        
+
         :param content: Content to extract data from
         :type content: str
         :param extraction_schema: Pydantic model defining the data structure
@@ -450,7 +505,7 @@ class AIEngine(Generic[T]):
         :rtype: BaseModel
         :raises AIEngineError: If extraction fails
         :raises ValueError: If content cannot be parsed into the schema
-        
+
         Example:
             >>> class JobPosting(BaseModel):
             ...     title: str
@@ -469,14 +524,14 @@ class AIEngine(Generic[T]):
         Extract the requested information from the provided content.
         Follow the output schema exactly.
         """
-        
+
         return await self.generate(
             content,
             system=system_prompt,
             output_schema=extraction_schema,
             temperature=0.1
         )
-    
+
     async def generate_text(
         self,
         prompt: str,
@@ -484,12 +539,12 @@ class AIEngine(Generic[T]):
         **kwargs
     ) -> Optional[str]:
         """Generate unstructured text content.
-        
+
         Args:
             prompt: Input prompt
             max_length: Optional maximum length
             **kwargs: Additional arguments for generate()
-            
+
         Returns:
             Generated text or None on failure
         """
@@ -498,14 +553,15 @@ class AIEngine(Generic[T]):
             result = await self.generate(
                 prompt=prompt,
                 output_schema=str,
-                model_settings={'max_length': max_length} if max_length else None,
+                model_settings={
+                    'max_length': max_length} if max_length else None,
                 **kwargs
             )
             return result
         except Exception as e:
             logger.error(f"Error generating text: {str(e)}")
             return None
-            
+
     def add_tool(
         self,
         func: callable,
@@ -514,7 +570,7 @@ class AIEngine(Generic[T]):
         retries: Optional[int] = None
     ) -> callable:
         """Register a tool function with the agent.
-        
+
         :param func: Function to register as a tool
         :type func: callable
         :param name: Optional custom name for the tool
@@ -525,7 +581,7 @@ class AIEngine(Generic[T]):
         :type retries: Optional[int]
         :return: Decorated function that can be used as a tool
         :rtype: callable
-        
+
         Example:
             >>> @engine.add_tool(
             ...     name="search_web",
@@ -544,29 +600,29 @@ class AIEngine(Generic[T]):
             description=description,
             retries=retries or self.retries
         )(func)
-        
+
     def add_system_prompt(self, func: callable) -> callable:
         """Register a system prompt function.
-        
+
         Args:
             func: Function that returns system prompt
-            
+
         Returns:
             Decorated function
         """
         return self.agent.system_prompt(func)
-    
+
     def run_sync(
         self,
         prompt: str,
         **kwargs
     ) -> Any:
         """Run generation synchronously.
-        
+
         Args:
             prompt: Input prompt
             **kwargs: Additional arguments
-            
+
         Returns:
             Generated content
         """
@@ -574,15 +630,17 @@ class AIEngine(Generic[T]):
         return result.output
 
 # Custom exceptions
+
+
 class AIEngineError(Exception):
     """Base exception for AI engine errors.
-    
+
     This is the base exception class for all AI engine related errors.
     Specific error types inherit from this class.
-    
+
     :param message: Error message
     :type message: str
-    
+
     Example:
         >>> try:
         ...     result = await engine.generate("prompt")
@@ -591,14 +649,15 @@ class AIEngineError(Exception):
     """
     pass
 
+
 class ModelError(AIEngineError):
     """Exception for model-specific errors.
-    
+
     Raised when the AI model behaves unexpectedly or returns an error.
-    
+
     :param message: Error message
     :type message: str
-    
+
     Example:
         >>> try:
         ...     result = await engine.generate("prompt")
@@ -607,14 +666,15 @@ class ModelError(AIEngineError):
     """
     pass
 
+
 class ContentFilterError(AIEngineError):
     """Exception for content that was filtered by safety settings.
-    
+
     Raised when content is blocked by the model's safety filters.
-    
+
     :param message: Error message
     :type message: str
-    
+
     Example:
         >>> try:
         ...     result = await engine.generate("inappropriate content")
@@ -624,6 +684,8 @@ class ContentFilterError(AIEngineError):
     pass
 
 # Utility functions
+
+
 def create_default_safety_settings() -> List[GeminiSafetySettings]:
     """Create default safety settings for Gemini models."""
     return [
@@ -645,6 +707,7 @@ def create_default_safety_settings() -> List[GeminiSafetySettings]:
         ),
     ]
 
+
 def default_gemini_settings() -> GeminiSettings:
     """Create default settings for Gemini models."""
     return GeminiSettings(
@@ -656,6 +719,7 @@ def default_gemini_settings() -> GeminiSettings:
         }
     )
 
+
 def default_openai_settings() -> OpenAISettings:
     """Create default settings for OpenAI models."""
     return OpenAISettings(
@@ -665,6 +729,7 @@ def default_openai_settings() -> OpenAISettings:
         presence_penalty=0.0,
         max_tokens=None  # Let the model decide based on context
     )
+
 
 def default_anthropic_settings() -> AnthropicSettings:
     """Create default settings for Anthropic models."""

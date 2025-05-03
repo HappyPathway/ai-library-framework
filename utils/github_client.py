@@ -1,25 +1,12 @@
-"""GitHub client module for template automation.
-
-This module provides the GitHubClient class which handles all interactions with the GitHub API
-for template repository automation.
-
-Example:
-    >>> from utils.github_client import GitHubClient
-    >>> client = GitHubClient(token="ghp_...")
-    >>> repo = await client.create_repo(
-    ...     org="myorg",
-    ...     name="new-project",
-    ...     template="template-repo",
-    ...     description="New project from template"
-    ... )
-"""
+"""GitHub client module for template automation."""
 
 import base64
 import logging
+import os
 import time
 from typing import List, Optional, Dict, Any, Union
 
-from github import Github, GithubException
+from github import Github, GithubException, Auth
 from github.Repository import Repository
 from github.ContentFile import ContentFile
 from github.Organization import Organization
@@ -30,65 +17,103 @@ from github.Workflow import Workflow
 logger = logging.getLogger(__name__)
 
 class GitHubClient:
-    """A client for interacting with GitHub's API in the context of template automation.
-    
-    This class provides methods for template repository operations including:
-    - Creating repositories from templates
-    - Managing repository contents
-    - Setting up team access
-    - Configuring repository settings
-    
-    Example:
-        >>> client = GitHubClient(token="ghp_...")
-        >>> # Create a new repository from template
-        >>> repo = await client.create_repo(
-        ...     org="myorg", 
-        ...     name="new-repo",
-        ...     template="template-repo"
-        ... )
-        >>> # Configure team access
-        >>> await client.set_team_access(
-        ...     org="myorg",
-        ...     repo="new-repo", 
-        ...     team="developers",
-        ...     permission="push"
-        ... )
-    
-    Attributes:
-        github (Github): The PyGithub client instance
-        rate_limit_pause (float): Seconds to pause when rate limited
-    """
+    """A client for interacting with GitHub's API."""
 
     def __init__(
         self, 
-        api_base_url: str,
-        token: str,
-        org_name: str,
+        api_base_url: str = "https://api.github.com",
+        token: Optional[str] = None,
+        org_name: Optional[str] = None,
         commit_author_name: str = "Template Automation",
-        commit_author_email: str = "automation@example.com"
+        commit_author_email: str = "automation@example.com",
+        max_retries: int = 3,
+        retry_delay: float = 1.0
     ):
-        """Initialize a new GitHub client.
+        """Initialize the GitHub client.
         
-        Args:
-            api_base_url: Base URL for the GitHub API
-            token: GitHub authentication token
-            org_name: GitHub organization name
-            commit_author_name: Name to use for automated commits
-            commit_author_email: Email to use for automated commits
-            
-        Raises:
-            GithubException: If authentication fails or org doesn't exist
+        :param api_base_url: GitHub API base URL (default: https://api.github.com)
+        :param token: GitHub API token (default: read from GITHUB_TOKEN env var)
+        :param org_name: Organization name for operations (optional)
+        :param commit_author_name: Name for automated commits
+        :param commit_author_email: Email for automated commits
+        :param max_retries: Maximum number of retries for API calls
+        :param retry_delay: Base delay between retries in seconds
         """
+        # Get token from environment if not provided
+        self.token = token or os.getenv('GITHUB_TOKEN')
+        if not self.token:
+            raise ValueError("No GitHub token provided. Set GITHUB_TOKEN environment variable.")
+            
+        # Verify token length and format
+        if len(self.token) < 30:  # Personal access tokens are longer than this
+            raise ValueError("GitHub token appears to be invalid (too short)")
+        if not self.token.startswith(('ghp_', 'github_pat_')):
+            raise ValueError("GitHub token appears to be invalid (wrong format)")
+
+        # Initialize client with modern auth method
         self.api_base_url = api_base_url
-        self.token = token
-        self.org_name = org_name
-        self.commit_author_name = commit_author_name
-        self.commit_author_email = commit_author_email
+        auth = Auth.Token(self.token)
+        self.client = Github(base_url=api_base_url, auth=auth)
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.rate_limit_pause = 5  # seconds to wait when rate limited
         
-        # Initialize client and get org
-        self.client = Github(base_url=api_base_url, login_or_token=token)
-        self.org = self.client.get_organization(org_name)
-        logger.info(f"Initialized GitHub client for org: {org_name}")
+        # Set commit author info
+        self.author = {
+            "name": commit_author_name,
+            "email": commit_author_email
+        }
+        
+        # Test authentication
+        try:
+            self.client.get_user().login
+        except GithubException as e:
+            if e.status == 401:
+                raise ValueError("GitHub token is invalid or expired") from e
+            raise
+        
+        # Get organization if specified
+        self.org = None
+        if org_name:
+            try:
+                self.org = self._retry_api_call(
+                    lambda: self.client.get_organization(org_name),
+                    retries=1,  # Don't retry org lookup
+                    error_msg=f"Failed to get organization {org_name}"
+                )
+            except GithubException as e:
+                if e.status == 404:
+                    logger.warning(f"Organization {org_name} not found")
+                else:
+                    raise
+
+    def _retry_api_call(self, func, retries=None, error_msg="API call failed"):
+        """Retry an API call with exponential backoff.
+        
+        :param func: Function to retry
+        :param retries: Number of retries (default: self.max_retries)
+        :param error_msg: Error message prefix for logging
+        :return: Result of the API call
+        :raises GithubException: If all retries fail
+        """
+        retries = retries if retries is not None else self.max_retries
+        last_error = None
+        
+        for attempt in range(retries):
+            try:
+                return func()
+            except GithubException as e:
+                last_error = e
+                if e.status == 404:  # Don't retry not found errors
+                    raise
+                if e.status == 401:  # Don't retry auth errors
+                    raise
+                if attempt < retries - 1:
+                    delay = self.retry_delay * (2 ** attempt)
+                    logger.warning(f"{error_msg} (attempt {attempt + 1}/{retries}): {str(e)}")
+                    time.sleep(delay)
+                    
+        raise last_error
 
     def create_repository_from_template(
         self,
@@ -250,10 +275,10 @@ class GitHubClient:
         create: bool = False,
         owning_team: Optional[str] = None
     ) -> Repository:
-        """Get or optionally create a GitHub repository.
+        """Get or create a GitHub repository.
         
         Args:
-            repo_name: Name of the repository
+            repo_name: Full repository name (owner/repo) or just repo name if using org
             create: Whether to create the repo if it doesn't exist
             owning_team: Name of team to grant access if repo is created
             
@@ -272,209 +297,39 @@ class GitHubClient:
             )
             ```
         """
-        """Get or create a GitHub repository with optional team permissions.
-        
-        Args:
-            repo_name: The name of the repository to retrieve or create
-            create: Whether to create the repository if it doesn't exist
-            owning_team: The name of the GitHub team to grant admin access
-            
-        Returns:
-            The repository object
-            
-        Raises:
-            GithubException: If repository operations fail
-        """
         try:
+            # If org is set and repo_name doesn't have a /, try org first
+            if self.org and '/' not in repo_name:
+                try:
+                    return self.org.get_repo(repo_name)
+                except GithubException as e:
+                    if e.status != 404:
+                        raise
+                    if create:
+                        repo = self.org.create_repo(repo_name, auto_init=True)
+                        if owning_team:
+                            team = self.org.get_team_by_slug(owning_team)
+                            team.set_repo_permission(repo, "admin")
+                        return repo
+                    raise
+            
+            # Try as full repo name (owner/repo)
             try:
-                repo = self.org.get_repo(repo_name)
-                logger.info(f"Found existing repository: {repo_name}")
-                if owning_team:
-                    self.set_team_permission(repo_name, owning_team, "admin")
-                return repo
+                return self.client.get_repo(repo_name)
             except GithubException as e:
-                if e.status == 404 and create:
-                    logger.info(f"Creating repository {repo_name}")
-                    repo = self.org.create_repo(
-                        name=repo_name,
-                        private=True,
-                        auto_init=True,
-                        allow_squash_merge=True,
-                        allow_merge_commit=True,
-                        allow_rebase_merge=True,
-                        delete_branch_on_merge=True
-                    )
-                    
-                    # Wait for repository initialization
-                    max_retries = 100
-                    retry_delay = 1
-                    for _ in range(max_retries):
-                        try:
-                            repo.get_branch("main")
-                            break
-                        except GithubException:
-                            time.sleep(retry_delay)
-                    else:
-                        raise Exception(f"Repository {repo_name} initialization timed out")
-                    
-                    if owning_team:
-                        self.set_team_permission(repo_name, owning_team, "admin")
-                    return repo
-                raise
-        except GithubException as e:
-            error_message = f"GitHub API error: {str(e)}"
-            logger.error(error_message)
-            raise
-
-    def get_default_branch(self, repo_name: str) -> str:
-        """Get the default branch name of a repository.
-        
-        Args:
-            repo_name: Name of the repository
-            
-        Returns:
-            Default branch name (usually 'main' or 'master')
-        """
-        repo = self.org.get_repo(repo_name)
-        return repo.default_branch
-
-    def create_branch(self, repo_name: str, branch_name: str, from_ref: str = "main") -> None:
-        """Create a new branch in the repository.
-        
-        Args:
-            repo_name: Name of the repository
-            branch_name: Name of the branch to create
-            from_ref: Reference to create branch from
-            
-        Raises:
-            GithubException: If branch creation fails
-        """
-        repo = self.org.get_repo(repo_name)
-        source = repo.get_branch(from_ref)
-        
-        try:
-            repo.create_git_ref(
-                ref=f"refs/heads/{branch_name}",
-                sha=source.commit.sha
-            )
-            logger.info(f"Created branch {branch_name} in {repo_name}")
-        except GithubException as e:
-            error_message = f"Failed to create branch {branch_name}: {str(e)}"
-            logger.error(error_message)
-            raise
-
-    def create_pull_request(
-        self,
-        repo_name: str,
-        title: str,
-        body: str,
-        head_branch: str,
-        base_branch: str = "main"
-    ) -> Any:
-        """Create a pull request in a repository.
-        
-        Args:
-            repo_name: Name of the repository
-            title: Title of the pull request
-            body: Description/body of the pull request
-            head_branch: Branch containing the changes
-            base_branch: Branch to merge into
-            
-        Returns:
-            The created pull request object
-            
-        Raises:
-            GithubException: If pull request creation fails
-        """
-        try:
-            repo = self.org.get_repo(repo_name)
-            pr = repo.create_pull(
-                title=title,
-                body=body,
-                head=head_branch,
-                base=base_branch,
-                maintainer_can_modify=True
-            )
-            logger.info(f"Created PR #{pr.number} in {repo_name}: {title}")
-            return pr
-        except GithubException as e:
-            error_message = f"Failed to create pull request: {str(e)}"
-            logger.error(error_message)
-            raise
-
-    def trigger_workflow(
-        self,
-        repo_name: str,
-        workflow_id: str,
-        ref: str,
-        inputs: Optional[Dict[str, Any]] = None
-    ) -> None:
-        """Trigger a GitHub Actions workflow.
-        
-        Args:
-            repo_name: Name of the repository
-            workflow_id: ID or filename of the workflow
-            ref: Git reference to run the workflow on
-            inputs: Input parameters for the workflow
-            
-        Raises:
-            GithubException: If workflow dispatch fails
-        """
-        try:
-            repo = self.org.get_repo(repo_name)
-            workflow = repo.get_workflow(workflow_id)
-            
-            # Convert inputs to GitHub's expected format
-            workflow_inputs = inputs if inputs is not None else {}
-            
-            workflow.create_dispatch(
-                ref=ref,
-                inputs=workflow_inputs
-            )
-            logger.info(f"Triggered workflow {workflow_id} in {repo_name} on {ref}")
-        except GithubException as e:
-            error_message = f"Failed to trigger workflow: {str(e)}"
-            logger.error(error_message)
-            raise
-
-    def set_team_permission(self, repo_name: str, team_name: str, permission: str) -> None:
-        """Set repository permissions for a team.
-        
-        Args:
-            repo_name: Name of the target repository
-            team_name: Name of the team to grant permissions to
-            permission: Permission level ('pull', 'push', 'admin', 'maintain', 'triage')
-            
-        Raises:
-            GithubException: If repository or team doesn't exist
-            
-        Example:
-            ```python
-            client.set_team_permission(
-                "my-service",
-                "developers",
-                "push"
-            )
-            ```
-        """
-        """Set a team's permission on a repository.
-        
-        Args:
-            repo_name: Name of the repository
-            team_name: Name of the team
-            permission: Permission level ('pull', 'push', 'admin', 'maintain', 'triage')
-            
-        Raises:
-            GithubException: If the operation fails
-        """
-        try:
-            repo = self.org.get_repo(repo_name)
-            team = self.org.get_team_by_slug(team_name)
-            team.update_team_repository(repo, permission)
-            logger.info(f"Set {team_name} permission on {repo_name} to {permission}")
-        except GithubException as e:
-            error_message = f"Failed to set team permission: {str(e)}"
-            logger.error(error_message)
+                if e.status != 404:
+                    raise
+                if not create:
+                    raise
+                
+                # Create in user account if no org
+                user = self.client.get_user()
+                if '/' in repo_name:
+                    repo_name = repo_name.split('/')[-1]
+                return user.create_repo(repo_name, auto_init=True)
+                
+        except Exception as e:
+            logger.error(f"Error accessing repository {repo_name}: {str(e)}")
             raise
 
     def update_repository_topics(self, repo_name: str, topics: List[str]) -> None:
@@ -488,10 +343,8 @@ class GitHubClient:
             GithubException: If the operation fails
         """
         try:
-            repo = self.org.get_repo(repo_name)
+            repo = self.get_repository(repo_name)
             repo.replace_topics(topics)
-            logger.info(f"Updated topics for {repo_name}: {topics}")
-        except GithubException as e:
-            error_message = f"Failed to update repository topics: {str(e)}"
-            logger.error(error_message)
+        except Exception as e:
+            logger.error(f"Error updating topics for {repo_name}: {str(e)}")
             raise

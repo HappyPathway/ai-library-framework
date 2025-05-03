@@ -2,24 +2,41 @@
 
 import pytest
 import zmq
-from core.zmq import ZMQManager, ZMQError
-from core.schemas.zmq import SocketType
+
+from utils.schemas.zmq import SocketType
+from utils.zmq import ZMQError, ZMQManager
+
 
 class TestZMQManager:
-    def test_pub_sub_pattern(self):
+    @pytest.fixture
+    def random_port(self):
+        """Get a random available port."""
+        context = zmq.Context()
+        socket = context.socket(zmq.PAIR)
+        port = socket.bind_to_random_port("tcp://127.0.0.1")
+        socket.close()
+        context.term()
+        return port
+
+    def test_pub_sub_pattern(self, random_port):
         """Test publisher/subscriber pattern."""
         with ZMQManager() as zmq:
             # Setup publisher
-            with zmq.socket(SocketType.PUB, "tcp://*:5555", bind=True) as pub:
-                # Setup subscriber
-                with zmq.socket(SocketType.SUB, "tcp://localhost:5555", topics=["test"]) as sub:
-                    # Allow time for connection
-                    import time
-                    time.sleep(0.1)
-                    
+            pub_addr = f"tcp://*:{random_port}"
+            sub_addr = f"tcp://localhost:{random_port}"
+
+            with zmq.socket(SocketType.PUB, pub_addr, bind=True) as pub:
+                with zmq.socket(SocketType.SUB, sub_addr, topics=["test"]) as sub:
+                    # Wait for connection with poll
+                    for _ in range(50):  # 5 second timeout
+                        if sub.poll(timeout_ms=100):
+                            break
+                    else:
+                        pytest.fail("Connection timeout")
+
                     # Send message
                     assert pub.send_message("Hello", topic="test")
-                    
+
                     # Receive message
                     message = sub.receive()
                     assert message is not None

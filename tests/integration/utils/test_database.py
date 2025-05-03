@@ -9,6 +9,7 @@ class TestModel(Base):
     
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
+    value = Column(String(100))
 
 @pytest.fixture(scope="function")
 def setup_database():

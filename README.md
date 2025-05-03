@@ -1,21 +1,8 @@
 # GitHub Copilot Instructions
 
-## Project Purpose
-This repository serves as a template for Python-based agent development projects. It provides a collection of utilities, patterns, and infrastructure components specifically designed to accelerate the development of AI agents with:
-
-- Structured LLM interactions via Pydantic models
-- Tool registration and management
-- Distributed computing via ZeroMQ
-- Configurable storage backends
-- Comprehensive logging and monitoring
-- Secure secret management
-- Testing patterns for AI components
-
-The template is intended to provide developers with a solid foundation for building sophisticated AI agents that can be easily extended with domain-specific functionality.
-
 ## Role and Behavior
-- Act as a software engineer specializing in AI agent development
-- Provide code suggestions and explanations for agent functionality
+- Act as a software engineer
+- Provide code suggestions and explanations
 - Use Python and Pydantic for type-safe development
 - Follow best practices for modular design, error handling, and testing
 - Use Sphinx-style docstrings for documentation
@@ -24,42 +11,6 @@ The template is intended to provide developers with a solid foundation for build
 - Avoid content that violates copyrights
 - Keep responses short and impersonal
 - If asked for harmful content, respond with "Sorry, I can't assist with that."
-
-## Recommended Project Structure
-
-The project should follow this structure for clarity and maintainability:
-
-```
-template-python-dev/
-├── agent/                      # Core agent functionality
-│   ├── __init__.py
-│   ├── engine.py               # Main AI engine components
-│   ├── tools/                  # Tool implementations
-│   └── adapters/               # Model provider adapters
-├── utils/                      # Utility modules
-│   ├── __init__.py
-│   ├── logging.py              # Centralized logging configuration
-│   ├── storage.py              # Storage abstractions (cloud, local, etc.)
-│   ├── database.py             # Database connection and session management
-│   ├── messaging/              # Messaging infrastructure (ZMQ, etc.)
-│   └── monitoring.py           # Instrumentation and metrics
-├── schemas/                    # Pydantic data models
-│   ├── __init__.py
-│   ├── agent.py                # Agent-specific models
-│   ├── storage.py              # Storage-related models
-│   └── configs.py              # Configuration models
-├── examples/                   # Example agent implementations
-│   ├── simple_agent.py
-│   ├── distributed_agents.py
-│   └── specialized/            # Domain-specific examples
-├── tests/
-│   ├── unit/                   # Unit tests
-│   │   ├── agent/
-│   │   ├── utils/
-│   │   └── schemas/
-│   └── integration/            # Integration tests
-└── docs/                       # Documentation
-```
 
 ## Code Change Instructions
 
@@ -82,101 +33,15 @@ def new_function():
 // ...existing code...
 ```
 
-# Modular Agent Development Patterns
+# Modular Utils Library Pattern
 
-## 1. Inheritance-Friendly Design Pattern
-
-Utility classes are designed to support inheritance for customization:
-
-- **Protected Extension Points**: Methods prefixed with `_` that subclasses can override
-- **Clear Documentation**: Extension points are documented with override instructions
-- **Sensible Defaults**: Base implementations provide reasonable defaults
-- **Composition Over Inheritance**: Use dependency injection for maximum flexibility
-
-Example extending AI Engine:
-```python
-from utils.ai_engine import AIEngine
-
-class CustomAIEngine(AIEngine):
-    """Custom AI engine with specialized behavior."""
-    
-    def _setup_instrumentation(self):
-        """Override to use custom instrumentation."""
-        # Custom instrumentation logic
-        return MyCustomInstrumentation()
-    
-    def _get_provider_settings(self):
-        """Override to customize provider settings."""
-        base_settings = super()._get_provider_settings()
-        # Add custom settings
-        return base_settings
-        
-    async def specialized_analysis(self, content, **kwargs):
-        """Add new domain-specific methods."""
-        # Custom implementation
-        return await self.analyze(content, **kwargs)
+Example directory structure:
 ```
-
-Example extending Storage:
-```python
-from utils.storage import LocalStorage
-
-class S3BackedStorage(LocalStorage):
-    """Storage implementation with S3 backup capabilities."""
-    
-    def __init__(self, bucket_name, local_path=None):
-        """Initialize with S3 bucket and optional local path."""
-        super().__init__(local_path)
-        self.bucket_name = bucket_name
-        self.s3_client = boto3.client('s3')
-    
-    def _get_default_dirs(self):
-        """Override to customize directory structure."""
-        dirs = super()._get_default_dirs()
-        dirs.extend(['synced', 'backups'])
-        return dirs
-        
-    async def save_json(self, data, path, backup=True):
-        """Override to add S3 backup functionality."""
-        # Save locally first
-        local_path = super().save_json(data, path)
-        
-        # Backup to S3 if requested
-        if backup:
-            self.s3_client.upload_file(local_path, self.bucket_name, path)
-            
-        return local_path
-```
-
-## 2. Agent Architecture Pattern
-
-Implement agents following a modular architecture:
-
-- **Core Engine**: Central decision-making component
-- **Tools Registry**: Mechanism for registering and discovering tools
-- **Adapters**: Interfaces to different LLM providers
-- **Schema Validation**: Input/output validation with Pydantic
-- **Persistent Context**: Memory and state management
-
-Example agent engine structure:
-```python
-class AIEngine:
-    """Core AI agent engine for orchestrating LLM interactions."""
-    
-    def __init__(self, model_name: str, instructions: str):
-        self.model_name = model_name
-        self.instructions = instructions
-        self.tools = {}
-        self.memory = AgentMemory()
-        self.adapter = get_model_adapter(model_name)
-        
-    def add_tool(self, func, name=None, description=None):
-        """Register a new tool with the agent."""
-        # Tool registration logic
-        
-    async def generate(self, prompt: str, output_schema: Type[BaseModel] = None):
-        """Generate a response using the underlying model."""
-        # Generation logic with structured output
+project/
+├── utils/
+│   ├── __init__.py
+│   ├── logging.py         # Centralized logging configuration
+│   ├── storage.py         # Storage abstractions (cloud, local, etc.)
 │   ├── database.py        # Database connection and session management
 │   ├── api_client.py      # Base API client functionality
 │   ├── monitoring.py      # Instrumentation and metrics
@@ -709,74 +574,12 @@ All Google Cloud Platform (GCP) integrations use Application Default Credentials
 - Cloud SQL connections in database.py
 - Local setup: Run `gcloud auth application-default login`
 
-# Extension and Inheritance Patterns
+## Authentication Setup
 
-## 1. Inheritance-Friendly Design
-
-Design utilities with clear extension points to support customization:
-
-- **Protected Methods for Extension**: Prefix helper methods with underscore that subclasses can override
-- **Clear Documentation**: Document extension points and expected behavior
-- **Factory Methods**: Use factory methods that can be overridden to change object creation
-- **Well-Defined Interfaces**: Define clear interfaces for subclasses to implement
-
-Example of an inheritance-friendly class structure:
-
-```python
-class BaseStorage:
-    """Base storage class designed for extension."""
-    
-    def __init__(self, config=None):
-        self.config = config or self._get_default_config()
-        self._initialize()
-    
-    def _get_default_config(self):
-        """Override to customize default configuration."""
-        return {"compress": False, "encrypt": False}
-    
-    def _initialize(self):
-        """Override to customize initialization logic."""
-        pass
-        
-    def save(self, data, path):
-        """High-level save method.
-        
-        The template method pattern - implements the workflow but delegates
-        specific operations to protected methods.
-        """
-        validated_data = self._validate_data(data)
-        processed_data = self._process_data(validated_data)
-        return self._perform_save(processed_data, path)
-    
-    def _validate_data(self, data):
-        """Override to customize data validation."""
-        return data
-        
-    def _process_data(self, data):
-        """Override to customize data processing."""
-        return data
-        
-    def _perform_save(self, data, path):
-        """Override this method to implement the actual save operation."""
-        raise NotImplementedError("Subclasses must implement _perform_save")
-
-# Example subclass
-class CustomStorage(BaseStorage):
-    def _get_default_config(self):
-        # Customize default configuration
-        config = super()._get_default_config()
-        config.update({"compress": True})
-        return config
-        
-    def _process_data(self, data):
-        # Add custom compression
-        data = super()._process_data(data)
-        if self.config["compress"]:
-            return self._compress(data)
-        return data
-        
-    def _perform_save(self, data, path):
-        # Implement the actual save operation
-        # ...
-        return True
-```
+### GitHub Access
+1. Create a personal access token at https://github.com/settings/tokens
+2. Grant repo and read:org scopes
+3. Add to .env file:
+   ```
+   GITHUB_TOKEN=your_token_here
+   ```

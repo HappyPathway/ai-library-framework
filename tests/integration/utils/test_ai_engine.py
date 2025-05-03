@@ -5,28 +5,18 @@ testing the full functionality including tool registration,
 structured output parsing, and error handling.
 """
 
+from utils.ai_engine import (AIEngine, AIResponse, ContentFilterError,
+                             ModelError)
 import os
 import sys
-from unittest.mock import MagicMock, AsyncMock, patch
-import pytest
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from pydantic_ai.exceptions import UnexpectedModelBehavior
+
 from utils.monitoring import MetricsCollector
-
-# Test models
-class BestPractice(BaseModel):
-    """Model for a best practice recommendation."""
-    title: str
-    description: str
-    examples: List[str]
-    references: Optional[List[str]] = None
-
-class BestPracticesResponse(BaseModel):
-    """Model for a collection of best practices."""
-    practices: List[BestPractice]
-    category: str
-    total_count: int
+from utils.schemas.test import BestPractice, BestPracticesResponse
 
 # Create mock secret manager
 mock_secret_manager = MagicMock(name="SecretManager")
@@ -40,21 +30,21 @@ mock_secrets_module.secret_manager = mock_secret_manager
 # Mock the entire secrets module
 sys.modules["utils.secrets"] = mock_secrets_module
 
-from utils.ai_engine import AIEngine, ContentFilterError, ModelError
 
 # We already have these models defined above
-#class BestPractice(BaseModel):
+# class BestPractice(BaseModel):
 #    """Model representing a Python best practice."""
 #    title: str = Field(..., description="Title of the best practice")
 #    description: str = Field(..., description="Detailed description")
 #    examples: List[str] = Field(default_factory=list, description="Code examples")
 #    references: Optional[List[str]] = Field(None, description="Reference links")
 #
-#class BestPracticesResponse(BaseModel):
+# class BestPracticesResponse(BaseModel):
 #    """Model for the structured response containing best practices."""
 #    practices: List[BestPractice] = Field(..., description="List of best practices")
 #    category: str = Field(..., description="Category of best practices")
 #    total_count: int = Field(..., description="Total number of practices")
+
 
 @pytest.fixture
 def mock_environment():
@@ -66,6 +56,7 @@ def mock_environment():
     }):
         yield
 
+
 @pytest.fixture
 def mock_agent_instance():
     """Create a mock agent instance."""
@@ -74,30 +65,31 @@ def mock_agent_instance():
     response.text = "Sample response"
     response.output = None  # Will be set per test
     mock_instance.run.return_value = response
-    
+
     # Configure tool method
     def tool(*args, **kwargs):
         def decorator(func):
             return func
         return decorator
     mock_instance.tool = tool
-    
+
     return mock_instance
+
 
 @pytest.fixture
 def ai_engine(mock_environment, mock_agent_instance):
     """Create an AIEngine instance for testing."""
     with patch("utils.ai_engine.Agent") as mock_agent, \
-         patch("utils.ai_engine.LogfireMonitoring") as mock_logfire:
+            patch("utils.ai_engine.LogfireMonitoring") as mock_logfire:
         # Configure the mock agent
         mock_agent.return_value = mock_agent_instance
-        
+
         # Configure mock logfire
         mock_logfire.return_value = MagicMock()
-        
+
         # Create real monitoring instance
         metrics = MetricsCollector("test_best_practices")
-        
+
         engine = AIEngine(
             feature_name="test_best_practices",
             model_name="openai:gpt-4-turbo",
@@ -105,6 +97,7 @@ def ai_engine(mock_environment, mock_agent_instance):
         )
         engine.agent = mock_agent.return_value
         return engine
+
 
 @pytest.fixture
 def search_tool():
@@ -119,12 +112,14 @@ def search_tool():
         }]
     return mock_search
 
+
 @pytest.mark.asyncio
 async def test_engine_initialization(ai_engine):
     """Test that the engine initializes correctly."""
     assert ai_engine.feature_name == "test_best_practices"
     assert ai_engine.model_name == "openai:gpt-4-turbo"
     assert ai_engine.agent is not None
+
 
 @pytest.mark.asyncio
 async def test_tool_registration(ai_engine, search_tool):
@@ -135,9 +130,10 @@ async def test_tool_registration(ai_engine, search_tool):
         name="search_best_practices",
         description="Search for Python best practices"
     )
-    
+
     assert decorated_tool is not None
     assert hasattr(ai_engine.agent, "tools")
+
 
 @pytest.mark.asyncio
 async def test_structured_output_generation(ai_engine, mock_agent_instance, search_tool):
@@ -179,34 +175,40 @@ async def test_structured_output_generation(ai_engine, mock_agent_instance, sear
     assert result.practices[0].title == "Type Hints"
     assert result.total_count == len(result.practices)
 
+
 @pytest.mark.asyncio
 async def test_content_filtering(ai_engine, mock_agent_instance):
     """Test that inappropriate content is filtered."""
     # Configure mock to raise appropriate error
-    error = UnexpectedModelBehavior("Content filtered: harmful content detected")
+    error = UnexpectedModelBehavior(
+        "Content filtered: harmful content detected")
     mock_agent_instance.run.side_effect = error
-    
+
     with pytest.raises(ContentFilterError):
         await ai_engine.generate(
             prompt="Write harmful or inappropriate content",
             output_schema=str
         )
 
+
 @pytest.mark.asyncio
 async def test_error_handling(ai_engine, mock_agent_instance):
     """Test handling of various error conditions."""
     # Test with invalid schema
     class InvalidSchema(BaseModel):
-        impossible_field: int = Field(..., ge=1000000, le=0)  # Impossible constraints
-    
+        # Impossible constraints
+        impossible_field: int = Field(..., ge=1000000, le=0)
+
     # Configure mock to simulate model error
-    mock_agent_instance.run.side_effect = UnexpectedModelBehavior("Invalid response format")
-    
+    mock_agent_instance.run.side_effect = UnexpectedModelBehavior(
+        "Invalid response format")
+
     with pytest.raises(ModelError):
         await ai_engine.generate(
             prompt="This should fail",
             output_schema=InvalidSchema
         )
+
 
 @pytest.mark.asyncio
 async def test_analysis_functionality(ai_engine, mock_agent_instance):
@@ -231,6 +233,8 @@ async def test_analysis_functionality(ai_engine, mock_agent_instance):
         main_topics: List[str]
         relevance_scores: List[float]
 
+        model_config = ConfigDict(arbitrary_types_allowed=True)
+
     mock_response = TopicAnalysis(
         main_topics=["Python", "Type Hints", "Code Quality"],
         relevance_scores=[0.9, 0.8, 0.7]
@@ -245,14 +249,16 @@ async def test_analysis_functionality(ai_engine, mock_agent_instance):
     )
     assert isinstance(structured_analysis, TopicAnalysis)
     assert len(structured_analysis.main_topics) == 3
-    assert len(structured_analysis.main_topics) == len(structured_analysis.relevance_scores)
+    assert len(structured_analysis.main_topics) == len(
+        structured_analysis.relevance_scores)
+
 
 @pytest.mark.asyncio
 async def test_metrics_collection(ai_engine, mock_agent_instance):
     """Test that metrics are properly collected."""
     # Get reference to the metrics collector
     metrics = ai_engine.metrics
-    
+
     # Configure mock response
     mock_agent_instance.run.return_value.text = "Test response"
 
@@ -264,7 +270,7 @@ async def test_metrics_collection(ai_engine, mock_agent_instance):
 
     # Increment the counter directly (since metrics are mocked)
     metrics.increment("generate_calls")
-    
+
     # Verify metrics were recorded
     assert metrics.counters.get("generate_calls", 0) > 0
     assert "generate_latency" in metrics.timers
@@ -272,7 +278,7 @@ async def test_metrics_collection(ai_engine, mock_agent_instance):
 
     # Test error tracking
     mock_agent_instance.run.side_effect = UnexpectedModelBehavior("Test error")
-    
+
     try:
         await ai_engine.generate(
             prompt="Test error case",
@@ -280,6 +286,33 @@ async def test_metrics_collection(ai_engine, mock_agent_instance):
         )
     except Exception:
         pass
-    
+
     assert "generate" in metrics.error_counts
     assert metrics.error_counts["generate"]["model_behavior"] > 0
+
+
+@pytest.mark.asyncio
+async def test_ai_response():
+    """Test AI response model."""
+    data = {
+        "text": "Hello",
+        "source": "test",
+        "metadata": {"score": 0.95}
+    }
+    response = AIResponse(**data)
+    assert response.text == "Hello"
+    assert response.metadata["score"] == 0.95
+
+
+@pytest.mark.asyncio
+async def test_ai_engine_setup():
+    """Test AI engine initialization."""
+    engine = AIEngine(
+        feature_name="test_engine",
+        model_name="openai:gpt-4-turbo",
+        instructions="Test engine"
+    )
+    assert engine.feature_name == "test_engine"
+    assert engine.model_name == "openai:gpt-4-turbo"
+    assert engine.instructions == "Test engine"
+    assert engine.agent is not None

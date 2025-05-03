@@ -12,7 +12,7 @@ Example Usage:
     from core.monitoring import setup_monitoring
 
     monitoring = setup_monitoring('my_feature')
-    
+
     monitoring.increment('api_calls')
     with monitoring.timer('request_duration'):
         result = make_request()
@@ -23,13 +23,14 @@ Use this module to implement systematic monitoring across your application.
 """
 import time
 from contextlib import contextmanager
-from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from .logging import setup_logging
 
 logger = setup_logging('monitoring')
+
 
 @dataclass
 class MetricsCollector:
@@ -52,7 +53,8 @@ class MetricsCollector:
         if operation not in self.success_counts:
             self.success_counts[operation] = 0
         self.success_counts[operation] += 1
-        logger.debug(f"{self.name} - Success {operation}: {self.success_counts[operation]}")
+        logger.debug(
+            f"{self.name} - Success {operation}: {self.success_counts[operation]}")
 
     def track_success(self, operation: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """Track a successful operation."""
@@ -70,11 +72,11 @@ class MetricsCollector:
             self.error_counts[operation][error] = 0
         self.error_counts[operation][error] += 1
         logger.error(f"{self.name} - Error in {operation}: {error}")
-    
+
     @contextmanager
     def timer(self, metric: str):
         """Time an operation.
-        
+
         Example:
             ```python
             with monitoring.timer('request_duration'):
@@ -95,10 +97,15 @@ class MetricsCollector:
         """Get all collected metrics."""
         return {
             'counters': self.counters,
-            'timers': self.timers, 
+            'timers': self.timers,
             'success_counts': self.success_counts,
             'error_counts': self.error_counts
         }
+
+
+# Alias for backward compatibility with existing code
+Metrics = MetricsCollector
+
 
 def setup_monitoring(
     component_name: str,
@@ -109,7 +116,7 @@ def setup_monitoring(
     Args:
         component_name: Name of the component being monitored
         enable_debug: Whether to enable debug logging
-        
+
     Returns:
         MetricsCollector instance
     """
