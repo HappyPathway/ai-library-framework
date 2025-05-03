@@ -2,6 +2,24 @@
 
 import os
 import sys
+from unittest.mock import MagicMock
+
+
+# Mock external libraries that might not be installed
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+MOCK_MODULES = ['anthropic', 'google.cloud', 'google.cloud.storage', 'google.cloud.secretmanager',
+                'google.cloud.exceptions', 'openai', 'pydantic_ai']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+# Set GOOGLE_CLOUD_PROJECT environment variable to prevent errors
+os.environ['GOOGLE_CLOUD_PROJECT'] = 'mock-project-id'
+
+# Add project root to path
 sys.path.insert(0, os.path.abspath('../..'))
 
 # Project information

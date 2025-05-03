@@ -29,6 +29,15 @@ implementation_plan
 migration_guide
 ```
 
+## User Guides
+
+```{toctree}
+:maxdepth: 2
+:caption: User Guides
+
+guides/logging
+```
+
 ## API Documentation
 
 ```{toctree}

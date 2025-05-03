@@ -98,6 +98,18 @@ template-python-dev/
 │       ├── dev.txt             # Development dependencies
 │       └── prod.txt            # Production dependencies
 └── docs/                       # Documentation
+    ├── Makefile                # For building docs
+    ├── source/                 # All source documentation
+    │   ├── conf.py             # Sphinx configuration
+    │   ├── index.md            # Main landing page
+    │   ├── guides/             # User guides and tutorials
+    │   │   └── logging.md      # Guide for using the logging module
+    │   ├── api/                # API reference documentation
+    │   │   ├── logging.md      # Auto-generated API reference for logging
+    │   │   └── ...             # Other API references
+    │   └── _static/            # Static assets for documentation
+    └── build/                  # Generated output (not in version control)
+        └── html/               # HTML documentation output
 ```
 
 ## Code Change Instructions
