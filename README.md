@@ -605,3 +605,46 @@ All Google Cloud Platform (GCP) integrations use Application Default Credentials
    # or
    ssh-add ~/.ssh/id_ed25519
    ```
+
+## Sharing and Extending the Dev Container
+
+### Sharing the Dev Container
+
+You can share this dev container in several ways:
+
+1. **Git Repository**: 
+   - The dev container configuration is stored in `.devcontainer/`
+   - Anyone who clones the repository gets the same dev environment
+
+2. **Pre-built Docker Image**:
+   - Build and push the container to a registry:
+   ```bash
+   cd .devcontainer
+   ./build-and-push.sh registry/imagename:tag
+   ```
+   - Others can reference it by setting `"image": "registry/imagename:tag"` in their devcontainer.json
+
+### Adding Custom Packages
+
+1. **Via tools.json**:
+   - Edit `.devcontainer/tools.json` to add:
+     - APT packages 
+     - Python packages (beyond requirements.txt)
+     - NPM packages
+     - Custom tools with installation commands
+
+2. **Direct Dockerfile Edits**:
+   - Modify `.devcontainer/Dockerfile` for permanent changes
+   - Add system packages or setup steps
+
+3. **Container Features**:
+   - Add pre-built features in devcontainer.json:
+   ```json
+   "features": {
+     "ghcr.io/devcontainers/features/feature-name:1": {}
+   }
+   ```
+
+4. **Runtime Installation**:
+   - Install packages on demand after container is running
+   - Changes will persist until container is rebuilt

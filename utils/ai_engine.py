@@ -62,6 +62,7 @@ from typing import (Any, AsyncIterator, Dict, Generic, List, Literal, Optional,
 import anthropic
 import google.generativeai as genai
 import openai
+from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelRetry, UnexpectedModelBehavior
 
@@ -141,9 +142,10 @@ class AIEngine(Generic[T]):
 
     # Default usage limits
     usage_limits = UsageLimits(
-        request_limit=500,
-        request_tokens_limit=4000,
-        total_tokens_limit=90000
+        max_requests_per_minute=60,
+        max_input_tokens=8000,
+        max_output_tokens=1024,
+        max_parallel_requests=5
     )
 
     def __init__(
@@ -213,6 +215,55 @@ class AIEngine(Generic[T]):
         """Get the metrics collector."""
         return self.monitoring
 
+    def add_tool(self, func=None, *, name=None, description=None, retries=None):
+        """Register a function as a tool with the agent.
+
+        This method can be used as a decorator or called directly.
+
+        :param func: The function to register as a tool
+        :type func: Callable, optional
+        :param name: Custom name for the tool (defaults to function name)
+        :type name: str, optional
+        :param description: Description of what the tool does
+        :type description: str, optional
+        :param retries: Optional retry count for tool invocations
+        :type retries: Optional[int]
+        :return: The original function or a decorator
+        :rtype: Callable
+
+        Example as decorator:
+            >>> @engine.add_tool
+            ... async def search_database(query: str) -> List[dict]:
+            ...     # Implementation
+            ...     return results
+
+        Example with parameters:
+            >>> @engine.add_tool(
+            ...     name="search_web",
+            ...     description="Search the web for information"
+            ... )
+            ... async def search(query: str) -> List[dict]:
+            ...     # Implementation
+            ...     return [{"title": "Result", "url": "http://..."}]
+
+        Example as function:
+            >>> async def fetch_data(url: str) -> dict:
+            ...     # Implementation
+            ...     return data
+            >>> 
+            >>> engine.add_tool(fetch_data, name="get_data")
+        """
+        # Define the decorator
+        def decorator(func):
+            self.agent.add_tool(
+                func, name=name, description=description, retries=retries or self.retries)
+            return func
+
+        # Handle both decorator and direct call patterns
+        if func is None:
+            return decorator
+        return decorator(func)
+
     def _get_api_key(self) -> str:
         """Get API key for the current provider."""
         key_map = {
@@ -252,6 +303,24 @@ class AIEngine(Generic[T]):
 
         # Configure settings for this instance
         settings = self._create_settings_instance(default_settings)
+
+        # Create model settings
+        model_settings = {
+            "temperature": settings.temperature or 0.7,
+            "max_tokens": settings.max_tokens
+        }
+
+        # Initialize and return the agent
+        self.agent = Agent(
+            model=self.model_name,
+            api_key=api_key,
+            monitoring_callback=instrument,
+            model_settings=model_settings,
+            usage_limits=self.usage_limits,
+            system=self.instructions
+        )
+
+        return self.agent
 
     def _setup_instrumentation(self):
         """Set up instrumentation for the agent.
@@ -296,24 +365,10 @@ class AIEngine(Generic[T]):
         Returns:
             BaseModel: Settings instance
         """
-        return type(default_settings)()
+        settings = type(default_settings)()
         settings.temperature = default_settings.temperature
         settings.max_tokens = default_settings.max_tokens
-
-        # Create model settings
-        model_settings = {
-            "temperature": settings.temperature or 0.7,
-            "max_tokens": settings.max_tokens
-        }
-
-        return Agent(
-            model=self.model_name,
-            api_key=api_key,
-            monitoring_callback=instrument,
-            model_settings=model_settings,
-            usage_limits=self.usage_limits,
-            system=self.instructions
-        )
+        return settings
 
     def _get_provider_specific_settings(self, settings: Optional[BaseModel]) -> dict:
         """Get provider-specific settings."""
@@ -434,6 +489,66 @@ class AIEngine(Generic[T]):
                 self.monitoring.track_error("generate", str(e))
             raise AIEngineError(f"Generation failed: {str(e)}")
 
+    async def classify(
+        self,
+        content: str,
+        *,
+        categories: List[str],
+        multi_label: bool = False,
+        system: Optional[str] = None
+    ) -> Union[str, List[str]]:
+        """Classify content into predefined categories.
+
+        This is an extension point that demonstrates how to build specialized methods
+        on top of the base generation functionality.
+
+        :param content: Content to classify
+        :type content: str
+        :param categories: List of possible classification categories
+        :type categories: List[str]
+        :param multi_label: Whether multiple labels can be assigned
+        :type multi_label: bool
+        :param system: Optional system prompt
+        :type system: Optional[str]
+        :return: Selected category or categories
+        :rtype: Union[str, List[str]]
+        :raises AIEngineError: If classification fails
+
+        Example:
+            >>> category = await engine.classify(
+            ...     content="I love this product!",
+            ...     categories=["positive", "negative", "neutral"]
+            ... )
+            >>> print(category)
+            positive
+        """
+        try:
+            # Build prompt for classification
+            categories_str = ", ".join(categories)
+            instruction = f"Classify the following text into {'one of' if not multi_label else 'one or more of'} these categories: {categories_str}."
+            if multi_label:
+                instruction += " Return the categories as a comma-separated list."
+
+            # Set up system prompt
+            sys_prompt = system or f"You are a text classifier. {instruction} Only respond with the category name(s)."
+
+            # Generate classification
+            result = await self.generate(
+                prompt=content,
+                system=sys_prompt,
+                temperature=0.1  # Lower temperature for more deterministic classification
+            )
+
+            # Process result
+            if multi_label:
+                # Split by commas and strip whitespace
+                return [cat.strip() for cat in result.split(',')]
+            return result.strip()
+
+        except Exception as e:
+            self.monitoring.track_error("classify", str(e))
+            raise AIEngineError(f"Classification failed: {str(e)}")
+
     async def analyze(
         self,
         content: str,
@@ -550,56 +665,23 @@ class AIEngine(Generic[T]):
         """
         try:
             # Use str as output type for unstructured text
+            # Note: max_length is not directly supported in generate()
+            # but can be handled in the prompt or system instructions
+            system = kwargs.pop('system', None)
+            if max_length:
+                system_prefix = f"Keep your response under {max_length} characters. "
+                system = system_prefix + (system or "")
+
             result = await self.generate(
                 prompt=prompt,
-                output_schema=str,
-                model_settings={
-                    'max_length': max_length} if max_length else None,
+                output_schema=None,  # We want raw text, not structured output
+                system=system,
                 **kwargs
             )
             return result
         except Exception as e:
             logger.error(f"Error generating text: {str(e)}")
             return None
-
-    def add_tool(
-        self,
-        func: callable,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        retries: Optional[int] = None
-    ) -> callable:
-        """Register a tool function with the agent.
-
-        :param func: Function to register as a tool
-        :type func: callable
-        :param name: Optional custom name for the tool
-        :type name: Optional[str]
-        :param description: Optional description of the tool's functionality
-        :type description: Optional[str]
-        :param retries: Optional retry count for tool invocations
-        :type retries: Optional[int]
-        :return: Decorated function that can be used as a tool
-        :rtype: callable
-
-        Example:
-            >>> @engine.add_tool(
-            ...     name="search_web",
-            ...     description="Search the web for information"
-            ... )
-            ... async def search(query: str) -> List[dict]:
-            ...     # Implementation
-            ...     return [{"title": "Result", "url": "http://..."}]
-            >>> 
-            >>> result = await engine.generate(
-            ...     prompt="Find information about Python"
-            ... )
-        """
-        return self.agent.tool(
-            name=name,
-            description=description,
-            retries=retries or self.retries
-        )(func)
 
     def add_system_prompt(self, func: callable) -> callable:
         """Register a system prompt function.

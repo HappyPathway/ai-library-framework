@@ -435,19 +435,19 @@ class ZMQManager:
 
     def _create_context(self) -> zmq.Context:
         """Create a ZMQ context.
-        
+
         Override this method in subclasses to customize context creation.
-        
+
         Returns:
             zmq.Context: ZMQ context
         """
         return zmq.Context()
-        
+
     def _create_metrics(self) -> MetricsCollector:
         """Create a metrics collector.
-        
+
         Override this method in subclasses to customize metrics collection.
-        
+
         Returns:
             MetricsCollector: Metrics collector
         """
@@ -460,10 +460,10 @@ class ZMQManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Clean up ZMQ context."""
         self._cleanup_context()
-        
+
     def _cleanup_context(self) -> None:
         """Clean up the ZMQ context.
-        
+
         Override this method in subclasses to customize context cleanup.
         """
         if hasattr(self, 'context') and self.context:
@@ -506,17 +506,17 @@ class ZMQManager:
 
             with self._create_socket_instance(config) as socket:
                 yield socket
-                
+
     def _create_config(self, socket_type: SocketType, address: str, config_kwargs: dict) -> ZMQConfig:
         """Create a socket configuration.
-        
+
         Override this method in subclasses to customize configuration creation.
-        
+
         Args:
             socket_type: The type of socket to create
             address: The address to bind/connect to
             config_kwargs: Additional configuration options
-            
+
         Returns:
             ZMQConfig: Socket configuration
         """
@@ -525,15 +525,15 @@ class ZMQManager:
             address=address,
             **config_kwargs
         )
-        
+
     def _create_socket_instance(self, config: ZMQConfig) -> ZMQSocket:
         """Create a socket instance.
-        
+
         Override this method in subclasses to customize socket instance creation.
-        
+
         Args:
             config: Socket configuration
-            
+
         Returns:
             ZMQSocket: Socket instance
         """

@@ -156,22 +156,22 @@ Example:
     def save_json(self, data: Union[Dict, List], filename: str) -> bool:
         """Save Data as JSON File
 
-This method saves a dictionary as a JSON file in the specified location.
+        This method saves a dictionary as a JSON file in the specified location.
 
-Args:
-    data (Dict): The data to save.
-    filename (str): The name of the JSON file.
+        Args:
+            data (Dict): The data to save.
+            filename (str): The name of the JSON file.
 
-Returns:
-    bool: True if the file was saved successfully, False otherwise.
+        Returns:
+            bool: True if the file was saved successfully, False otherwise.
 
-Example:
-    ```python
-    storage = LocalStorage()
-    success = storage.save_json({"key": "value"}, "data.json")
-    print(success)  # Outputs: True
-    ```
-"""
+        Example:
+            ```python
+            storage = LocalStorage()
+            success = storage.save_json({"key": "value"}, "data.json")
+            print(success)  # Outputs: True
+            ```
+        """
         try:
             path = self.get_path(filename)
             with open(path, 'w') as f:
@@ -234,26 +234,6 @@ Example:
         except Exception as e:
             logger.error(f"Error loading JSON {filename}: {str(e)}")
             return None
-
-    def save_json(self, data: Union[Dict, List], filename: str) -> bool:
-        """Save JSON data to file.
-
-        Args:
-            data: The data to save
-            filename: Name of the file to save to
-
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        try:
-            path = self.get_path(filename)
-            with open(path, 'w') as f:
-                json.dump(data, f, indent=2)
-            logger.info(f"Saved JSON to {filename}")
-            return True
-        except Exception as e:
-            logger.error(f"Error saving JSON {filename}: {str(e)}")
-            return False
 
 # Initialize default storage after class definition
 

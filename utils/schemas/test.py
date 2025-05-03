@@ -25,7 +25,7 @@ class BestPractice(BaseModel):
     )
 
     @field_validator('importance')
-    def validate_importance(cls, v):
+    def validate_importance(self, v):
         """Validate importance is between 1 and 10."""
         if not 1 <= v <= 10:
             raise ValueError("Importance must be between 1 and 10")

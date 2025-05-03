@@ -36,18 +36,26 @@ class GeminiSafetySettings(BaseModel):
 
 class GeminiSettings(BaseModel):
     """Configuration settings for Gemini AI models."""
+    temperature: float = 0.7
+    max_tokens: int = 1024
     safety_settings: Optional[List[GeminiSafetySettings]] = None
+    generation_config: Optional[Dict[str, Any]] = None
 
 
 class OpenAISettings(BaseModel):
     """Configuration settings for OpenAI models."""
+    temperature: float = 0.7
+    max_tokens: int = 1024
     frequency_penalty: Optional[float] = None
     presence_penalty: Optional[float] = None
     logit_bias: Optional[Dict[str, float]] = None
+    stop: Optional[List[str]] = None
 
 
 class AnthropicSettings(BaseModel):
     """Configuration settings for Anthropic models."""
+    temperature: float = 0.7
+    max_tokens: int = 1024
     top_k: Optional[int] = None
     top_p: Optional[float] = None
 

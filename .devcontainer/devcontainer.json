@@ -55,9 +55,13 @@
     },
     "features": {
         "ghcr.io/devcontainers/features/git:1": {},
-        "ghcr.io/devcontainers/features/github-cli:1": {}
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.11"
+        }
     },
-    "postCreateCommand": "pip install -r requirements.txt && chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa ~/.ssh/id_ed25519 ~/.ssh/config 2>/dev/null || true && chmod 644 ~/.ssh/*.pub 2>/dev/null || true",
+    "postCreateCommand": "pip install -r requirements.txt && chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa ~/.ssh/id_ed25519 ~/.ssh/config 2>/dev/null || true && chmod 644 ~/.ssh/*.pub 2>/dev/null || true && sudo -E .devcontainer/install-tools.sh",
     "postAttachCommand": "eval $(ssh-agent) && ssh-add ~/.ssh/id_rsa ~/.ssh/id_ed25519 2>/dev/null || true",
     "remoteUser": "vscode"
 }
