@@ -583,3 +583,25 @@ All Google Cloud Platform (GCP) integrations use Application Default Credentials
    ```
    GITHUB_TOKEN=your_token_here
    ```
+
+### SSH Configuration
+1. The dev container is configured to mount your local SSH directory (`~/.ssh`) into the container
+2. SSH keys and configuration will be available at `/home/vscode/.ssh` within the container
+3. Permissions are automatically set during container creation:
+   - Directory: 700 (rwx------)
+   - Private keys: 600 (rw-------)
+   - Public keys: 644 (rw-r--r--)
+4. SSH agent will be started automatically when you attach to the container
+5. If you're having issues with SSH in the container:
+   ```bash
+   # Check permissions
+   ls -la ~/.ssh
+   
+   # Start SSH agent manually
+   eval $(ssh-agent)
+   
+   # Add your keys
+   ssh-add ~/.ssh/id_rsa
+   # or
+   ssh-add ~/.ssh/id_ed25519
+   ```
