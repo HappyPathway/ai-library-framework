@@ -1,0 +1,14 @@
+{
+    "python.defaultInterpreterPath": "/usr/local/python/current/bin/python3",
+    "python.analysis.extraPaths": [
+        "/usr/local/python/current/lib/python3.12/site-packages",
+        "/usr/local/python/3.12.10/lib/python3.12/site-packages"
+    ],
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "python.analysis.autoImportCompletions": true
+}

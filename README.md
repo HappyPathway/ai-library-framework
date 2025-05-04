@@ -1,116 +1,16 @@
 # GitHub Copilot Instructions
 
-## Project Purpose
-This repository serves as a template for Python-based agent development projects. It provides a collection of utilities, patterns, and infrastructure components specifically designed to accelerate the development of AI agents with:
-
-- Structured LLM interactions via Pydantic models
-- Tool registration and management
-- Distributed computing via ZeroMQ
-- Configurable storage backends
-- Comprehensive logging and monitoring
-- Secure secret management
-- Testing patterns for AI components
-
-The template is intended to provide developers with a solid foundation for building sophisticated AI agents that can be easily extended with domain-specific functionality.
-
 ## Role and Behavior
-- Act as a software engineer specializing in AI agent development
-- Provide code suggestions and explanations for agent functionality
+- Act as a software engineer
+- Provide code suggestions and explanations
 - Use Python and Pydantic for type-safe development
 - Follow best practices for modular design, error handling, and testing
 - Use Sphinx-style docstrings for documentation
 - Use Pydantic-AI for structured LLM interactions
-- Use a virtual environment for Python projects
+- Use dev container for consistent development environment
 - Avoid content that violates copyrights
 - Keep responses short and impersonal
 - If asked for harmful content, respond with "Sorry, I can't assist with that."
-
-## Recommended Project Structure
-
-The project should follow this structure for clarity and maintainability:
-
-```
-template-python-dev/
-├── agent/                      # Core agent functionality (future feature)
-├── utils/                      # Core utilities
-│   ├── __init__.py
-│   ├── core/                   # Core functionality
-│   │   ├── __init__.py
-│   │   ├── logging.py          # Centralized logging configuration
-│   │   └── monitoring.py       # Instrumentation and metrics
-│   ├── ai/                     # AI-related functionality
-│   │   ├── __init__.py
-│   │   ├── engine.py           # Core AI engine (refactored from ai_engine.py)
-│   │   └── tools/              # AI tools implementations
-│   ├── storage/                # Storage-related functionality
-│   │   ├── __init__.py
-│   │   ├── local.py            # Local storage implementation
-│   │   └── setup.py            # Storage setup functionality
-│   ├── cloud/                  # Cloud-related functionality
-│   │   ├── __init__.py
-│   │   ├── gcs.py              # GCS operations
-│   │   └── secrets.py          # Cloud secrets management
-│   ├── messaging/              # Messaging infrastructure
-│   │   ├── __init__.py
-│   │   ├── zmq.py              # ZMQ implementation
-│   │   └── devices.py          # ZMQ devices implementation
-│   ├── database.py             # Database functionality
-│   ├── github_client.py        # GitHub API client
-│   └── web_scraper.py          # Web scraping functionality
-├── schemas/                    # All Pydantic models
-│   ├── __init__.py
-│   ├── ai.py                   # AI-related schemas
-│   ├── storage.py              # Storage-related schemas
-│   ├── database.py             # Database-related schemas
-│   ├── messaging/              # Messaging schemas
-│   │   ├── __init__.py
-│   │   ├── zmq.py
-│   │   └── devices.py
-│   └── api/                    # API-related schemas
-│       ├── __init__.py
-│       └── github.py           # GitHub API schemas
-├── examples/                   # Example agent implementations
-│   ├── simple_agent.py
-│   ├── distributed_agents.py
-│   └── specialized/            # Domain-specific examples
-├── tests/                      # Test organization
-│   ├── __init__.py
-│   ├── conftest.py             # Common test fixtures
-│   ├── unit/                   # All unit tests
-│   │   ├── __init__.py
-│   │   ├── utils/              # Unit tests for utils modules
-│   │   │   ├── __init__.py
-│   │   │   ├── ai/             # Tests for AI modules
-│   │   │   ├── core/           # Tests for core modules
-│   │   │   ├── storage/        # Tests for storage modules
-│   │   │   ├── cloud/          # Tests for cloud modules
-│   │   │   └── messaging/      # Tests for messaging modules
-│   │   └── schemas/            # Unit tests for schemas
-│   └── integration/            # All integration tests
-│       ├── __init__.py
-│       ├── conftest.py         # Integration-specific fixtures
-│       └── utils/              # Integration tests for utils modules
-├── setup/                      # Development environment setup
-│   ├── __init__.py
-│   ├── dev_setup.py            # Development environment setup
-│   └── requirements/           # Split requirements files
-│       ├── base.txt            # Core dependencies
-│       ├── dev.txt             # Development dependencies
-│       └── prod.txt            # Production dependencies
-└── docs/                       # Documentation
-    ├── Makefile                # For building docs
-    ├── source/                 # All source documentation
-    │   ├── conf.py             # Sphinx configuration
-    │   ├── index.md            # Main landing page
-    │   ├── guides/             # User guides and tutorials
-    │   │   └── logging.md      # Guide for using the logging module
-    │   ├── api/                # API reference documentation
-    │   │   ├── logging.md      # Auto-generated API reference for logging
-    │   │   └── ...             # Other API references
-    │   └── _static/            # Static assets for documentation
-    └── build/                  # Generated output (not in version control)
-        └── html/               # HTML documentation output
-```
 
 ## Code Change Instructions
 
@@ -126,108 +26,22 @@ When suggesting code changes:
 ### Example Format
 
 ```python
-# filepath: /path/to/file.py
-# ...existing code...
+// filepath: /path/to/file.py
+// ...existing code...
 def new_function():
     pass
-# ...existing code...
+// ...existing code...
 ```
 
-# Modular Agent Development Patterns
+# Modular Utils Library Pattern
 
-## 1. Inheritance-Friendly Design Pattern
-
-Utility classes are designed to support inheritance for customization:
-
-- **Protected Extension Points**: Methods prefixed with `_` that subclasses can override
-- **Clear Documentation**: Extension points are documented with override instructions
-- **Sensible Defaults**: Base implementations provide reasonable defaults
-- **Composition Over Inheritance**: Use dependency injection for maximum flexibility
-
-Example extending AI Engine:
-```python
-from utils.ai_engine import AIEngine
-
-class CustomAIEngine(AIEngine):
-    """Custom AI engine with specialized behavior."""
-    
-    def _setup_instrumentation(self):
-        """Override to use custom instrumentation."""
-        # Custom instrumentation logic
-        return MyCustomInstrumentation()
-    
-    def _get_provider_settings(self):
-        """Override to customize provider settings."""
-        base_settings = super()._get_provider_settings()
-        # Add custom settings
-        return base_settings
-        
-    async def specialized_analysis(self, content, **kwargs):
-        """Add new domain-specific methods."""
-        # Custom implementation
-        return await self.analyze(content, **kwargs)
+Example directory structure:
 ```
-
-Example extending Storage:
-```python
-from utils.storage import LocalStorage
-
-class S3BackedStorage(LocalStorage):
-    """Storage implementation with S3 backup capabilities."""
-    
-    def __init__(self, bucket_name, local_path=None):
-        """Initialize with S3 bucket and optional local path."""
-        super().__init__(local_path)
-        self.bucket_name = bucket_name
-        self.s3_client = boto3.client('s3')
-    
-    def _get_default_dirs(self):
-        """Override to customize directory structure."""
-        dirs = super()._get_default_dirs()
-        dirs.extend(['synced', 'backups'])
-        return dirs
-        
-    async def save_json(self, data, path, backup=True):
-        """Override to add S3 backup functionality."""
-        # Save locally first
-        local_path = super().save_json(data, path)
-        
-        # Backup to S3 if requested
-        if backup:
-            self.s3_client.upload_file(local_path, self.bucket_name, path)
-            
-        return local_path
-```
-
-## 2. Agent Architecture Pattern
-
-Implement agents following a modular architecture:
-
-- **Core Engine**: Central decision-making component
-- **Tools Registry**: Mechanism for registering and discovering tools
-- **Adapters**: Interfaces to different LLM providers
-- **Schema Validation**: Input/output validation with Pydantic
-- **Persistent Context**: Memory and state management
-
-Example agent engine structure:
-```python
-class AIEngine:
-    """Core AI agent engine for orchestrating LLM interactions."""
-    
-    def __init__(self, model_name: str, instructions: str):
-        self.model_name = model_name
-        self.instructions = instructions
-        self.tools = {}
-        self.memory = AgentMemory()
-        self.adapter = get_model_adapter(model_name)
-        
-    def add_tool(self, func, name=None, description=None):
-        """Register a new tool with the agent."""
-        # Tool registration logic
-        
-    async def generate(self, prompt: str, output_schema: Type[BaseModel] = None):
-        """Generate a response using the underlying model."""
-        # Generation logic with structured output
+project/
+├── utils/
+│   ├── __init__.py
+│   ├── logging.py         # Centralized logging configuration
+│   ├── storage.py         # Storage abstractions (cloud, local, etc.)
 │   ├── database.py        # Database connection and session management
 │   ├── api_client.py      # Base API client functionality
 │   ├── monitoring.py      # Instrumentation and metrics
@@ -696,50 +510,42 @@ class ContentAnalyzer:
             raise AIError(f"Content analysis failed: {str(e)}")
 ```
 
-### 11. Using a Virtual Environment and Managing Dependencies
+### 11. Using Dev Containers and Managing Dependencies
 
-To ensure a clean and isolated Python environment, always use a virtual environment for your project.
+This project uses dev containers to provide a consistent development environment across machines.
 
-#### Setting Up a Virtual Environment
+#### Dev Container Benefits
 
-1. Create a virtual environment:
+1. Consistent development environments for all contributors
+2. All dependencies pre-installed in the container
+3. No need to manage separate virtual environments
+4. Isolated from the host system
+5. Reproducible builds and testing
+
+#### Getting Started with Dev Containers
+
+1. Install Docker and the Dev Containers extension for VS Code
+2. Open the project in VS Code
+3. When prompted, click "Reopen in Container" or use the command palette to select "Dev Containers: Reopen in Container"
+
+#### Managing Dependencies in `requirements.txt`
+
+1. Add a new dependency to `requirements.txt`:
    ```bash
-   python3 -m venv venv
+   echo "package-name==version" >> requirements.txt
    ```
 
-2. Activate the virtual environment:
-   - On macOS/Linux:
-     ```bash
-     source venv/bin/activate
-     ```
-   - On Windows:
-     ```bash
-     venv\Scripts\activate
-     ```
-
-3. Upgrade `pip` to the latest version:
-   ```bash
-   pip install --upgrade pip
-   ```
-
-#### Adding Dependencies to `requirements.txt`
-
-1. Install a new dependency:
-   ```bash
-   pip install <package-name>
-   ```
-
-2. Add the installed dependency to `requirements.txt`:
-   ```bash
-   pip freeze > requirements.txt
-   ```
-
-3. Install all dependencies from `requirements.txt`:
+2. Install dependencies from `requirements.txt`:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Ensure `requirements.txt` is committed to version control to maintain consistency across environments.
+3. Update all dependencies in the container:
+   ```bash
+   pip install -r requirements.txt --upgrade
+   ```
+
+4. Ensure `requirements.txt` is committed to version control to maintain consistency across environments and container rebuilds.
 
 ### Core Dependencies
 
@@ -760,74 +566,77 @@ All Google Cloud Platform (GCP) integrations use Application Default Credentials
 - Cloud SQL connections in database.py
 - Local setup: Run `gcloud auth application-default login`
 
-# Extension and Inheritance Patterns
+## Authentication Setup
 
-## 1. Inheritance-Friendly Design
+### GitHub Access
+1. Create a personal access token at https://github.com/settings/tokens
+2. Grant repo and read:org scopes
+3. Add to .env file:
+   ```
+   GITHUB_TOKEN=your_token_here
+   ```
 
-Design utilities with clear extension points to support customization:
+### SSH Configuration
+1. The dev container is configured to mount your local SSH directory (`~/.ssh`) into the container
+2. SSH keys and configuration will be available at `/home/vscode/.ssh` within the container
+3. Permissions are automatically set during container creation:
+   - Directory: 700 (rwx------)
+   - Private keys: 600 (rw-------)
+   - Public keys: 644 (rw-r--r--)
+4. SSH agent will be started automatically when you attach to the container
+5. If you're having issues with SSH in the container:
+   ```bash
+   # Check permissions
+   ls -la ~/.ssh
+   
+   # Start SSH agent manually
+   eval $(ssh-agent)
+   
+   # Add your keys
+   ssh-add ~/.ssh/id_rsa
+   # or
+   ssh-add ~/.ssh/id_ed25519
+   ```
 
-- **Protected Methods for Extension**: Prefix helper methods with underscore that subclasses can override
-- **Clear Documentation**: Document extension points and expected behavior
-- **Factory Methods**: Use factory methods that can be overridden to change object creation
-- **Well-Defined Interfaces**: Define clear interfaces for subclasses to implement
+## Sharing and Extending the Dev Container
 
-Example of an inheritance-friendly class structure:
+### Sharing the Dev Container
 
-```python
-class BaseStorage:
-    """Base storage class designed for extension."""
-    
-    def __init__(self, config=None):
-        self.config = config or self._get_default_config()
-        self._initialize()
-    
-    def _get_default_config(self):
-        """Override to customize default configuration."""
-        return {"compress": False, "encrypt": False}
-    
-    def _initialize(self):
-        """Override to customize initialization logic."""
-        pass
-        
-    def save(self, data, path):
-        """High-level save method.
-        
-        The template method pattern - implements the workflow but delegates
-        specific operations to protected methods.
-        """
-        validated_data = self._validate_data(data)
-        processed_data = self._process_data(validated_data)
-        return self._perform_save(processed_data, path)
-    
-    def _validate_data(self, data):
-        """Override to customize data validation."""
-        return data
-        
-    def _process_data(self, data):
-        """Override to customize data processing."""
-        return data
-        
-    def _perform_save(self, data, path):
-        """Override this method to implement the actual save operation."""
-        raise NotImplementedError("Subclasses must implement _perform_save")
+You can share this dev container in several ways:
 
-# Example subclass
-class CustomStorage(BaseStorage):
-    def _get_default_config(self):
-        # Customize default configuration
-        config = super()._get_default_config()
-        config.update({"compress": True})
-        return config
-        
-    def _process_data(self, data):
-        # Add custom compression
-        data = super()._process_data(data)
-        if self.config["compress"]:
-            return self._compress(data)
-        return data
-        
-    def _perform_save(self, data, path):
-        # Implement the actual save operation
-        # ...
-        return True
-```
+1. **Git Repository**: 
+   - The dev container configuration is stored in `.devcontainer/`
+   - Anyone who clones the repository gets the same dev environment
+
+2. **Pre-built Docker Image**:
+   - Build and push the container to a registry:
+   ```bash
+   cd .devcontainer
+   ./build-and-push.sh registry/imagename:tag
+   ```
+   - Others can reference it by setting `"image": "registry/imagename:tag"` in their devcontainer.json
+
+### Adding Custom Packages
+
+1. **Via tools.json**:
+   - Edit `.devcontainer/tools.json` to add:
+     - APT packages 
+     - Python packages (beyond requirements.txt)
+     - NPM packages
+     - Custom tools with installation commands
+
+2. **Direct Dockerfile Edits**:
+   - Modify `.devcontainer/Dockerfile` for permanent changes
+   - Add system packages or setup steps
+
+3. **Container Features**:
+   - Add pre-built features in devcontainer.json:
+   ```json
+   "features": {
+     "ghcr.io/devcontainers/features/feature-name:1": {}
+   }
+   ```
+
+4. **Runtime Installation**:
+   - Install packages on demand after container is running
+   - Changes will persist until container is rebuilt
