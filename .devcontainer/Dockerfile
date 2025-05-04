@@ -17,6 +17,7 @@ RUN apt-get update \
     zsh \
     jq \
     build-essential \
+    redis-server \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and set environment directory
@@ -34,7 +35,8 @@ RUN pip install --no-cache-dir \
     pytest \
     pytest-cov \
     isort \
-    python-dotenv
+    python-dotenv \
+    redis
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog

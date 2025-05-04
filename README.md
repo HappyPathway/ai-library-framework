@@ -510,7 +510,78 @@ class ContentAnalyzer:
             raise AIError(f"Content analysis failed: {str(e)}")
 ```
 
-### 11. Using Dev Containers and Managing Dependencies
+### 11. Redis Messaging for Agent Communication
+
+This project includes Redis-based messaging utilities for building distributed agent systems that can communicate efficiently.
+
+#### Key Redis Components
+
+- **RedisClient/AsyncRedisClient**: Base Redis clients with synchronous and asynchronous APIs
+- **RedisPubSub**: Simple publish-subscribe pattern for broadcasting messages
+- **RedisStream**: Reliable, ordered message delivery with consumer groups
+- **RedisLock**: Distributed locks for coordination between agents
+- **RedisRateLimiter**: Rate limiting for controlled access to resources
+
+#### Example: Agent Communication with Redis PubSub
+
+```python
+from utils.messaging.redis import RedisPubSub
+
+# Publisher (Agent 1)
+pubsub = RedisPubSub()
+pubsub.publish("commands", {
+    "action": "process_document",
+    "document_id": "doc-123",
+    "priority": "high"
+})
+
+# Subscriber (Agent 2)
+def command_handler(message):
+    if message["action"] == "process_document":
+        # Process the document
+        document = load_document(message["document_id"])
+        result = process_document(document)
+        
+        # Publish the result
+        pubsub.publish("results", {
+            "document_id": message["document_id"],
+            "status": "completed",
+            "result": result
+        })
+
+pubsub = RedisPubSub()
+pubsub.subscribe("commands", command_handler)
+pubsub.run()  # Blocking call to process messages
+```
+
+#### Example: Workflow Processing with Redis Streams
+
+```python
+from utils.messaging.redis import RedisStream
+
+# Task producer
+stream = RedisStream("document_tasks")
+stream.add({
+    "document_id": "doc-123",
+    "operation": "analyze",
+    "timestamp": "2025-05-04T10:30:00Z"
+})
+
+# Task consumer
+worker = RedisStream("document_tasks")
+worker.create_consumer_group("workers", "worker-1")
+
+def process_task(task):
+    # Process the task
+    print(f"Processing document {task['document_id']}")
+    return True  # Mark as successfully processed
+
+worker.process_messages(process_task)
+```
+
+For more details, see the [Redis Messaging Guide](docs/source/guides/redis.md) and the [example files](examples/).
+
+### 12. Using Dev Containers and Managing Dependencies
 
 This project uses dev containers to provide a consistent development environment across machines.
 
