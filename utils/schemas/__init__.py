@@ -5,6 +5,9 @@ Each module contains models related to a specific domain or functionality.
 """
 
 from .ai import AIResponse, UsageLimits
+from .mcp import (AssistantMessage, DuplicateHandling, MCPSettings, Message,
+                  PromptMetadata, ResourceMetadata, SystemMessage,
+                  ToolMetadata, UserMessage)
 from .storage import StorageConfig
 # Import commonly used models for convenience
 from .zmq import MessageEnvelope, SocketType, ZMQConfig
@@ -19,4 +22,7 @@ __all__ = [
     "StorageConfig",
     # AI models
     "AIResponse", "UsageLimits",
+    # MCP models
+    "MCPSettings", "ToolMetadata", "ResourceMetadata", "PromptMetadata",
+    "DuplicateHandling", "Message", "UserMessage", "AssistantMessage", "SystemMessage",
 ]

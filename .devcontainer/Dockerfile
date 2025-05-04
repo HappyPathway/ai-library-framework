@@ -1,5 +1,5 @@
 # Use Python 3.11 as base image
-FROM mcr.microsoft.com/devcontainers/python:3.11
+FROM mcr.microsoft.com/devcontainers/python:3.12
 
 # Prevent apt from showing prompts
 ENV DEBIAN_FRONTEND=noninteractive

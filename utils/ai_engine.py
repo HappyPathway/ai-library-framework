@@ -56,21 +56,17 @@ Note:
 import asyncio
 import os
 from enum import Enum
-from typing import (Any, AsyncIterator, Dict, Generic, List, Literal, Optional,
-                    Type, TypeVar, Union)
+from typing import (Any, AsyncIterator, Generic, List, Literal, Optional, Type,
+                    TypeVar, Union)
 
-import anthropic
-import google.generativeai as genai
-import openai
 from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelRetry, UnexpectedModelBehavior
 
 from .logging import setup_logging
 from .monitoring import MetricsCollector, setup_monitoring
-from .schemas.ai import (AIResponse, AnthropicSettings, GeminiSafetySettings,
+from .schemas.ai import (AnthropicSettings, GeminiSafetySettings,
                          GeminiSettings, OpenAISettings, UsageLimits)
-from .secrets import secret_manager
 
 logger = setup_logging(__name__)
 
@@ -465,7 +461,19 @@ class AIEngine(Generic[T]):
         except ModelRetry as e:
             # Handle rate limits with exponential backoff
             self.monitoring.track_error("generate", "rate_limit")
-            await asyncio.sleep(e.retry_after)
+            # Use a default retry delay of 1 second or extract from message if possible
+            retry_delay = 1.0  # Default delay in seconds
+            # Try to extract a delay value from the error message if it's there
+            try:
+                import re
+                delay_match = re.search(
+                    r'retry after (\d+(?:\.\d+)?)', str(e).lower())
+                if delay_match:
+                    retry_delay = float(delay_match.group(1))
+            except Exception:
+                pass  # Use default delay if extraction fails
+
+            await asyncio.sleep(retry_delay)
             return await self.generate(
                 prompt,
                 output_schema=output_schema,
@@ -478,16 +486,16 @@ class AIEngine(Generic[T]):
             # Map to appropriate error type
             if "content filtered" in str(e).lower():
                 self.monitoring.track_error("generate", "content_filtered")
-                raise ContentFilterError(str(e))
+                raise ContentFilterError(str(e)) from e
             self.monitoring.track_error("generate", "model_behavior")
-            raise ModelError(f"Unexpected model behavior: {str(e)}")
+            raise ModelError(f"Unexpected model behavior: {str(e)}") from e
 
         except Exception as e:
             if hasattr(e, "schema_error"):
                 self.monitoring.track_error("generate", "schema_error")
             else:
                 self.monitoring.track_error("generate", str(e))
-            raise AIEngineError(f"Generation failed: {str(e)}")
+            raise AIEngineError(f"Generation failed: {str(e)}") from e
 
     async def classify(
         self,
@@ -547,7 +555,7 @@ class AIEngine(Generic[T]):
 
         except Exception as e:
             self.monitoring.track_error("classify", str(e))
-            raise AIEngineError(f"Classification failed: {str(e)}")
+            raise AIEngineError(f"Classification failed: {str(e)}") from e
 
     async def analyze(
         self,
@@ -680,7 +688,7 @@ class AIEngine(Generic[T]):
             )
             return result
         except Exception as e:
-            logger.error(f"Error generating text: {str(e)}")
+            logger.error("Error generating text: %s", str(e))
             return None
 
     def add_system_prompt(self, func: callable) -> callable:

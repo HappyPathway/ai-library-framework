@@ -7,7 +7,7 @@
 - Follow best practices for modular design, error handling, and testing
 - Use Sphinx-style docstrings for documentation
 - Use Pydantic-AI for structured LLM interactions
-- Use a virtual environment for Python projects
+- Use dev container for consistent development environment
 - Avoid content that violates copyrights
 - Keep responses short and impersonal
 - If asked for harmful content, respond with "Sorry, I can't assist with that."
@@ -510,50 +510,42 @@ class ContentAnalyzer:
             raise AIError(f"Content analysis failed: {str(e)}")
 ```
 
-### 11. Using a Virtual Environment and Managing Dependencies
+### 11. Using Dev Containers and Managing Dependencies
 
-To ensure a clean and isolated Python environment, always use a virtual environment for your project.
+This project uses dev containers to provide a consistent development environment across machines.
 
-#### Setting Up a Virtual Environment
+#### Dev Container Benefits
 
-1. Create a virtual environment:
+1. Consistent development environments for all contributors
+2. All dependencies pre-installed in the container
+3. No need to manage separate virtual environments
+4. Isolated from the host system
+5. Reproducible builds and testing
+
+#### Getting Started with Dev Containers
+
+1. Install Docker and the Dev Containers extension for VS Code
+2. Open the project in VS Code
+3. When prompted, click "Reopen in Container" or use the command palette to select "Dev Containers: Reopen in Container"
+
+#### Managing Dependencies in `requirements.txt`
+
+1. Add a new dependency to `requirements.txt`:
    ```bash
-   python3 -m venv venv
+   echo "package-name==version" >> requirements.txt
    ```
 
-2. Activate the virtual environment:
-   - On macOS/Linux:
-     ```bash
-     source venv/bin/activate
-     ```
-   - On Windows:
-     ```bash
-     venv\Scripts\activate
-     ```
-
-3. Upgrade `pip` to the latest version:
-   ```bash
-   pip install --upgrade pip
-   ```
-
-#### Adding Dependencies to `requirements.txt`
-
-1. Install a new dependency:
-   ```bash
-   pip install <package-name>
-   ```
-
-2. Add the installed dependency to `requirements.txt`:
-   ```bash
-   pip freeze > requirements.txt
-   ```
-
-3. Install all dependencies from `requirements.txt`:
+2. Install dependencies from `requirements.txt`:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Ensure `requirements.txt` is committed to version control to maintain consistency across environments.
+3. Update all dependencies in the container:
+   ```bash
+   pip install -r requirements.txt --upgrade
+   ```
+
+4. Ensure `requirements.txt` is committed to version control to maintain consistency across environments and container rebuilds.
 
 ### Core Dependencies
 

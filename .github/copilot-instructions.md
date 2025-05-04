@@ -126,11 +126,11 @@ When suggesting code changes:
 ### Example Format
 
 ```python
-// filepath: /path/to/file.py
-// ...existing code...
+# filepath: /path/to/file.py
+# ...existing code...
 def new_function():
     pass
-// ...existing code...
+# ...existing code...
 ```
 
 # Modular Agent Development Patterns

@@ -506,6 +506,9 @@ class ZMQManager:
 
             with self._create_socket_instance(config) as socket:
                 yield socket
+        except Exception as e:
+            logger.error("Socket creation failed: %s", str(e))
+            raise ZMQError(f"Failed to create socket: {str(e)}") from e
 
     def _create_config(self, socket_type: SocketType, address: str, config_kwargs: dict) -> ZMQConfig:
         """Create a socket configuration.
@@ -536,13 +539,16 @@ class ZMQManager:
 
         Returns:
             ZMQSocket: Socket instance
-        """
-        return ZMQSocket(config, self.context, self.metrics)
 
+        Raises:
+            ZMQError: If socket creation fails
+        """
+        try:
+            return ZMQSocket(config, self.context, self.metrics)
         except ValueError as e:
-            raise ZMQError(f"Invalid socket configuration: {str(e)}")
+            raise ZMQError(f"Invalid socket configuration: {str(e)}") from e
         except Exception as e:
-            raise ZMQError(f"Failed to create socket: {str(e)}")
+            raise ZMQError(f"Failed to create socket: {str(e)}") from e
 
     def _create_context(self) -> zmq.Context:
         """Create a ZMQ context.
