@@ -8,7 +8,20 @@
     "python.analysis.typeCheckingMode": "basic",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
+    "python.linting.flake8Enabled": true,
     "python.formatting.provider": "black",
     "editor.formatOnSave": true,
-    "python.analysis.autoImportCompletions": true
+    "python.analysis.autoImportCompletions": true,
+    // Disable unused import reporting in Pylance
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportUnusedImport": "none"
+    },
+    // Configure flake8 and pylint
+    "python.linting.flake8Args": [
+        "--config=.flake8"
+    ],
+    "python.linting.pylintArgs": [
+        "--rcfile=.pylintrc",
+        "--rcfile=.pylintrc-local"
+    ]
 }

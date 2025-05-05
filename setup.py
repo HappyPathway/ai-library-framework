@@ -55,18 +55,25 @@ ZMQ_DEPS = [
     "pyzmq>=25.1.2",
 ]
 
+# Redis dependencies
+REDIS_DEPS = [
+    "redis>=5.0.1",
+    "async-timeout>=4.0.3",  # Used by aioredis for timeouts
+]
+
 # Define all extras
 extras_require = {
     "ai": AI_DEPS,
     "mcp": MCP_DEPS,
     "cloud": CLOUD_DEPS,
     "zmq": ZMQ_DEPS,
+    "redis": REDIS_DEPS,
     "test": TEST_DEPS,
     "dev": DEV_DEPS,
     # You can define new combinations like:
     "agent": AI_DEPS + MCP_DEPS,
     # Or a comprehensive all-in-one:
-    "all": AI_DEPS + MCP_DEPS + CLOUD_DEPS + ZMQ_DEPS,
+    "all": AI_DEPS + MCP_DEPS + CLOUD_DEPS + ZMQ_DEPS + REDIS_DEPS,
 }
 
 setup(
@@ -86,11 +93,12 @@ setup(
     ],
     keywords="agent, development, template, ai, llm",
     packages=find_packages(
-        exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
+        exclude=["tests", "*.tests", "*.tests.*", "tests.*", "src"]),
     python_requires=">=3.10",
     install_requires=CORE_DEPS,
     extras_require=extras_require,
     include_package_data=True,
+    package_dir={"": "."},  # Explicitly specify the root directory
     project_urls={
         "Bug Reports": "https://github.com/yourusername/template-python-dev/issues",
         "Source": "https://github.com/yourusername/template-python-dev",

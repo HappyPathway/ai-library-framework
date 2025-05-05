@@ -2,6 +2,10 @@
 
 Welcome to the Python Template Dev documentation. This project provides a collection of reusable utilities and best practices for Python development.
 
+## Getting Started
+
+To get started with this template, check out the [Development Setup Guide](guides/development_setup.md) for instructions on how to install and configure your environment.
+
 ## Core Utilities
 
 This project includes several core utilities for common development tasks:
@@ -16,6 +20,7 @@ This project includes several core utilities for common development tasks:
 - **Web Scraper**: Rate-limited web scraping utility
 - **GCS Config**: Google Cloud Storage configuration management
 - **Setup Storage**: Storage infrastructure initialization
+- **Messaging**: Inter-agent communication via ZMQ and Redis
 
 ## Project Documentation
 
@@ -35,7 +40,14 @@ migration_guide
 :maxdepth: 2
 :caption: User Guides
 
+guides/development_setup
+guides/ci_integration
+guides/testing
 guides/logging
+guides/messaging
+guides/redis
+guides/async_tasks
+guides/celery
 ```
 
 ## API Documentation
@@ -49,6 +61,7 @@ api/monitoring
 api/ai_engine
 api/database
 api/github_client
+api/messaging/redis
 api/secrets
 api/storage
 api/web_scraper

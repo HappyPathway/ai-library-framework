@@ -12,7 +12,8 @@
     ],
     "forwardPorts": [
         8000,
-        5678
+        5678,
+        6379
     ],
     "remoteEnv": {
         "GOOGLE_CLOUD_PROJECT": "${localEnv:GOOGLE_CLOUD_PROJECT}",
@@ -69,6 +70,6 @@
         }
     },
     "postCreateCommand": "pip install -r requirements.txt && chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa ~/.ssh/id_ed25519 ~/.ssh/config 2>/dev/null || true && chmod 644 ~/.ssh/*.pub 2>/dev/null || true && sudo -E .devcontainer/install-tools.sh",
-    "postAttachCommand": "eval $(ssh-agent) && ssh-add ~/.ssh/id_rsa ~/.ssh/id_ed25519 2>/dev/null || true",
+    "postAttachCommand": "eval $(ssh-agent) && ssh-add ~/.ssh/id_rsa ~/.ssh/id_ed25519 2>/dev/null || true && sudo -E .devcontainer/start-redis.sh",
     "remoteUser": "vscode"
 }

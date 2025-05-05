@@ -1,0 +1,61 @@
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pylint.messages_control]
+disable = [
+    "unused-import",
+    "unused-wildcard-import",
+    "wildcard-import",
+    "wrong-import-position", 
+    "wrong-import-order",
+    "fixme",
+    "line-too-long",
+]
+
+[tool.flake8]
+ignore = ["F401", "E501"]
+max-line-length = 100
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.pyright]
+reportUnusedImport = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+markers = [
+    "integration: marks tests as integration tests that require external services",
+    "unit: marks tests as unit tests that can run independently",
+    "slow: marks tests as slow running tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:redis.*:",
+    "ignore::_pytest.warning_types.PytestUnhandledThreadExceptionWarning",
+]

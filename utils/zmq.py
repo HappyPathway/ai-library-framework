@@ -91,56 +91,6 @@ class ZMQSocket:
         self.metrics = metrics or setup_monitoring(__name__)
         self.socket = None
 
-    def _create_socket(self):
-        """Create the socket with the configured type.
-
-        Override this method in subclasses to customize socket creation.
-
-        Returns:
-            zmq.Socket: Created socket
-        """
-        socket_type = self.config.socket_type.get_zmq_type()
-        return self.context.socket(socket_type)
-
-    def _configure_socket_options(self):
-        """Configure socket options based on configuration.
-
-        Override this method in subclasses to customize socket options.
-        """
-        if self.config.receive_timeout:
-            self.socket.setsockopt(zmq.RCVTIMEO, self.config.receive_timeout)
-        if self.config.send_timeout:
-            self.socket.setsockopt(zmq.SNDTIMEO, self.config.send_timeout)
-        if self.config.identity:
-            self.socket.setsockopt(zmq.IDENTITY, self.config.identity)
-
-    def _connect_socket(self):
-        """Connect or bind the socket based on configuration.
-
-        Override this method in subclasses to customize connection behavior.
-
-        Raises:
-            zmq.ZMQError: If connection fails
-        """
-        logger.info(
-            f"Socket {'binding to' if self.config.bind else 'connecting to'} {self.config.address}")
-        if self.config.bind:
-            self.socket.bind(self.config.address)
-            logger.info("Bind successful")
-        else:
-            self.socket.connect(self.config.address)
-            logger.info("Connect successful")
-
-    def _setup_subscriptions(self):
-        """Set up subscriptions for SUB sockets.
-
-        Override this method in subclasses to customize subscription behavior.
-        """
-        if self.config.socket_type == SocketType.SUB:
-            for topic in (self.config.topics or [""]):
-                self.socket.setsockopt_string(zmq.SUBSCRIBE, topic)
-                logger.debug(f"Subscribed to topic: '{topic}'")
-
     def __enter__(self):
         """Configure and return socket.
 
@@ -155,9 +105,9 @@ class ZMQSocket:
         """
         try:
             logger.info(
-                f"Creating socket of type {self.config.socket_type.value}")
+                "Creating socket of type %s", self.config.socket_type.value)
             self.socket = self._create_socket()
-            logger.info(f"Socket created successfully")
+            logger.info("Socket created successfully")
 
             # Configure socket options
             self._configure_socket_options()
@@ -177,7 +127,7 @@ class ZMQSocket:
             return self
 
         except Exception as e:
-            logger.error(f"Failed to initialize ZMQ socket: {str(e)}")
+            logger.error("Failed to initialize ZMQ socket: %s", str(e))
             self.metrics.increment("socket.init.error")
             raise ZMQError(f"Socket initialization failed: {str(e)}") from e
 
@@ -187,7 +137,7 @@ class ZMQSocket:
             try:
                 self.socket.close()
             except Exception as e:
-                logger.error(f"Error closing socket: {str(e)}")
+                logger.error("Error closing socket: %s", str(e))
                 self.metrics.increment("socket.close.error")
 
     def send_message(
@@ -219,6 +169,7 @@ class ZMQSocket:
         """
         start_time = time.time()
         try:
+            start_time = time.time()
             if isinstance(data, dict):
                 payload = json.dumps(data).encode('utf-8')
             elif isinstance(data, str):
@@ -238,11 +189,11 @@ class ZMQSocket:
                 return False
 
             # Prepare message for sending
-            logger.debug(f"Preparing message with topic: {topic}")
+            logger.debug("Preparing message with topic: %s", topic)
             try:
                 message_json = envelope.model_dump_json().encode('utf-8')
             except Exception as e:
-                logger.error(f"Failed to serialize message: {e}")
+                logger.error("Failed to serialize message: %s", e)
                 return False
 
             # Send the message
@@ -251,7 +202,7 @@ class ZMQSocket:
                     if not topic:
                         logger.error("Topic is required for PUB sockets")
                         return False
-                    logger.debug(f"Sending PUB message: topic={topic}")
+                    logger.debug("Sending PUB message: topic=%s", topic)
                     self.socket.send_multipart(
                         [topic.encode('utf-8'), message_json])
                 else:
@@ -262,15 +213,16 @@ class ZMQSocket:
                 return True
 
             except zmq.ZMQError as e:
-                logger.error(f"ZMQ error while sending: {e}")
+                logger.error("ZMQ error while sending: %s", e)
                 raise ZMQError(f"Failed to send message: {e}") from e
 
         except zmq.ZMQError as e:
-            logger.error(f"ZMQ Error sending message: {e} (errno: {e.errno})")
+            logger.error(
+                "ZMQ Error sending message: %s (errno: %s)", e, e.errno)
             self.metrics.increment("message.send.error")
             raise ZMQError(f"Failed to send message: {str(e)}") from e
         except Exception as e:
-            logger.error(f"Failed to send message: {str(e)}")
+            logger.error("Failed to send message: %s", str(e))
             self.metrics.increment("message.send.error")
             return False
 
@@ -306,7 +258,7 @@ class ZMQSocket:
                             f"Expected 2 message parts for SUB socket, got {len(parts)}")
 
                     topic = parts[0].decode('utf-8')
-                    logger.debug(f"Received message with topic: {topic}")
+                    logger.debug("Received message with topic: %s", topic)
                     try:
                         data = json.loads(parts[1].decode('utf-8'))
                         # Ensure topic is included in envelope
@@ -336,16 +288,17 @@ class ZMQSocket:
         except zmq.Again:
             # Timeout occurred
             logger.debug(
-                f"Receive timeout after {timeout or self.config.receive_timeout}ms")
+                "Receive timeout after %sms", timeout or self.config.receive_timeout)
             self.metrics.increment("message.receive.timeout")
             return None
         except zmq.ZMQError as e:
-            error_msg = f"ZMQ error receiving message: {str(e)} (errno: {e.errno})"
+            error_msg = "ZMQ error receiving message: %s (errno: %s)" % (
+                str(e), e.errno)
             logger.error(error_msg)
             self.metrics.track_error("message.receive", error_msg)
             raise ZMQError(error_msg) from e
         except Exception as e:
-            error_msg = f"Failed to receive message: {str(e)}"
+            error_msg = "Failed to receive message: %s" % str(e)
             logger.error(error_msg)
             self.metrics.track_error("message.receive", error_msg)
             raise ZMQError(error_msg) from e
@@ -385,8 +338,9 @@ class ZMQSocket:
         Raises:
             zmq.ZMQError: If connection or binding fails
         """
+        connection_type = "binding to" if self.config.bind else "connecting to"
         logger.info(
-            f"Socket {'binding to' if self.config.bind else 'connecting to'} {self.config.address}")
+            "Socket %s %s", connection_type, self.config.address)
         if self.config.bind:
             self.socket.bind(self.config.address)
             logger.info("Bind successful")
@@ -401,9 +355,9 @@ class ZMQSocket:
         """
         if self.config.socket_type == SocketType.SUB:
             logger.info(
-                f"Setting up SUB socket with topics: {self.config.topics}")
+                "Setting up SUB socket with topics: %s", self.config.topics)
             for topic in (self.config.topics or [""]):
-                logger.info(f"Subscribing to topic: {topic}")
+                logger.info("Subscribing to topic: %s", topic)
                 self.socket.setsockopt_string(zmq.SUBSCRIBE, topic)
 
 
@@ -425,7 +379,7 @@ class ZMQManager:
     """
 
     def __init__(self, metrics: Optional[MetricsCollector] = None):
-        """Initialize ZMQ manager.
+        """Initialize the ZMQ manager.
 
         :param metrics: Optional metrics collector
         :type metrics: Optional[MetricsCollector]
@@ -462,12 +416,19 @@ class ZMQManager:
         self._cleanup_context()
 
     def _cleanup_context(self) -> None:
-        """Clean up the ZMQ context.
+        """Cleanup the ZMQ context.
 
-        Override this method in subclasses to customize context cleanup.
+        Returns:
+            None
         """
-        if hasattr(self, 'context') and self.context:
-            self.context.term()
+        if self.context:
+            logger.info("Terminating ZMQ context")
+            try:
+                self.context.term()
+                logger.info("ZMQ context terminated")
+            except Exception as e:
+                logger.error("Error terminating ZMQ context: %s", str(e))
+                self.metrics.increment("context.term.error")
 
     @contextmanager
     def socket(self, socket_type: SocketType, address: str, **kwargs) -> ZMQSocket:
@@ -502,7 +463,8 @@ class ZMQManager:
             # Create configuration
             config = self._create_config(socket_type, address, config_kwargs)
 
-            logger.debug(f"Creating socket with config: {config.model_dump()}")
+            logger.debug("Creating socket with config: %s",
+                         config.model_dump())
 
             with self._create_socket_instance(config) as socket:
                 yield socket
@@ -569,37 +531,3 @@ class ZMQManager:
             MetricsCollector: Metrics collector
         """
         return setup_monitoring(__name__)
-
-    def _create_socket_instance(self, config: ZMQConfig) -> ZMQSocket:
-        """Create a ZMQSocket instance with the given configuration.
-
-        Override this method in subclasses to customize socket instance creation,
-        for example to use a subclass of ZMQSocket.
-
-        Args:
-            config: Socket configuration
-
-        Returns:
-            ZMQSocket: Socket wrapper
-        """
-        return ZMQSocket(config, self.context, self.metrics)
-
-    def _create_config(self, socket_type: SocketType, address: str, config_kwargs: dict) -> ZMQConfig:
-        """Create a socket configuration object.
-
-        Override this method in subclasses to customize config creation or use a
-        subclass of ZMQConfig.
-
-        Args:
-            socket_type: Type of socket to create
-            address: Socket address
-            config_kwargs: Additional configuration options
-
-        Returns:
-            ZMQConfig: Socket configuration
-        """
-        return ZMQConfig(
-            socket_type=socket_type,
-            address=address,
-            **config_kwargs
-        )

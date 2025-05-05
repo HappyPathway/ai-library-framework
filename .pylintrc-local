@@ -1,0 +1,7 @@
+[MESSAGES CONTROL]
+# Disable specific messages for this specific project
+disable=
+    W1203,          # Allow f-string in logging
+    W0718,          # Allow broad exception handling
+    C0103,          # Allow non-standard naming for module-level variables
+    W0603           # Allow global statement where needed
