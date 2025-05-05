@@ -18,10 +18,10 @@ from .logging import setup_logging
 logger = setup_logging('storage')
 
 # Initialize module-level variables
-_default_storage = None
-get_path = None
-get_json = None
-save_json = None
+_DEFAULT_STORAGE = None
+_get_path = None
+_get_json = None
+_save_json = None
 
 
 def get_default_storage_path() -> Path:
@@ -41,7 +41,6 @@ def get_default_storage_path() -> Path:
         return path
     except (OSError, PermissionError):
         # Fall back to a temporary directory
-        import tempfile
         temp_dir = Path(tempfile.gettempdir()) / 'template-python-dev'
         temp_dir.mkdir(parents=True, exist_ok=True)
         return temp_dir
@@ -176,10 +175,10 @@ Example:
             path = self.get_path(filename)
             with open(path, 'w') as f:
                 json.dump(data, f, indent=2)
-            logger.info(f"Saved JSON to {filename}")
+            logger.info("Saved JSON to %s", filename)
             return True
         except Exception as e:
-            logger.error(f"Error saving JSON {filename}: {str(e)}")
+            logger.error("Error saving JSON %s: %s", filename, str(e))
             return False
 
     def load_json(self, filename: str) -> Optional[Dict]:
@@ -206,12 +205,12 @@ Example:
         """Save text content to file."""
         try:
             path = self.get_path(filename)
-            with open(path, 'w') as f:
+            with open(path, 'w', encoding='utf-8') as f:
                 f.write(content)
-            logger.info(f"Saved text to {filename}")
+            logger.info("Saved text to %s", filename)
             return True
         except Exception as e:
-            logger.error(f"Error saving text {filename}: {str(e)}")
+            logger.error("Error saving text %s: %s", filename, str(e))
             return False
 
     def get_json(self, filename: str) -> Optional[dict]:
@@ -226,13 +225,13 @@ Example:
         try:
             path = self.get_path(filename)
             if not path.exists():
-                logger.warning(f"File not found: {filename}")
+                logger.warning("File not found: %s", filename)
                 return None
 
-            with open(path) as f:
+            with open(path, encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
-            logger.error(f"Error loading JSON {filename}: {str(e)}")
+            logger.error("Error loading JSON %s: %s", filename, str(e))
             return None
 
 # Initialize default storage after class definition
@@ -240,14 +239,19 @@ Example:
 
 def get_default_storage() -> 'LocalStorage':
     """Get or create the default storage instance."""
-    global _default_storage, get_path, get_json, save_json
-    if _default_storage is None:
-        _default_storage = LocalStorage()
-        get_path = _default_storage.get_path
-        get_json = _default_storage.get_json
-        save_json = _default_storage.save_json
-    return _default_storage
+    global _DEFAULT_STORAGE, _get_path, _get_json, _save_json
+    if _DEFAULT_STORAGE is None:
+        _DEFAULT_STORAGE = LocalStorage()
+        _get_path = _DEFAULT_STORAGE.get_path
+        _get_json = _DEFAULT_STORAGE.get_json
+        _save_json = _DEFAULT_STORAGE.save_json
+    return _DEFAULT_STORAGE
 
 
 # Create the default storage instance
-_default_storage = get_default_storage()
+_DEFAULT_STORAGE = get_default_storage()
+
+# Make helper functions available at module level
+get_path = _get_path
+get_json = _get_json
+save_json = _save_json

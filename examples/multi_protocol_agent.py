@@ -17,18 +17,16 @@ Requirements:
 """
 
 import argparse
-import asyncio
 import json
 import logging
 import signal
 import sys
 import threading
 import time
-from typing import Any, Dict, List, Optional
 
+from utils.messaging import (DeviceType, SocketType, ZMQDevice, ZMQManager,
+                             ZMQSocket)
 from utils.messaging.redis import RedisClient, RedisPubSub, RedisStream
-from utils.zmq import ZMQClient
-from utils.zmq_devices import DeviceType, ZMQDevice
 
 # Setup logging
 logging.basicConfig(
@@ -36,6 +34,209 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("multi_protocol_agent")
+
+
+class ZMQClient:
+    """Client for ZMQ messaging patterns.
+
+    This class provides a simplified interface for working with ZMQ patterns
+    (pub/sub, request/reply) in a way that fits the agent communication pattern.
+    """
+
+    def __init__(self):
+        """Initialize the ZMQ client."""
+        self.manager = ZMQManager()
+        self.manager.__enter__()  # Enter the context manually
+
+        # Socket references
+        self.publisher = None
+        self.subscriber = None
+        self.requester = None
+        self.responder = None
+
+        # Subscriber topic mapping
+        self.subscriber_topics = []
+        self.subscriber_callback = None
+
+        # For monitoring subscriber socket
+        self._subscriber_running = False
+        self._subscriber_thread = None
+
+    def setup_publisher(self, address: str) -> None:
+        """Set up a publisher socket.
+
+        Args:
+            address: The address to bind to (e.g., "tcp://*:5555")
+        """
+        logger.info("Setting up publisher on %s", address)
+        self.publisher = self.manager.socket(
+            SocketType.PUB, address, bind=True).__enter__()
+
+    def add_subscriber(self, address: str, topic: str) -> None:
+        """Add a subscription.
+
+        Args:
+            address: The address to connect to (e.g., "tcp://localhost:5555")
+            topic: The topic to subscribe to
+        """
+        logger.info("Setting up subscriber to %s on topic %s", address, topic)
+        self.subscriber = self.manager.socket(
+            SocketType.SUB, address, bind=False, topics=[topic]).__enter__()
+        self.subscriber_topics.append(topic)
+
+        # Start subscriber thread if not already running
+        self._start_subscriber_thread()
+
+    def setup_request(self, address: str) -> None:
+        """Set up a request socket.
+
+        Args:
+            address: The address to connect to (e.g., "tcp://localhost:5556")
+        """
+        logger.info("Setting up request socket on %s", address)
+        self.requester = self.manager.socket(
+            SocketType.REQ, address, bind=False).__enter__()
+
+    def setup_reply(self, address: str) -> None:
+        """Set up a reply socket.
+
+        Args:
+            address: The address to bind to (e.g., "tcp://*:5556")
+        """
+        logger.info("Setting up reply socket on %s", address)
+        self.responder = self.manager.socket(
+            SocketType.REP, address, bind=True).__enter__()
+
+    def publish(self, topic: str, message: str) -> None:
+        """Publish a message to a topic.
+
+        Args:
+            topic: The topic to publish to
+            message: The message to publish
+        """
+        if not self.publisher:
+            raise ValueError("Publisher socket not set up")
+
+        logger.debug("Publishing message to topic %s: %s", topic, message)
+        self.publisher.send_message(message, topic=topic)
+
+    def _start_subscriber_thread(self) -> None:
+        """Start the subscriber thread if not already running."""
+        if not self._subscriber_running and self.subscriber:
+            self._subscriber_running = True
+            self._subscriber_thread = threading.Thread(
+                target=self._subscriber_loop, daemon=True)
+            self._subscriber_thread.start()
+
+    def _subscriber_loop(self) -> None:
+        """Background thread for receiving subscription messages."""
+        logger.info("Subscriber thread started")
+        while self._subscriber_running:
+            # Receive messages with a timeout
+            self.receive(timeout=100)
+            time.sleep(0.01)  # Avoid busy-waiting
+
+    def receive(self, timeout: int = None) -> None:
+        """Receive and process messages from subscription.
+
+        Args:
+            timeout: Receive timeout in milliseconds
+        """
+        if not self.subscriber:
+            return
+
+        # Receive message
+        message = self.subscriber.receive(timeout=timeout)
+        if message:
+            topic = message.topic
+            payload = message.payload
+
+            # Call the subscriber callback if set
+            if self.subscriber_callback:
+                try:
+                    self.subscriber_callback(topic, payload)
+                except Exception as e:
+                    logger.error("Error in subscriber callback: %s", str(e))
+
+    def request(self, message: str, timeout: int = 5000) -> str:
+        """Send a request and wait for a reply.
+
+        Args:
+            message: The request message
+            timeout: Request timeout in milliseconds
+
+        Returns:
+            The reply message
+        """
+        if not self.requester:
+            raise ValueError("Request socket not set up")
+
+        # Send request
+        logger.debug("Sending request: %s", message)
+        self.requester.send_message(message)
+
+        # Receive reply
+        reply = self.requester.receive(timeout=timeout)
+        if reply:
+            logger.debug("Received reply: %s", reply.payload)
+            return reply.payload
+        else:
+            logger.warning("No reply received within timeout")
+            return None
+
+    def receive_request(self, timeout: int = 1000) -> str:
+        """Receive a request on the reply socket.
+
+        Args:
+            timeout: Receive timeout in milliseconds
+
+        Returns:
+            The request message or None if timeout
+        """
+        if not self.responder:
+            raise ValueError("Reply socket not set up")
+
+        # Receive request
+        request = self.responder.receive(timeout=timeout)
+        if request:
+            logger.debug("Received request: %s", request.payload)
+            return request.payload
+        return None
+
+    def send_reply(self, message: str) -> None:
+        """Send a reply to a received request.
+
+        Args:
+            message: The reply message
+        """
+        if not self.responder:
+            raise ValueError("Reply socket not set up")
+
+        logger.debug("Sending reply: %s", message)
+        self.responder.send_message(message)
+
+    def close(self) -> None:
+        """Close all sockets and the ZMQ context."""
+        logger.info("Closing ZMQ client")
+
+        # Stop subscriber thread if running
+        self._subscriber_running = False
+        if self._subscriber_thread:
+            self._subscriber_thread.join(timeout=1.0)
+
+        # Close all sockets
+        for socket in [self.publisher, self.subscriber, self.requester, self.responder]:
+            if socket:
+                try:
+                    socket.__exit__(None, None, None)
+                except Exception as e:
+                    logger.error("Error closing socket: %s", str(e))
+
+        # Close ZMQ manager
+        try:
+            self.manager.__exit__(None, None, None)
+        except Exception as e:
+            logger.error("Error closing ZMQ manager: %s", str(e))
 
 
 class HybridMessagingAgent:
@@ -65,7 +266,7 @@ class HybridMessagingAgent:
 
     def _handle_exit(self, signum, frame):
         """Handle termination signals."""
-        logger.info(f"Received signal {signum}, shutting down...")
+        logger.info("Received signal %s, shutting down...", signum)
         self.running = False
         # Give background threads time to complete
         time.sleep(0.5)
@@ -74,7 +275,7 @@ class HybridMessagingAgent:
     def start(self):
         """Start the agent."""
         self.running = True
-        logger.info(f"Agent {self.agent_id} started")
+        logger.info("Agent %s started", self.agent_id)
 
         # Subscribe to Redis channels
         self.redis_pubsub.subscribe("broadcast", self._handle_redis_broadcast)
@@ -84,7 +285,7 @@ class HybridMessagingAgent:
         try:
             self.redis_stream.create_consumer_group("agents", self.agent_id)
         except Exception as e:
-            logger.warning(f"Error creating consumer group: {str(e)}")
+            logger.warning("Error creating consumer group: %s", str(e))
 
         # Start ZMQ sockets
         self.zmq_client.add_subscriber("tcp://localhost:5555", "updates")
@@ -109,7 +310,7 @@ class HybridMessagingAgent:
                         self._process_task(message["data"])
                         self.redis_stream.acknowledge(message["id"])
                     except Exception as e:
-                        logger.error(f"Error processing message: {str(e)}")
+                        logger.error("Error processing message: %s", str(e))
 
                 time.sleep(0.1)  # Small sleep to prevent CPU spinning
         finally:
@@ -121,7 +322,7 @@ class HybridMessagingAgent:
             return
 
         self.running = False
-        logger.info(f"Stopping agent {self.agent_id}")
+        logger.info("Stopping agent %s", self.agent_id)
 
         # Clean up Redis connections
         self.redis_pubsub.stop()
@@ -135,7 +336,7 @@ class HybridMessagingAgent:
         Args:
             message: The received message data
         """
-        logger.info(f"Redis broadcast received: {message}")
+        logger.info("Redis broadcast received: %s", message)
 
         # Process the message based on its type
         if isinstance(message, dict) and "type" in message:
@@ -149,7 +350,7 @@ class HybridMessagingAgent:
             topic: The topic the message was published on
             message: The received message data
         """
-        logger.info(f"ZMQ message received on topic {topic}")
+        logger.info("ZMQ message received on topic %s", topic)
 
         # Try to parse JSON if it's a string
         if isinstance(message, str):
@@ -170,7 +371,7 @@ class HybridMessagingAgent:
             command: The command to execute
             source: The source of the command (redis or zmq)
         """
-        logger.info(f"Executing command from {source}: {command}")
+        logger.info("Executing command from %s: %s", source, command)
 
         # Implement command execution logic
         if command == "ping":
@@ -195,7 +396,7 @@ class HybridMessagingAgent:
         Args:
             task: Task data from Redis stream
         """
-        logger.info(f"Processing task: {task}")
+        logger.info("Processing task: %s", task)
 
         # Example of sending a ZMQ request based on Redis task
         if "action" in task and task["action"] == "query":
@@ -207,7 +408,7 @@ class HybridMessagingAgent:
                 {"query": task["query"], "response": response}
             )
 
-            logger.info(f"Task {task['id']} completed")
+            logger.info("Task %s completed", task['id'])
 
 
 def send_test_messages():

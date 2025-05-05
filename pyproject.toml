@@ -1,0 +1,46 @@
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pylint.messages_control]
+disable = [
+    "unused-import",
+    "unused-wildcard-import",
+    "wildcard-import",
+    "wrong-import-position", 
+    "wrong-import-order",
+    "fixme",
+    "line-too-long",
+]
+
+[tool.flake8]
+ignore = ["F401", "E501"]
+max-line-length = 100
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.pyright]
+reportUnusedImport = false

@@ -1,0 +1,21 @@
+[flake8]
+# Ignore unused imports
+ignore = F401, E501
+
+# Max line length
+max-line-length = 100
+
+# Exclude directories
+exclude = 
+    .git,
+    __pycache__,
+    build,
+    dist,
+    venv,
+    .venv,
+    .env,
+    .tox,
+    .nox,
+    .pytest_cache,
+    .mypy_cache,
+    docs/build

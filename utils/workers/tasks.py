@@ -130,3 +130,159 @@ def analyze_content(self, content: str, analysis_type: str = "general") -> Dict[
             }
         )
         raise
+
+
+@app.task(bind=True, name="tasks.batch_process")
+def batch_process(self, item_ids: List[str], options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Process a batch of items asynchronously.
+
+    Args:
+        item_ids: List of item IDs to process
+        options: Optional processing options
+
+    Returns:
+        Dict with processing results
+    """
+    start_time = time.time()
+    options = options or {}
+    total = len(item_ids)
+
+    logger.info(
+        f"Starting batch process of {total} items with options: {options}")
+    results = {"processed": 0, "failed": 0, "items": []}
+
+    try:
+        for i, item_id in enumerate(item_ids):
+            try:
+                # Update progress
+                self.update_state(
+                    state="PROGRESS",
+                    meta={
+                        "current": i,
+                        "total": total,
+                        "percent": int((i / total) * 100),
+                        "processed": results["processed"],
+                        "failed": results["failed"]
+                    }
+                )
+
+                # Process item (simulate processing)
+                time.sleep(0.5)
+
+                # Add to results
+                results["items"].append({
+                    "item_id": item_id,
+                    "status": "success"
+                })
+                results["processed"] += 1
+
+            except Exception as e:
+                logger.error(f"Error processing item {item_id}: {str(e)}")
+                results["failed"] += 1
+                results["items"].append({
+                    "item_id": item_id,
+                    "status": "error",
+                    "error": str(e)
+                })
+
+        # Final results
+        results["total_time"] = time.time() - start_time
+        results["total"] = total
+
+        logger.info(
+            f"Batch processing complete: {results['processed']} processed, {results['failed']} failed")
+        return results
+
+    except Exception as e:
+        logger.error(f"Fatal error in batch processing: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise
+
+
+@app.task(bind=True, name="tasks.fetch_and_process")
+def fetch_and_process(self, url: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Fetch data from a URL and process it.
+
+    Args:
+        url: The URL to fetch data from
+        params: Optional parameters for the request
+
+    Returns:
+        Dict with processing results
+    """
+    import requests  # Import here to avoid unnecessary dependency loading
+
+    start_time = time.time()
+    params = params or {}
+
+    logger.info(f"Fetching data from {url}")
+
+    try:
+        # Make request
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+
+        # Process data (example)
+        data = response.json()
+
+        # Simulate processing time
+        time.sleep(1)
+
+        result = {
+            "url": url,
+            "status_code": response.status_code,
+            "processing_time": time.time() - start_time,
+            "data_size": len(response.content),
+            "processed": True
+        }
+
+        logger.info(f"Successfully processed data from {url}")
+        return result
+
+    except requests.RequestException as e:
+        logger.error(f"Error fetching data from {url}: {str(e)}")
+
+        self.update_state(
+            state="FAILURE",
+            meta={
+                "url": url,
+                "status": "error",
+                "error": str(e)
+            }
+        )
+        raise
+    except Exception as e:
+        logger.error(f"Error processing data from {url}: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise
+
+
+@app.task(name="tasks.periodic_cleanup")
+def periodic_cleanup() -> Dict[str, Any]:
+    """Periodic cleanup task that can be scheduled.
+
+    Returns:
+        Dict with cleanup results
+    """
+    logger.info("Starting periodic cleanup")
+    start_time = time.time()
+
+    # Example cleanup operations:
+    # 1. Clean temporary files
+    # 2. Archive old data
+    # 3. Update indexes
+
+    # Simulate work
+    time.sleep(2)
+
+    result = {
+        "task": "cleanup",
+        "timestamp": time.time(),
+        "duration": time.time() - start_time,
+        "items_cleaned": 25,
+        "space_reclaimed_mb": 150
+    }
+
+    logger.info(
+        f"Cleanup completed: {result['items_cleaned']} items, {result['space_reclaimed_mb']}MB reclaimed")
+    return result

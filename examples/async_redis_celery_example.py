@@ -25,8 +25,9 @@ from celery.result import AsyncResult
 from utils.async_tasks import TaskManager, TaskStatus
 # Configure logging
 from utils.logging import setup_logging
+from utils.messaging.async_redis import AsyncRedisPubSub
 # Import Redis components
-from utils.messaging.redis import AsyncRedisClient, RedisPubSub
+from utils.messaging.redis import AsyncRedisClient, RedisConfig
 # Import Celery tasks
 from utils.workers.tasks import analyze_content, process_document
 
@@ -48,9 +49,23 @@ class CoordinatorAgent:
         Args:
             redis_url: Redis connection URL
         """
-        # Create Redis clients
-        self.redis = AsyncRedisClient(url=redis_url)
-        self.pubsub = RedisPubSub(client=self.redis)
+        # Create Redis clients (unconnected)
+        self.redis_url = redis_url
+        # Create RedisConfig from the URL
+        config = RedisConfig()
+        if redis_url:
+            # Parse the URL format redis://host:port/db
+            parts = redis_url.split('/')
+            if len(parts) > 2:
+                host_port = parts[2].split(':')
+                config = RedisConfig(
+                    host=host_port[0],
+                    port=int(host_port[1]) if len(host_port) > 1 else 6379,
+                    db=int(parts[3]) if len(parts) > 3 else 0,
+                )
+
+        self.redis = AsyncRedisClient(config=config)
+        self.pubsub = AsyncRedisPubSub(client=self.redis)
 
         # Create task manager
         self.task_manager = TaskManager()
@@ -95,7 +110,7 @@ class CoordinatorAgent:
         await self.task_manager.stop()
 
         # Close Redis connection
-        await self.redis.disconnect()
+        await self.redis.close()
 
         logger.info("Coordinator agent stopped")
 
@@ -141,7 +156,7 @@ class CoordinatorAgent:
             Processing results
         """
         try:
-            logger.info(f"Starting workflow for request {request_id}")
+            logger.info("Starting workflow for request %s", request_id)
 
             # Update status
             self.pending_tasks[request_id]["status"] = "processing"
@@ -154,7 +169,7 @@ class CoordinatorAgent:
             celery_tasks = []
             for doc_id in document_ids:
                 # Delegate document processing to Celery
-                logger.info(f"Submitting document {doc_id} to Celery")
+                logger.info("Submitting document %s to Celery", doc_id)
                 task = process_document.delay(
                     doc_id, {"request_id": request_id})
                 celery_tasks.append(task)
@@ -174,9 +189,9 @@ class CoordinatorAgent:
                 if task.ready():
                     result = task.get()  # Get the result
                     document_results.append(result)
-                    logger.info(f"Task {task.id} completed")
+                    logger.info("Task %s completed", task.id)
                 else:
-                    logger.warning(f"Task {task.id} timed out")
+                    logger.warning("Task %s timed out", task.id)
 
             # Step 3: Optional analysis step
             analysis_result = None
@@ -216,12 +231,12 @@ class CoordinatorAgent:
             # Update status
             self.pending_tasks[request_id]["status"] = "completed"
 
-            logger.info(f"Workflow completed for request {request_id}")
+            logger.info("Workflow completed for request %s", request_id)
             return final_result
 
         except Exception as e:
             logger.error(
-                f"Error in workflow for request {request_id}: {str(e)}")
+                "Error in workflow for request %s: %s", request_id, str(e))
 
             # Update status
             self.pending_tasks[request_id]["status"] = "failed"
@@ -288,7 +303,7 @@ class CoordinatorAgent:
         """
         try:
             data = json.loads(message)
-            logger.info(f"Received request on {channel}: {data}")
+            logger.info("Received request on %s: %s", channel, data)
 
             # Process the request
             request_id = await self.process_request(data)
@@ -300,7 +315,7 @@ class CoordinatorAgent:
             }))
 
         except Exception as e:
-            logger.error(f"Error processing request: {str(e)}")
+            logger.error("Error processing request: %s", str(e))
 
     async def _handle_result(self, channel: str, message: str):
         """Handle incoming results from Redis PubSub.
@@ -311,13 +326,13 @@ class CoordinatorAgent:
         """
         try:
             data = json.loads(message)
-            logger.info(f"Received result on {channel}: {data}")
+            logger.info("Received result on %s: %s", channel, data)
 
             # Here you could trigger further actions based on results
             # This is just a placeholder in this example
 
         except Exception as e:
-            logger.error(f"Error handling result: {str(e)}")
+            logger.error("Error handling result: %s", str(e))
 
 
 async def run_example():
@@ -335,19 +350,21 @@ async def run_example():
             "analyze": True
         }
 
-        logger.info(f"Submitting test request: {request_data}")
+        logger.info("Submitting test request: %s", request_data)
         request_id = await agent.process_request(request_data)
 
         # Poll for status a few times
         for _ in range(5):
             await asyncio.sleep(2)
             status = await agent.get_status(request_id)
-            logger.info(f"Request status: {status}")
+            logger.info("Request status: %s", status)
 
         # Also demonstrate pubsub by publishing a request
         logger.info("Publishing test request via Redis PubSub")
-        pubsub = RedisPubSub(client=AsyncRedisClient())
-        await pubsub.connect()
+        async_client = AsyncRedisClient()
+        await async_client.connect()
+        pubsub = AsyncRedisPubSub(client=async_client)
+        # No need to explicitly connect the pubsub as it will use the connected client
 
         await pubsub.publish("agent:requests", json.dumps({
             "document_ids": ["doc-pubsub-1"],
