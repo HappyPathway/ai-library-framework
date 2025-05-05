@@ -42,6 +42,7 @@ migration_guide
 
 guides/development_setup
 guides/ci_integration
+guides/testing
 guides/logging
 guides/messaging
 guides/redis

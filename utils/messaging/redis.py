@@ -132,7 +132,7 @@ class RedisClient:
                 socket_timeout=self.config.socket_timeout,
                 socket_connect_timeout=self.config.socket_connect_timeout,
                 socket_keepalive=self.config.socket_keepalive,
-                retry_on_timeout=self.config.retry_on_timeout,
+                # retry_on_timeout parameter is deprecated in newer Redis versions
                 decode_responses=self.config.decode_responses,
                 max_connections=self.config.max_connections
             )
@@ -337,7 +337,7 @@ class AsyncRedisClient:
                 socket_timeout=self.config.socket_timeout,
                 socket_connect_timeout=self.config.socket_connect_timeout,
                 socket_keepalive=self.config.socket_keepalive,
-                retry_on_timeout=self.config.retry_on_timeout,
+                # retry_on_timeout parameter is deprecated in newer Redis versions
                 decode_responses=self.config.decode_responses,
                 max_connections=self.config.max_connections
             )
@@ -363,7 +363,8 @@ class AsyncRedisClient:
     async def close(self) -> None:
         """Close the Redis connection asynchronously."""
         if self._client:
-            await self._client.close()
+            # Use aclose() instead of close() as recommended by Redis library
+            await self._client.aclose()
             self._client = None
             logger.debug("Redis connection closed")
 
@@ -630,11 +631,19 @@ class RedisPubSub:
     def stop(self) -> None:
         """Stop listening for messages."""
         self._running = False
-        self.pubsub.close()
+        try:
+            self.pubsub.close()
+        except Exception as e:
+            # Safely handle any errors during close
+            logger.debug(f"Error closing pubsub: {str(e)}")
 
     def __del__(self):
         """Clean up resources."""
-        self.stop()
+        try:
+            self.stop()
+        except Exception:
+            # Ignore errors during garbage collection
+            pass
 
 
 class RedisStream:

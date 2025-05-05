@@ -1,16 +1,55 @@
 """Utils messaging package.
 
-This package provides implementations for various messaging systems to enable
+This pa        __all__ = [
+            'RedisClient',
+            'AsyncRedisClient',
+            'RedisConfig',
+            'RedisPubSub',
+            'RedisStream',
+            'RedisLock',
+            'RedisRateLimiter',
+        ]
+
+        # Add AsyncRedisPubSub if available
+        if has_async_redis:
+            __all__.append('AsyncRedisPubSub')
+            
+        # Add mock classes if available
+        if has_mock_redis:
+            __all__.extend(['MockRedisClient', 'MockAsyncRedisClient'])
+    except ImportError:
+        pass
+elif USE_MOCK_REDIS:
+    # If redis is not available but we want mock implementations
+    try:
+        from .mock_redis import MockRedisClient, MockAsyncRedisClient
+        
+        # Create alias for compatibility
+        RedisClient = MockRedisClient
+        AsyncRedisClient = MockAsyncRedisClient
+        
+        __all__ = [
+            'MockRedisClient',
+            'MockAsyncRedisClient',
+            'RedisClient',
+            'AsyncRedisClient',
+        ]
+    except ImportError:
+        passimplementations for various messaging systems to enable
 distributed agent communication.
 """
 
 from importlib.util import find_spec
+import os
 
 # Initialize __all__ to avoid "used before assignment" error
 __all__ = []
 
+# Check if we should use mock Redis (for testing without Redis server)
+USE_MOCK_REDIS = os.environ.get('USE_MOCK_REDIS', '').lower() in ('true', '1', 'yes')
+
 # Conditionally expose Redis client if redis package is installed
-if find_spec('redis'):
+if find_spec('redis') and not USE_MOCK_REDIS:
     try:
         from .redis import (AsyncRedisClient, RedisClient, RedisConfig,
                             RedisLock, RedisPubSub, RedisRateLimiter,
@@ -22,6 +61,13 @@ if find_spec('redis'):
             has_async_redis = True
         except ImportError:
             has_async_redis = False
+
+        # Try to import mock implementations for testing without Redis
+        try:
+            from .mock_redis import MockRedisClient, MockAsyncRedisClient
+            has_mock_redis = True
+        except ImportError:
+            has_mock_redis = False
 
         __all__ = [
             'RedisClient',

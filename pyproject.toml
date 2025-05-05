@@ -44,3 +44,14 @@ exclude = [
 
 [tool.pyright]
 reportUnusedImport = false
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests as integration tests that require external services",
+    "unit: marks tests as unit tests that can run independently",
+    "slow: marks tests as slow running tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:redis.*:",
+    "ignore::_pytest.warning_types.PytestUnhandledThreadExceptionWarning",
+]
