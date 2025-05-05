@@ -2,6 +2,10 @@
 
 Welcome to the Python Template Dev documentation. This project provides a collection of reusable utilities and best practices for Python development.
 
+## Getting Started
+
+To get started with this template, check out the [Development Setup Guide](guides/development_setup.md) for instructions on how to install and configure your environment.
+
 ## Core Utilities
 
 This project includes several core utilities for common development tasks:
@@ -36,6 +40,7 @@ migration_guide
 :maxdepth: 2
 :caption: User Guides
 
+guides/development_setup
 guides/logging
 guides/messaging
 guides/redis

@@ -27,10 +27,10 @@ These files document the dependencies for specific features and environments:
 
 ## Using setup.py
 
-Alternatively, you can use the setup.py extras:
+Alternatively, you can use the setup.py extras from the root directory:
 
 ```bash
-# Basic installation
+# Basic installation (from the root directory)
 pip install -e .
 
 # With specific features
@@ -48,3 +48,5 @@ pip install -e ".[dev]"
 # Full installation
 pip install -e ".[all]"
 ```
+
+> **Important:** Always run these commands from the root directory of the project, not from the requirements directory.
