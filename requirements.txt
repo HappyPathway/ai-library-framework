@@ -133,7 +133,7 @@ soupsieve==2.7
 SQLAlchemy==2.0.28
 sse-starlette==2.3.3
 starlette==0.46.2
--e git+ssh://git@github.com/HappyPathway/template-python-dev.git@9265074b94d267525ea9dd5605f632933638c20b#egg=template_python_dev
+# Package is installed in development mode locally, no need to reference via Git
 tokenizers==0.21.1
 tomlkit==0.13.2
 tqdm==4.67.1

@@ -93,11 +93,12 @@ setup(
     ],
     keywords="agent, development, template, ai, llm",
     packages=find_packages(
-        exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
+        exclude=["tests", "*.tests", "*.tests.*", "tests.*", "src"]),
     python_requires=">=3.10",
     install_requires=CORE_DEPS,
     extras_require=extras_require,
     include_package_data=True,
+    package_dir={"": "."},  # Explicitly specify the root directory
     project_urls={
         "Bug Reports": "https://github.com/yourusername/template-python-dev/issues",
         "Source": "https://github.com/yourusername/template-python-dev",

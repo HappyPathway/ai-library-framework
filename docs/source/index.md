@@ -41,6 +41,7 @@ migration_guide
 :caption: User Guides
 
 guides/development_setup
+guides/ci_integration
 guides/logging
 guides/messaging
 guides/redis
