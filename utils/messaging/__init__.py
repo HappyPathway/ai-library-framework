@@ -39,8 +39,8 @@ elif USE_MOCK_REDIS:
 distributed agent communication.
 """
 
-from importlib.util import find_spec
 import os
+from importlib.util import find_spec
 
 # Initialize __all__ to avoid "used before assignment" error
 __all__ = []
@@ -51,9 +51,15 @@ USE_MOCK_REDIS = os.environ.get('USE_MOCK_REDIS', '').lower() in ('true', '1', '
 # Conditionally expose Redis client if redis package is installed
 if find_spec('redis') and not USE_MOCK_REDIS:
     try:
-        from .redis import (AsyncRedisClient, RedisClient, RedisConfig,
-                            RedisLock, RedisPubSub, RedisRateLimiter,
-                            RedisStream)
+        from .redis import (
+            AsyncRedisClient,
+            RedisClient,
+            RedisConfig,
+            RedisLock,
+            RedisPubSub,
+            RedisRateLimiter,
+            RedisStream,
+        )
 
         # Import async Redis implementations
         try:
@@ -64,7 +70,7 @@ if find_spec('redis') and not USE_MOCK_REDIS:
 
         # Try to import mock implementations for testing without Redis
         try:
-            from .mock_redis import MockRedisClient, MockAsyncRedisClient
+            from .mock_redis import MockAsyncRedisClient, MockRedisClient
             has_mock_redis = True
         except ImportError:
             has_mock_redis = False

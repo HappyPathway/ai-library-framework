@@ -19,9 +19,16 @@ try:
 except ImportError:
     MOCK_AVAILABLE = False
 
-from utils.messaging.redis import (AsyncRedisClient, RedisClient, RedisConfig,
-                                   RedisLock, RedisPubSub, RedisRateLimiter,
-                                   RedisStream)
+from utils.messaging.redis import (
+    AsyncRedisClient,
+    RedisClient,
+    RedisConfig,
+    RedisLock,
+    RedisPubSub,
+    RedisRateLimiter,
+    RedisStream,
+)
+
 
 # Check if Redis is available
 def is_redis_available():
@@ -34,6 +41,7 @@ def is_redis_available():
         return True
     except (socket.error, ConnectionRefusedError):
         return False
+
 
 # Skip all Redis tests if Redis is not available
 REDIS_AVAILABLE = is_redis_available()
@@ -54,7 +62,7 @@ def redis_config():
 @pytest.fixture
 def redis_client(redis_config):
     """Redis client fixture.
-    
+
     Returns a real Redis client if Redis is available, otherwise returns a mock.
     """
     if REDIS_AVAILABLE:
@@ -212,7 +220,7 @@ class TestRedisStream:
     def test_add_and_read(self, redis_client, test_stream_name, clear_redis):
         """Test adding and reading from a stream."""
         stream = RedisStream(test_stream_name, redis_client)
-        
+
         # Delete the stream if it exists (to start fresh)
         redis_client.client.delete(test_stream_name)
 
@@ -234,7 +242,7 @@ class TestRedisStream:
         """Test consumer groups with streams."""
         # Delete the stream if it exists (to start fresh)
         redis_client.client.delete(test_stream_name)
-        
+
         stream = RedisStream(test_stream_name, redis_client)
 
         # Create a consumer group
@@ -247,13 +255,13 @@ class TestRedisStream:
 
         # Read from the group
         messages = stream.read_group(count=10)
-        
+
         # Filter out any messages that aren't our task messages
         task_messages = [m for m in messages if 'task' in m.get('data', {})]
 
         # Verify messages
         assert len(task_messages) == 2
-        
+
         # Sort and verify task messages
         task_messages.sort(key=lambda x: x["data"]["task"])
         assert task_messages[0]["data"]["task"] == "task1"
@@ -328,21 +336,21 @@ class TestRedisRateLimiter:
         keys = redis_client.client.keys("rate:test_limiter:*")
         if keys:
             redis_client.client.delete(*keys)
-            
+
         # Create a rate limiter with a very small limit to ensure it triggers
         limiter = RedisRateLimiter(
             "test_limiter", rate=1, period=1, redis_client=redis_client)
 
         # First request should be allowed
         assert limiter.is_allowed("user1") is True
-        
+
         # Force the rate limiter to deny subsequent requests
         for _ in range(10):  # Make multiple requests to ensure we hit the limit
             limiter.is_allowed("user1")
-            
+
         # Wait a tiny bit to ensure the rate counter is updated
         time.sleep(0.1)
-            
+
         # Now check if the rate limiter correctly denies the request
         assert limiter.is_allowed("user1") is False
 
