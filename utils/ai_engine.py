@@ -56,8 +56,7 @@ Note:
 import asyncio
 import os
 from enum import Enum
-from typing import (Any, AsyncIterator, Generic, List, Literal, Optional, Type,
-                    TypeVar, Union)
+from typing import Any, AsyncIterator, Generic, List, Literal, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
 from pydantic_ai import Agent
@@ -65,8 +64,13 @@ from pydantic_ai.exceptions import ModelRetry, UnexpectedModelBehavior
 
 from .logging import setup_logging
 from .monitoring import MetricsCollector, setup_monitoring
-from .schemas.ai import (AnthropicSettings, GeminiSafetySettings,
-                         GeminiSettings, OpenAISettings, UsageLimits)
+from .schemas.ai import (
+    AnthropicSettings,
+    GeminiSafetySettings,
+    GeminiSettings,
+    OpenAISettings,
+    UsageLimits,
+)
 
 logger = setup_logging(__name__)
 
@@ -456,7 +460,17 @@ class AIEngine(Generic[T]):
                     temperature=temperature
                 )
                 self.monitoring.increment_success("generate")
-                return result.output if output_schema else result.text
+
+                # Handle different result attributes based on what's available
+                if output_schema:
+                    return result.output
+                elif hasattr(result, 'text'):
+                    return result.text
+                elif hasattr(result, 'content'):
+                    return result.content
+                else:
+                    # Last resort: try to get the result as a string
+                    return str(result)
 
         except ModelRetry as e:
             # Handle rate limits with exponential backoff

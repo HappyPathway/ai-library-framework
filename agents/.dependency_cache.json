@@ -1,0 +1,1512 @@
+{
+  "amqp": {
+    "name": "amqp",
+    "version": "5.3.1",
+    "description": "Low-level AMQP client for Python (fork of amqplib).",
+    "website": "https://pypi.org/project/amqp/",
+    "category": "async",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "annotated-types": {
+    "name": "annotated-types",
+    "version": "0.7.0",
+    "description": "Reusable constraint types to use with typing.Annotated",
+    "website": "https://pypi.org/project/annotated-types/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "anthropic": {
+    "name": "anthropic",
+    "version": "0.50.0",
+    "description": "The official Python library for the anthropic API",
+    "website": "https://pypi.org/project/anthropic/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "https://github.com/anthropics/anthropic-sdk-python",
+    "summary": "AgentRunResult(output='')"
+  },
+  "anyio": {
+    "name": "anyio",
+    "version": "4.9.0",
+    "description": "High level compatibility layer for multiple asynchronous event loop implementations",
+    "website": "https://pypi.org/project/anyio/",
+    "category": "async",
+    "docs_url": "https://anyio.readthedocs.io/en/latest/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "argcomplete": {
+    "name": "argcomplete",
+    "version": "3.6.2",
+    "description": "Bash tab completion for argparse",
+    "website": "https://pypi.org/project/argcomplete/",
+    "category": "other",
+    "docs_url": "https://kislyuk.github.io/argcomplete",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "astroid": {
+    "name": "astroid",
+    "version": "3.3.9",
+    "description": "An abstract syntax tree for Python with inference support.",
+    "website": "https://pypi.org/project/astroid/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "async-timeout": {
+    "name": "async-timeout",
+    "version": "5.0.1",
+    "description": "Timeout context manager for asyncio programs",
+    "website": "https://pypi.org/project/async-timeout/",
+    "category": "async",
+    "docs_url": "",
+    "github_url": "https://github.com/aio-libs/async-timeout/actions",
+    "summary": "AgentRunResult(output='')"
+  },
+  "beautifulsoup4": {
+    "name": "beautifulsoup4",
+    "version": "4.12.3",
+    "description": "Screen-scraping library",
+    "website": "https://pypi.org/project/beautifulsoup4/",
+    "category": "web",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "billiard": {
+    "name": "billiard",
+    "version": "4.2.1",
+    "description": "Python multiprocessing fork with improvements and bugfixes",
+    "website": "https://pypi.org/project/billiard/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "black": {
+    "name": "black",
+    "version": "24.3.0",
+    "description": "The uncompromising code formatter.",
+    "website": "https://pypi.org/project/black/",
+    "category": "dev",
+    "docs_url": "https://black.readthedocs.io/",
+    "github_url": "https://github.com/psf/black",
+    "summary": "AgentRunResult(output='')"
+  },
+  "boto3": {
+    "name": "boto3",
+    "version": "1.38.8",
+    "description": "The AWS SDK for Python",
+    "website": "https://pypi.org/project/boto3/",
+    "category": "cloud",
+    "docs_url": "https://boto3.amazonaws.com/v1/documentation/api/latest/index.html",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "botocore": {
+    "name": "botocore",
+    "version": "1.38.8",
+    "description": "Low-level, data-driven core of boto 3.",
+    "website": "https://pypi.org/project/botocore/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "cachetools": {
+    "name": "cachetools",
+    "version": "5.3.3",
+    "description": "Extensible memoizing collections and decorators",
+    "website": "https://pypi.org/project/cachetools/",
+    "category": "dev",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on')"
+  },
+  "celery": {
+    "name": "celery",
+    "version": "5.5.2",
+    "description": "Distributed Task Queue.",
+    "website": "https://pypi.org/project/celery/",
+    "category": "async",
+    "docs_url": "https://docs.celeryq.dev/en/stable/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the provided documentation:\\n\\nCelery is a distributed task queue system designed to process vast amounts of messages, focusing on real-time execution while also supporting task scheduling. It provides a simple, flexible, and reliable way to run background tasks asynchronously or schedule them for later execution in distributed environments.')"
+  },
+  "certifi": {
+    "name": "certifi",
+    "version": "2025.4.26",
+    "description": "Python package for providing Mozilla's CA Bundle.",
+    "website": "https://pypi.org/project/certifi/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "cffi": {
+    "name": "cffi",
+    "version": "1.17.1",
+    "description": "Foreign Function Interface for Python calling C code.",
+    "website": "https://pypi.org/project/cffi/",
+    "category": "other",
+    "docs_url": "http://cffi.readthedocs.org/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='CFFI is a Python package providing a C Foreign Function Interface, allowing Python code to interact with almost any C code. Its key feature is using C-like declarations,')"
+  },
+  "charset-normalizer": {
+    "name": "charset-normalizer",
+    "version": "3.4.2",
+    "description": "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet.",
+    "website": "https://pypi.org/project/charset-normalizer/",
+    "category": "other",
+    "docs_url": "https://charset-normalizer.readthedocs.io/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "click": {
+    "name": "click",
+    "version": "8.1.8",
+    "description": "Composable command line interface toolkit",
+    "website": "https://pypi.org/project/click/",
+    "category": "core",
+    "docs_url": "https://click.palletsprojects.com/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Click is a Python package designed for creating beautiful and composable command line interfaces (CLIs) with minimal code. Key features include arbitrary command nesting, automatic help page generation, and lazy loading of subcommands, making it ideal for quickly and easily developing command line tools.')"
+  },
+  "click-didyoumean": {
+    "name": "click-didyoumean",
+    "version": "0.3.1",
+    "description": "Enables git-like *did-you-mean* feature in click",
+    "website": "https://pypi.org/project/click-didyoumean/",
+    "category": "core",
+    "docs_url": "",
+    "github_url": "https://github.com/click-contrib/click-didyoumean",
+    "summary": "AgentRunResult(output='`click-didyoumean` is a Python package that adds a Git-like \"did you mean?\" feature to command-line interfaces built with the `click` library. It suggests valid commands when a user enters a typo, improving usability. Key features include easy integration using specific group/collection classes and configurable limits on the number of suggestions and the required similarity score.')"
+  },
+  "click-plugins": {
+    "name": "click-plugins",
+    "version": "1.1.1",
+    "description": "An extension module for click to enable registering CLI commands via setuptools entry-points.",
+    "website": "https://pypi.org/project/click-plugins/",
+    "category": "core",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='`click-plugins` extends the Click library to allow external')"
+  },
+  "click-repl": {
+    "name": "click-repl",
+    "version": "0.3.0",
+    "description": "REPL plugin for Click",
+    "website": "https://pypi.org/project/click-repl/",
+    "category": "core",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "cohere": {
+    "name": "cohere",
+    "version": "5.15.0",
+    "description": "",
+    "website": "",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": ""
+  },
+  "colorama": {
+    "name": "colorama",
+    "version": "0.4.6",
+    "description": "Cross-platform colored terminal text.",
+    "website": "https://pypi.org/project/colorama/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "coverage": {
+    "name": "coverage",
+    "version": "7.8.0",
+    "description": "Code coverage measurement for Python",
+    "website": "https://pypi.org/project/coverage/",
+    "category": "testing",
+    "docs_url": "https://coverage.readthedocs.io/en/7.8.0",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Coverage.py is a Python tool that measures code coverage by monitoring program execution to identify which lines of code have been run and which have not. Its key capability is analyzing the source to find potentially executable but unexecuted code, commonly used to gauge the effectiveness of tests by showing which parts of the codebase are exercised.')"
+  },
+  "cryptography": {
+    "name": "cryptography",
+    "version": "44.0.3",
+    "description": "cryptography is a package which provides cryptographic recipes and primitives to Python developers.",
+    "website": "https://pypi.org/project/cryptography/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "deprecated": {
+    "name": "deprecated",
+    "version": "1.2.18",
+    "description": "Python @deprecated decorator to deprecate old python classes, functions or methods.",
+    "website": "https://pypi.org/project/Deprecated/",
+    "category": "other",
+    "docs_url": "https://deprecated.readthedocs.io/en/latest/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "dill": {
+    "name": "dill",
+    "version": "0.4.0",
+    "description": "serialize all of Python",
+    "website": "https://pypi.org/project/dill/",
+    "category": "other",
+    "docs_url": "http://dill.rtfd.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "distro": {
+    "name": "distro",
+    "version": "1.9.0",
+    "description": "Distro - an OS platform information API",
+    "website": "https://pypi.org/project/distro/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output=\"The 'distro' Python package provides a stable API to reliably identify the underlying Linux or BSD operating system distribution and its version. It is primarily used by developers and system administrators needing to query OS platform details within their Python applications or scripts, often for conditional logic or system reporting.\")"
+  },
+  "eval_type_backport": {
+    "name": "eval_type_backport",
+    "version": "0.2.2",
+    "description": "Like `typing._eval_type`, but lets older Python versions use newer typing features.",
+    "website": "https://pypi.org/project/eval-type-backport/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "executing": {
+    "name": "executing",
+    "version": "2.2.0",
+    "description": "Get the currently executing AST node of a frame, and other information",
+    "website": "https://pypi.org/project/executing/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "fastapi": {
+    "name": "fastapi",
+    "version": "0.115.12",
+    "description": "FastAPI framework, high performance, easy to learn, fast to code, ready for production",
+    "website": "https://pypi.org/project/fastapi/",
+    "category": "web",
+    "docs_url": "https://fastapi.tiangolo.com/",
+    "github_url": "https://github.com/fastapi/fastapi",
+    "summary": ""
+  },
+  "fastavro": {
+    "name": "fastavro",
+    "version": "1.10.0",
+    "description": "Fast read/write of AVRO files",
+    "website": "https://pypi.org/project/fastavro/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "filelock": {
+    "name": "filelock",
+    "version": "3.18.0",
+    "description": "A platform independent file lock.",
+    "website": "https://pypi.org/project/filelock/",
+    "category": "other",
+    "docs_url": "https://py-filelock.readthedocs.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "flake8": {
+    "name": "flake8",
+    "version": "7.0.0",
+    "description": "the modular source code checker: pep8 pyflakes and co",
+    "website": "https://pypi.org/project/flake8/",
+    "category": "testing",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "fsspec": {
+    "name": "fsspec",
+    "version": "2025.3.2",
+    "description": "File-system specification",
+    "website": "https://pypi.org/project/fsspec/",
+    "category": "other",
+    "docs_url": "https://filesystem-spec.readthedocs.io/en/latest/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "gitdb": {
+    "name": "gitdb",
+    "version": "4.0.12",
+    "description": "Git Object Database",
+    "website": "https://pypi.org/project/gitdb/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "gitpython": {
+    "name": "gitpython",
+    "version": "3.1.42",
+    "description": "GitPython is a Python library used to interact with Git repositories",
+    "website": "https://pypi.org/project/GitPython/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "google-ai-generativelanguage": {
+    "name": "google-ai-generativelanguage",
+    "version": "0.6.15",
+    "description": "Google Ai Generativelanguage API client library",
+    "website": "https://pypi.org/project/google-ai-generativelanguage/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "google-api-core": {
+    "name": "google-api-core",
+    "version": "2.24.2",
+    "description": "Google API client core library",
+    "website": "https://pypi.org/project/google-api-core/",
+    "category": "other",
+    "docs_url": "https://googleapis.dev/python/google-api-core/latest/",
+    "github_url": "https://github.com/googleapis/python-api-core",
+    "summary": ""
+  },
+  "google-api-python-client": {
+    "name": "google-api-python-client",
+    "version": "2.167.0",
+    "description": "Google API Client Library for Python",
+    "website": "https://pypi.org/project/google-api-python-client/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "google-auth": {
+    "name": "google-auth",
+    "version": "2.39.0",
+    "description": "Google Authentication Library",
+    "website": "https://pypi.org/project/google-auth/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='The `google-auth` Python library simplifies the process of authenticating applications, particularly in server-to-server scenarios, to access Google APIs. It handles various Google authentication mechanisms, making it easier for developers to securely connect their applications to Google services. Common use cases involve any Python application needing programmatic access to Google Cloud Platform or other Google APIs.')"
+  },
+  "google-auth-httplib2": {
+    "name": "google-auth-httplib2",
+    "version": "0.2.0",
+    "description": "Google Authentication Library: httplib2 transport",
+    "website": "https://pypi.org/project/google-auth-httplib2/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "google-cloud": {
+    "name": "google-cloud",
+    "version": "0.34.0",
+    "description": "API Client library for Google Cloud",
+    "website": "https://pypi.org/project/google-cloud/",
+    "category": "cloud",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "google-cloud-core": {
+    "name": "google-cloud-core",
+    "version": "2.4.3",
+    "description": "Google Cloud API client core library",
+    "website": "https://pypi.org/project/google-cloud-core/",
+    "category": "cloud",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "google-cloud-secret-manager": {
+    "name": "google-cloud-secret-manager",
+    "version": "2.23.3",
+    "description": "Google Cloud Secret Manager API client library",
+    "website": "https://pypi.org/project/google-cloud-secret-manager/",
+    "category": "cloud",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "google-cloud-storage": {
+    "name": "google-cloud-storage",
+    "version": "2.14.0",
+    "description": "Google Cloud Storage API client library",
+    "website": "https://pypi.org/project/google-cloud-storage/",
+    "category": "cloud",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='The `google-cloud-storage` Python package is a client library enabling developers to interact with the Google Cloud Storage API.')"
+  },
+  "google-crc32c": {
+    "name": "google-crc32c",
+    "version": "1.7.1",
+    "description": "A python wrapper of the C library 'Google CRC32C'",
+    "website": "https://pypi.org/project/google-crc32c/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output=\"Based on the provided documentation:\\n\\nThe `google-crc32c` package is a Python wrapper for Google's C library implementation of the CRC32C hashing algorithm, leveraging hardware acceleration where available. It provides pre-compiled wheels for various platforms and Python versions (3.9+), enabling developers to easily integrate and efficiently compute CRC3\")"
+  },
+  "google-generativeai": {
+    "name": "google-generativeai",
+    "version": "0.8.5",
+    "description": "Google Generative AI High level API client library and tools.",
+    "website": "https://pypi.org/project/google-generativeai/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "google-resumable-media": {
+    "name": "google-resumable-media",
+    "version": "2.7.2",
+    "description": "Utilities for Google Media Downloads and Resumable Uploads",
+    "website": "https://pypi.org/project/google-resumable-media/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='The `google-resumable-media` Python package provides utilities for managing media interactions with Google services. Its key features are facilitating media downloads and enabling resumable uploads, which allow large file transfers to continue even if interrupted. Developers commonly use this package for reliable, programmatic media file transfers to and from Google platforms.')"
+  },
+  "googleapis-common-protos": {
+    "name": "googleapis-common-protos",
+    "version": "1.70.0",
+    "description": "Common protobufs used in Google APIs",
+    "website": "https://pypi.org/project/googleapis-common-protos/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/googleapis/google-cloud-python/tree/main/packages/googleapis-common-protos",
+    "summary": "AgentRunResult(output='')"
+  },
+  "greenlet": {
+    "name": "greenlet",
+    "version": "3.2.1",
+    "description": "Lightweight in-process concurrent programming",
+    "website": "https://pypi.org/project/greenlet/",
+    "category": "other",
+    "docs_url": "https://greenlet.readthedocs.io/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "griffe": {
+    "name": "griffe",
+    "version": "1.7.3",
+    "description": "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API.",
+    "website": "https://pypi.org/project/griffe/",
+    "category": "other",
+    "docs_url": "https://mkdocstrings.github.io/griffe",
+    "github_url": "https://github.com/mkdocstrings/griffe",
+    "summary": "AgentRunResult(output='')"
+  },
+  "groq": {
+    "name": "groq",
+    "version": "0.24.0",
+    "description": "The official Python library for the groq API",
+    "website": "https://pypi.org/project/groq/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/groq/groq-python",
+    "summary": "AgentRunResult(output='')"
+  },
+  "grpc-google-iam-v1": {
+    "name": "grpc-google-iam-v1",
+    "version": "0.14.2",
+    "description": "IAM API client library",
+    "website": "https://pypi.org/project/grpc-google-iam-v1/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/googleapis/google-cloud-python",
+    "summary": "AgentRunResult(output='')"
+  },
+  "grpcio": {
+    "name": "grpcio",
+    "version": "1.72.0rc1",
+    "description": "HTTP/2-based RPC framework",
+    "website": "https://pypi.org/project/grpcio/",
+    "category": "other",
+    "docs_url": "https://grpc.github.io/grpc/python",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "grpcio-status": {
+    "name": "grpcio-status",
+    "version": "1.71.0",
+    "description": "Status proto mapping for gRPC",
+    "website": "https://pypi.org/project/grpcio-status/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "h11": {
+    "name": "h11",
+    "version": "0.16.0",
+    "description": "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1",
+    "website": "https://pypi.org/project/h11/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "httpcore": {
+    "name": "httpcore",
+    "version": "1.0.9",
+    "description": "A minimal low-level HTTP client.",
+    "website": "https://pypi.org/project/httpcore/",
+    "category": "other",
+    "docs_url": "https://www.encode.io/httpcore",
+    "github_url": "",
+    "summary": "AgentRunResult(output='`httpcore` is a minimal, low-')"
+  },
+  "httplib2": {
+    "name": "httplib2",
+    "version": "0.22.0",
+    "description": "A comprehensive HTTP client library.",
+    "website": "https://pypi.org/project/httplib2/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the provided documentation excerpt (\"Please enable JavaScript to proceed.\"), it is impossible to summarize the `httplib2` package. The text does not contain any information about the package\\'s purpose, features, or use cases.')"
+  },
+  "httpx": {
+    "name": "httpx",
+    "version": "0.28.1",
+    "description": "The next generation HTTP client.",
+    "website": "https://pypi.org/project/httpx/",
+    "category": "web",
+    "docs_url": "https://www.python-httpx.org",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "httpx-sse": {
+    "name": "httpx-sse",
+    "version": "0.4.0",
+    "description": "Consume Server-Sent Event (SSE) messages with HTTPX.",
+    "website": "https://pypi.org/project/httpx-sse/",
+    "category": "web",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "huggingface-hub": {
+    "name": "huggingface-hub",
+    "version": "0.30.2",
+    "description": "Client library to download and publish models, datasets and other repos on the huggingface.co hub",
+    "website": "https://pypi.org/project/huggingface-hub/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "idna": {
+    "name": "idna",
+    "version": "3.10",
+    "description": "Internationalized Domain Names in Applications (IDNA)",
+    "website": "https://pypi.org/project/idna/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "importlib_metadata": {
+    "name": "importlib_metadata",
+    "version": "8.6.1",
+    "description": "Read metadata from Python packages",
+    "website": "https://pypi.org/project/importlib-metadata/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "iniconfig": {
+    "name": "iniconfig",
+    "version": "2.1.0",
+    "description": "brain-dead simple config-ini parsing",
+    "website": "https://pypi.org/project/iniconfig/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='`iniconfig` is a simple Python library designed for parsing INI configuration files. Its key features include maintaining the original order of sections and entries and supporting multi-line values, making it useful for developers needing a straightforward utility to read configuration settings.')"
+  },
+  "isort": {
+    "name": "isort",
+    "version": "5.13.2",
+    "description": "A Python utility / library to sort Python imports.",
+    "website": "https://pypi.org/project/isort/",
+    "category": "dev",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "jiter": {
+    "name": "jiter",
+    "version": "0.9.0",
+    "description": "Fast iterable JSON parser.",
+    "website": "https://pypi.org/project/jiter/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "jmespath": {
+    "name": "jmespath",
+    "version": "1.0.1",
+    "description": "JSON Matching Expressions",
+    "website": "https://pypi.org/project/jmespath/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "kombu": {
+    "name": "kombu",
+    "version": "5.5.3",
+    "description": "Messaging library for Python.",
+    "website": "https://pypi.org/project/kombu/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "logfire": {
+    "name": "logfire",
+    "version": "3.14.1",
+    "description": "The best Python observability tool! \ud83e\udeb5\ud83d\udd25",
+    "website": "https://pypi.org/project/logfire/",
+    "category": "core",
+    "docs_url": "https://logfire.pydantic.dev/docs/",
+    "github_url": "",
+    "summary": ""
+  },
+  "logfire-api": {
+    "name": "logfire-api",
+    "version": "3.14.1",
+    "description": "",
+    "website": "",
+    "category": "core",
+    "docs_url": "",
+    "github_url": "",
+    "summary": ""
+  },
+  "markdown-it-py": {
+    "name": "markdown-it-py",
+    "version": "3.0.0",
+    "description": "Python port of markdown-it. Markdown parsing, done right!",
+    "website": "https://pypi.org/project/markdown-it-py/",
+    "category": "other",
+    "docs_url": "https://markdown-it-py.readthedocs.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "mccabe": {
+    "name": "mccabe",
+    "version": "0.7.0",
+    "description": "McCabe checker, plugin for flake8",
+    "website": "https://pypi.org/project/mccabe/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the provided text, `mccabe` is a Python package that checks the McCabe complexity of code, functioning as a plugin for the `flake8` code checker. Developers use it as part of their software development and quality assurance process to assess and manage code complexity.')"
+  },
+  "mcp": {
+    "name": "mcp",
+    "version": "1.7.1",
+    "description": "Model Context Protocol SDK",
+    "website": "https://pypi.org/project/mcp/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/modelcontextprotocol/python-sdk",
+    "summary": "AgentRunResult(output='')"
+  },
+  "mdurl": {
+    "name": "mdurl",
+    "version": "0.1.2",
+    "description": "Markdown URL utilities",
+    "website": "https://pypi.org/project/mdurl/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on')"
+  },
+  "mistralai": {
+    "name": "mistralai",
+    "version": "1.7.0",
+    "description": "Python Client SDK for the Mistral AI API.",
+    "website": "https://pypi.org/project/mistralai/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "https://github.com/mistralai/client-python.git",
+    "summary": "AgentRunResult(output='')"
+  },
+  "mypy": {
+    "name": "mypy",
+    "version": "1.9.0",
+    "description": "Optional static typing for Python",
+    "website": "https://pypi.org/project/mypy/",
+    "category": "testing",
+    "docs_url": "https://mypy.readthedocs.io/en/stable/index.html",
+    "github_url": "https://github.com/python/mypy",
+    "summary": "AgentRunResult(output='')"
+  },
+  "mypy_extensions": {
+    "name": "mypy_extensions",
+    "version": "1.1.0",
+    "description": "Type system extensions for programs checked with the mypy type checker.",
+    "website": "https://pypi.org/project/mypy-extensions/",
+    "category": "testing",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output=\"Based on the provided excerpt:\\n\\nThe `mypy_extensions` package provides extensions to Python's standard `typing` module, specifically designed for programs checked with the `mypy` type checker. Its key capability is offering additional type system features that are recognized and supported by both `mypy` and the `mypyc` compiler. Developers use this package to leverage these extended typing capabilities for more precise static analysis\")"
+  },
+  "nodeenv": {
+    "name": "nodeenv",
+    "version": "1.9.1",
+    "description": "Node.js virtual environment builder",
+    "website": "https://pypi.org/project/nodeenv/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Nodeenv is a Python tool designed to create isolated Node.js virtual environments, ensuring each environment has its own installation directories and libraries, preventing conflicts. Key features include the creation of self-contained Node.js setups and the ability to integrate these environments with Python virtual environments created by `virtualenv`. This makes it particularly useful for developers managing multiple Node.js projects or projects combining both Python and Node.js technologies.')"
+  },
+  "openai": {
+    "name": "openai",
+    "version": "1.77.0",
+    "description": "The official Python library for the openai API",
+    "website": "https://pypi.org/project/openai/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "https://github.com/openai/openai-python",
+    "summary": "AgentRunResult(output='')"
+  },
+  "opentelemetry-api": {
+    "name": "opentelemetry-api",
+    "version": "1.32.1",
+    "description": "OpenTelemetry Python API",
+    "website": "https://pypi.org/project/opentelemetry-api/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/open-telemetry/opentelemetry-python",
+    "summary": "AgentRunResult(output='Based on the provided documentation excerpt (\"Please enable JavaScript to proceed.\"), it is impossible to summarize the \\'opentelemetry-api\\' package. The text contains no information about the package\\'s purpose, features, capabilities, or common use cases. It appears to be a placeholder or error message from a web page rendering issue.')"
+  },
+  "opentelemetry-exporter-otlp-proto-common": {
+    "name": "opentelemetry-exporter-otlp-proto-common",
+    "version": "1.32.1",
+    "description": "OpenTelemetry Protobuf encoding",
+    "website": "https://pypi.org/project/opentelemetry-exporter-otlp-proto-common/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/open-telemetry/opentelemetry-python",
+    "summary": "AgentRunResult(output=\"This package provides shared Protobuf encoding capabilities for OpenTelemetry data. It primarily functions as an internal dependency, handling the serialization logic for other OTLP exporters like `opentelemetry-exporter-otlp-proto-grpc` and `opentelemetry-exporter-otlp-proto-http`. Developers typically don't interact with it directly but rely on it when using those specific OTLP Protobuf exporters.\")"
+  },
+  "opentelemetry-exporter-otlp-proto-http": {
+    "name": "opentelemetry-exporter-otlp-proto-http",
+    "version": "1.32.1",
+    "description": "OpenTelemetry Collector Protobuf over HTTP Exporter",
+    "website": "https://pypi.org/project/opentelemetry-exporter-otlp-proto-http/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/open-telemetry/opentelemetry-python",
+    "summary": "AgentRunResult(output='')"
+  },
+  "opentelemetry-instrumentation": {
+    "name": "opentelemetry-instrumentation",
+    "version": "0.53b1",
+    "description": "Instrumentation Tools & Auto Instrumentation for OpenTelemetry Python",
+    "website": "https://pypi.org/project/opentelemetry-instrumentation/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/open-telemetry/opentelemetry-python-contrib",
+    "summary": "AgentRunResult(output='')"
+  },
+  "opentelemetry-proto": {
+    "name": "opentelemetry-proto",
+    "version": "1.32.1",
+    "description": "OpenTelemetry Python Proto",
+    "website": "https://pypi.org/project/opentelemetry-proto/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/open-telemetry/opentelemetry-python",
+    "summary": "AgentRunResult(output='')"
+  },
+  "opentelemetry-sdk": {
+    "name": "opentelemetry-sdk",
+    "version": "1.32.1",
+    "description": "OpenTelemetry Python SDK",
+    "website": "https://pypi.org/project/opentelemetry-sdk/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/open-telemetry/opentelemetry-python",
+    "summary": "AgentRunResult(output='')"
+  },
+  "opentelemetry-semantic-conventions": {
+    "name": "opentelemetry-semantic-conventions",
+    "version": "0.53b1",
+    "description": "OpenTelemetry Semantic Conventions",
+    "website": "https://pypi.org/project/opentelemetry-semantic-conventions/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/open-telemetry/opentelemetry-python",
+    "summary": "AgentRunResult(output='')"
+  },
+  "packaging": {
+    "name": "packaging",
+    "version": "25.0",
+    "description": "Core utilities for Python packages",
+    "website": "https://pypi.org/project/packaging/",
+    "category": "other",
+    "docs_url": "https://packaging.pypa.io/",
+    "github_url": "",
+    "summary": "AgentRunResult(output=\"Based on the provided excerpt:\\n\\nThe Python 'packaging' library provides reusable core utilities for implementing standard packaging interoperability specifications, such as version parsing (PEP 440) and platform tags (PEP 425). Its main purpose is to offer a single, correct, shared implementation for these standards, ensuring consistency for tools that need to work with package metadata and compatibility.\")"
+  },
+  "pathspec": {
+    "name": "pathspec",
+    "version": "0.12.1",
+    "description": "Utility library for gitignore style pattern matching of file paths.",
+    "website": "https://pypi.org/project/pathspec/",
+    "category": "other",
+    "docs_url": "https://python-path-specification.readthedocs.io/en/latest/index.html",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "platformdirs": {
+    "name": "platformdirs",
+    "version": "4.3.7",
+    "description": "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`.",
+    "website": "https://pypi.org/project/platformdirs/",
+    "category": "other",
+    "docs_url": "https://platformdirs.readthedocs.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='`platformdirs` is a Python library designed to find standard, platform-specific directory locations across different operating systems (like Windows, macOS, Linux, Android). Its key capability is providing the correct paths for common use cases such as storing application')"
+  },
+  "pluggy": {
+    "name": "pluggy",
+    "version": "1.5.0",
+    "description": "plugin and hook calling mechanisms for python",
+    "website": "https://pypi.org/project/pluggy/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "prompt_toolkit": {
+    "name": "prompt_toolkit",
+    "version": "3.0.51",
+    "description": "",
+    "website": "",
+    "category": "dev",
+    "docs_url": "",
+    "github_url": "",
+    "summary": ""
+  },
+  "proto-plus": {
+    "name": "proto-plus",
+    "version": "1.26.1",
+    "description": "Beautiful, Pythonic protocol buffers",
+    "website": "https://pypi.org/project/proto-plus/",
+    "category": "other",
+    "docs_url": "https://googleapis.dev/python/proto-plus/latest/",
+    "github_url": "https://github.com/googleapis/proto-plus-python",
+    "summary": ""
+  },
+  "protobuf": {
+    "name": "protobuf",
+    "version": "5.29.4",
+    "description": null,
+    "website": "https://pypi.org/project/protobuf/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output=\"Based on the provided documentation excerpt, the Python 'protobuf' package does not have a description outlining its specific function or purpose. The available information mainly covers metadata like its license (3-Clause BSD), author, Python version requirements (>=3.9), and release history, including details about yanked versions. Therefore, its key features, capabilities, and common use cases cannot be determined from this text alone.\")"
+  },
+  "pyasn1": {
+    "name": "pyasn1",
+    "version": "0.6.1",
+    "description": "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)",
+    "website": "https://pypi.org/project/pyasn1/",
+    "category": "other",
+    "docs_url": "https://pyasn1.readthedocs.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pyasn1_modules": {
+    "name": "pyasn1_modules",
+    "version": "0.4.2",
+    "description": "A collection of ASN.1-based protocols modules",
+    "website": "https://pypi.org/project/pyasn1-modules/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pycodestyle": {
+    "name": "pycodestyle",
+    "version": "2.11.1",
+    "description": "Python style guide checker",
+    "website": "https://pypi.org/project/pycodestyle/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the documentation')"
+  },
+  "pycparser": {
+    "name": "pycparser",
+    "version": "2.22",
+    "description": "C parser in Python",
+    "website": "https://pypi.org/project/pycparser/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='`pycparser` is a pure Python package that functions as a complete parser for the C language. It transforms C code into an Abstract Syntax Tree (AST), serving as a front-end for applications like C compilers or code analysis tools.')"
+  },
+  "pydantic": {
+    "name": "pydantic",
+    "version": "2.11.4",
+    "description": "Data validation using Python type hints",
+    "website": "https://pypi.org/project/pydantic/",
+    "category": "data",
+    "docs_url": "https://docs.pydantic.dev",
+    "github_url": "",
+    "summary": ""
+  },
+  "pydantic-ai": {
+    "name": "pydantic-ai",
+    "version": "0.1.9",
+    "description": "Agent Framework / shim to use Pydantic with LLMs",
+    "website": "https://pypi.org/project/pydantic-ai/",
+    "category": "ai",
+    "docs_url": "https://ai.pydantic.dev",
+    "github_url": "",
+    "summary": ""
+  },
+  "pydantic-ai-slim": {
+    "name": "pydantic-ai-slim",
+    "version": "0.1.9",
+    "description": "",
+    "website": "",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "",
+    "summary": ""
+  },
+  "pydantic-evals": {
+    "name": "pydantic-evals",
+    "version": "0.1.9",
+    "description": "Framework for evaluating stochastic code execution, especially code making use of LLMs",
+    "website": "https://pypi.org/project/pydantic-evals/",
+    "category": "data",
+    "docs_url": "https://ai.pydantic.dev/evals",
+    "github_url": "",
+    "summary": ""
+  },
+  "pydantic-graph": {
+    "name": "pydantic-graph",
+    "version": "0.1.9",
+    "description": "Graph and state machine library",
+    "website": "https://pypi.org/project/pydantic-graph/",
+    "category": "data",
+    "docs_url": "https://ai.pydantic.dev/graph",
+    "github_url": "",
+    "summary": ""
+  },
+  "pydantic-settings": {
+    "name": "pydantic-settings",
+    "version": "2.9.1",
+    "description": "Settings management using Pydantic",
+    "website": "https://pypi.org/project/pydantic-settings/",
+    "category": "data",
+    "docs_url": "https://docs.pydantic.dev/dev-v2/concepts/pydantic_settings/",
+    "github_url": "",
+    "summary": ""
+  },
+  "pydantic_core": {
+    "name": "pydantic_core",
+    "version": "2.33.2",
+    "description": "Core functionality for Pydantic validation and serialization",
+    "website": "https://pypi.org/project/pydantic-core/",
+    "category": "data",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pyflakes": {
+    "name": "pyflakes",
+    "version": "3.2.0",
+    "description": "passive checker of Python programs",
+    "website": "https://pypi.org/project/pyflakes/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Pyflakes is a simple, passive checker that analyzes Python source files (Python 3.9+) for various errors without importing or executing the code. Its key features include speed and safety, as it works purely by parsing, making it suitable for checking modules with side effects. Developers commonly use Pyflakes as a fast utility to detect potential errors in their code during development.')"
+  },
+  "pygithub": {
+    "name": "pygithub",
+    "version": "2.3.0",
+    "description": "Use the full Github API v3",
+    "website": "https://pypi.org/project/PyGithub/",
+    "category": "other",
+    "docs_url": "https://pygithub.readthedocs.io/en/stable/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the provided excerpt (\"\u00a9 Copyright 2025, Vincent Jacques.\"), it is impossible to summarize what the \\'pygithub\\' package does, its features, or its use cases. The text only contains copyright information and lacks any descriptive content about the package itself.')"
+  },
+  "pygments": {
+    "name": "pygments",
+    "version": "2.19.1",
+    "description": "Pygments is a syntax highlighting package written in Python.",
+    "website": "https://pypi.org/project/Pygments/",
+    "category": "other",
+    "docs_url": "https://pygments.org/docs",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the documentation structure provided, Pygments appears to be a Python package focused on processing and presenting code. It offers capabilities like a command-line interface, a Python API for integration, support for Unicode/encodings, and extensibility through custom formatters and')"
+  },
+  "pyjwt": {
+    "name": "pyjwt",
+    "version": "2.10.1",
+    "description": "JSON Web Token implementation in Python",
+    "website": "https://pypi.org/project/PyJWT/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pylint": {
+    "name": "pylint",
+    "version": "3.3.7",
+    "description": "python code static checker",
+    "website": "https://pypi.org/project/pylint/",
+    "category": "testing",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pynacl": {
+    "name": "pynacl",
+    "version": "1.5.0",
+    "description": "Python binding to the Networking and Cryptography (NaCl) library",
+    "website": "https://pypi.org/project/PyNaCl/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='PyNaCl is a Python package providing bindings to the libsodium/NaCl cryptography library, designed for improved usability, security, and speed. It')"
+  },
+  "pyparsing": {
+    "name": "pyparsing",
+    "version": "3.2.3",
+    "description": "pyparsing module - Classes and methods to define and execute parsing grammars",
+    "website": "https://pypi.org/project/pyparsing/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Pyparsing is a Python package enabling developers to define and execute parsing grammars directly within Python code using provided classes. It offers an alternative approach to traditional lex/yacc methods or regular expressions for creating parsers. Common use cases involve text processing and tasks within software development, such as building compilers or interpreters for simple languages.')"
+  },
+  "pyright": {
+    "name": "pyright",
+    "version": "1.1.400",
+    "description": "Command line wrapper for pyright",
+    "website": "https://pypi.org/project/pyright/",
+    "category": "testing",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pytest": {
+    "name": "pytest",
+    "version": "8.1.1",
+    "description": "pytest: simple powerful testing with Python",
+    "website": "https://pypi.org/project/pytest/",
+    "category": "testing",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pytest-asyncio": {
+    "name": "pytest-asyncio",
+    "version": "0.23.5",
+    "description": "Pytest support for asyncio",
+    "website": "https://pypi.org/project/pytest-asyncio/",
+    "category": "testing",
+    "docs_url": "https://pytest-asyncio.readthedocs.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the provided text:\\n\\n`pytest-asyncio` is a pytest plugin designed to help test Python code written using the `asyncio` library. Its key capability is allowing test functions to be defined as coroutines (`async def`), enabling the use of `await` directly within tests. This makes it useful for testing asynchronous functions, applications, or libraries that rely on `asyncio`.')"
+  },
+  "pytest-cov": {
+    "name": "pytest-cov",
+    "version": "4.1.0",
+    "description": "Pytest plugin for measuring coverage.",
+    "website": "https://pypi.org/project/pytest-cov/",
+    "category": "testing",
+    "docs_url": "https://pytest-cov.readthedocs.io/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the documentation excerpt, pytest-cov is a plugin for the pytest testing framework that measures code coverage during test execution.')"
+  },
+  "pytest-mock": {
+    "name": "pytest-mock",
+    "version": "3.14.0",
+    "description": "Thin-wrapper around the mock package for easier use with pytest",
+    "website": "https://pypi.org/project/pytest-mock/",
+    "category": "testing",
+    "docs_url": "https://pytest-mock.readthedocs.io/en/latest/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "python-dateutil": {
+    "name": "python-dateutil",
+    "version": "2.9.0.post0",
+    "description": "Extensions to the standard Python datetime module",
+    "website": "https://pypi.org/project/python-dateutil/",
+    "category": "other",
+    "docs_url": "https://dateutil.readthedocs.io/en/stable/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "python-dotenv": {
+    "name": "python-dotenv",
+    "version": "1.0.0",
+    "description": "Read key-value pairs from a .env file and set them as environment variables",
+    "website": "https://pypi.org/project/python-dotenv/",
+    "category": "core",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "python-multipart": {
+    "name": "python-multipart",
+    "version": "0.0.20",
+    "description": "A streaming multipart parser for Python",
+    "website": "https://pypi.org/project/python-multipart/",
+    "category": "other",
+    "docs_url": "https://kludex.github.io/python-multipart/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pyyaml": {
+    "name": "pyyaml",
+    "version": "6.0.2",
+    "description": "YAML parser and emitter for Python",
+    "website": "https://pypi.org/project/PyYAML/",
+    "category": "ai",
+    "docs_url": "https://pyyaml.org/wiki/PyYAMLDocumentation",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "pyzmq": {
+    "name": "pyzmq",
+    "version": "25.1.2",
+    "description": "Python bindings for 0MQ",
+    "website": "https://pypi.org/project/pyzmq/",
+    "category": "async",
+    "docs_url": "https://pyzmq.readthedocs.org",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "redis": {
+    "name": "redis",
+    "version": "6.0.0",
+    "description": "Python client for Redis database and key-value store",
+    "website": "https://pypi.org/project/redis/",
+    "category": "data",
+    "docs_url": "https://redis.readthedocs.io/en/latest/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "requests": {
+    "name": "requests",
+    "version": "2.32.3",
+    "description": "Python HTTP for Humans.",
+    "website": "https://pypi.org/project/requests/",
+    "category": "web",
+    "docs_url": "https://requests.readthedocs.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "rich": {
+    "name": "rich",
+    "version": "14.0.0",
+    "description": "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal",
+    "website": "https://pypi.org/project/rich/",
+    "category": "core",
+    "docs_url": "https://rich.readthedocs.io/en/latest/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "rsa": {
+    "name": "rsa",
+    "version": "4.9.1",
+    "description": "Pure-Python RSA implementation",
+    "website": "https://pypi.org/project/rsa/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "https://github.com/sybrenstuvel/python-rsa",
+    "summary": "AgentRunResult(output='')"
+  },
+  "s3transfer": {
+    "name": "s3transfer",
+    "version": "0.12.0",
+    "description": "An Amazon S3 Transfer Manager",
+    "website": "https://pypi.org/project/s3transfer/",
+    "category": "cloud",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "setuptools": {
+    "name": "setuptools",
+    "version": "80.3.0",
+    "description": "Easily download, build, install, upgrade, and uninstall Python packages",
+    "website": "https://pypi.org/project/setuptools/",
+    "category": "dev",
+    "docs_url": "https://setuptools.pypa.io/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "six": {
+    "name": "six",
+    "version": "1.17.0",
+    "description": "Python 2 and 3 compatibility utilities",
+    "website": "https://pypi.org/project/six/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output=\"Based on the documentation, the 'six' package is a Python 2 and 3 compatibility library. It provides utility functions to help developers write code that runs smoothly on both Python 2.7 and Python 3.3+ by abstracting away version-specific differences. Its primary use case is enabling cross-version compatibility for Python projects.\")"
+  },
+  "smmap": {
+    "name": "smmap",
+    "version": "5.0.2",
+    "description": "A pure Python implementation of a sliding window memory map manager",
+    "website": "https://pypi.org/project/smmap/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "sniffio": {
+    "name": "sniffio",
+    "version": "1.3.1",
+    "description": "Sniff out which async library your code is running under",
+    "website": "https://pypi.org/project/sniffio/",
+    "category": "other",
+    "docs_url": "https://sniffio.readthedocs.io/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "soupsieve": {
+    "name": "soupsieve",
+    "version": "2.7",
+    "description": "A modern CSS selector implementation for Beautiful Soup.",
+    "website": "https://pypi.org/project/soupsieve/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "sqlalchemy": {
+    "name": "sqlalchemy",
+    "version": "2.0.28",
+    "description": "Database Abstraction Library",
+    "website": "https://pypi.org/project/SQLAlchemy/",
+    "category": "data",
+    "docs_url": "https://docs.sqlalchemy.org",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "sse-starlette": {
+    "name": "sse-starlette",
+    "version": "2.3.3",
+    "description": "SSE plugin for Starlette",
+    "website": "https://pypi.org/project/sse-starlette/",
+    "category": "web",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='`sse-starlette` is a Python package that')"
+  },
+  "starlette": {
+    "name": "starlette",
+    "version": "0.46.2",
+    "description": "The little ASGI library that shines.",
+    "website": "https://pypi.org/project/starlette/",
+    "category": "web",
+    "docs_url": "https://www.starlette.io/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Starlette is a lightweight, high-performance ASGI framework and toolkit designed for building asynchronous web services and APIs in Python. Key features include support for background')"
+  },
+  "tokenizers": {
+    "name": "tokenizers",
+    "version": "0.21.1",
+    "description": null,
+    "website": "https://pypi.org/project/tokenizers/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "tomlkit": {
+    "name": "tomlkit",
+    "version": "0.13.2",
+    "description": "Style preserving TOML library",
+    "website": "https://pypi.org/project/tomlkit/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "https://github.com/sdispater/tomlkit",
+    "summary": "AgentRunResult(output='')"
+  },
+  "tqdm": {
+    "name": "tqdm",
+    "version": "4.67.1",
+    "description": "Fast, Extensible Progress Meter",
+    "website": "https://pypi.org/project/tqdm/",
+    "category": "core",
+    "docs_url": "",
+    "github_url": "https://github.com/tqdm/tqdm",
+    "summary": "AgentRunResult(output='Based on the provided excerpt:\\n\\n`tqdm` is a fast and extensible Python package that provides progress meters (progress bars) for visualizing the execution of tasks. Key features include displaying progress rate and estimated time remaining (ETA) in console, terminal, and notebook environments across various operating systems. It is commonly used by developers to add visual feedback to loops or long-running operations in scripts and applications.')"
+  },
+  "types-beautifulsoup4": {
+    "name": "types-beautifulsoup4",
+    "version": "4.12.0.20240229",
+    "description": "Typing stubs for beautifulsoup4",
+    "website": "https://pypi.org/project/types-beautifulsoup4/",
+    "category": "web",
+    "docs_url": "",
+    "github_url": "https://github.com/python/typeshed",
+    "summary": "AgentRunResult(output='')"
+  },
+  "types-html5lib": {
+    "name": "types-html5lib",
+    "version": "1.1.11.20241018",
+    "description": "Typing stubs for html5lib",
+    "website": "https://pypi.org/project/types-html5lib/",
+    "category": "ai",
+    "docs_url": "",
+    "github_url": "https://github.com/python/typeshed",
+    "summary": "AgentRunResult(output='')"
+  },
+  "types-requests": {
+    "name": "types-requests",
+    "version": "2.31.0.20240311",
+    "description": "Typing stubs for requests",
+    "website": "https://pypi.org/project/types-requests/",
+    "category": "web",
+    "docs_url": "",
+    "github_url": "https://github.com/python/typeshed",
+    "summary": "AgentRunResult(output='')"
+  },
+  "typing-inspection": {
+    "name": "typing-inspection",
+    "version": "0.4.0",
+    "description": "Runtime typing introspection tools",
+    "website": "https://pypi.org/project/typing-inspection/",
+    "category": "core",
+    "docs_url": "https://pydantic.github.io/typing-inspection/dev/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the provided excerpt:\\n\\n`typing-inspection` is a Python package that provides tools to inspect type annotations programmatically at runtime. Its key capability is enabling the examination of type hints during program execution. This is useful for scenarios where runtime decisions or')"
+  },
+  "typing_extensions": {
+    "name": "typing_extensions",
+    "version": "4.13.2",
+    "description": "Backported and Experimental Type Hints for Python 3.8+",
+    "website": "https://pypi.org/project/typing-extensions/",
+    "category": "core",
+    "docs_url": "https://typing-extensions.readthedocs.io/",
+    "github_url": "https://github.com/python/typing_extensions",
+    "summary": "AgentRunResult(output=\"`typing_extensions` complements Python's standard `typing` module by providing runtime support for new and experimental type hinting features specified in PEPs. Its key capabilities are backporting newer typing constructs (like `TypeGuard`) to older\")"
+  },
+  "tzdata": {
+    "name": "tzdata",
+    "version": "2025.2",
+    "description": "Provider of IANA time zone data",
+    "website": "https://pypi.org/project/tzdata/",
+    "category": "other",
+    "docs_url": "https://tzdata.readthedocs.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "uritemplate": {
+    "name": "uritemplate",
+    "version": "4.1.1",
+    "description": "Implementation of RFC 6570 URI Templates",
+    "website": "https://pypi.org/project/uritemplate/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "urllib3": {
+    "name": "urllib3",
+    "version": "2.4.0",
+    "description": "HTTP library with thread-safe connection pooling, file post, and more.",
+    "website": "https://pypi.org/project/urllib3/",
+    "category": "other",
+    "docs_url": "https://urllib3.readthedocs.io",
+    "github_url": "",
+    "summary": "AgentRunResult(output='`urllib3` is a powerful, user-friendly HTTP client library for Python, widely used within the ecosystem for making web requests. Key features include client-side TLS/SSL verification, multipart file uploads, automatic request retries and redirect handling, support for various compression encodings (gzip, deflate, brotli, zstd), and HTTP/SOCKS proxy support. It simplifies common HTTP tasks that require more complex handling with standard libraries.')"
+  },
+  "uvicorn": {
+    "name": "uvicorn",
+    "version": "0.34.2",
+    "description": "The lightning-fast ASGI server.",
+    "website": "https://pypi.org/project/uvicorn/",
+    "category": "web",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Uvicorn is a high-performance ASGI web server implementation for Python. Its primary function is to serve web applications built with modern asynchronous Python frameworks that adhere to the ASGI specification. Common use cases involve deploying async web applications and APIs where speed is essential.')"
+  },
+  "vine": {
+    "name": "vine",
+    "version": "5.1.0",
+    "description": "Python promises.",
+    "website": "https://pypi.org/project/vine/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the provided text \"Please enable JavaScript to proceed,\" it is impossible to determine what the \\'vine\\' Python package does, its key features, or common use cases. The text is a browser message indicating that JavaScript is required to view the actual documentation content, which is not present in the excerpt. Therefore, no summary of the \\'vine\\' package can be generated from this information.')"
+  },
+  "wcwidth": {
+    "name": "wcwidth",
+    "version": "0.2.13",
+    "description": "Measures the displayed width of unicode strings in a terminal",
+    "website": "https://pypi.org/project/wcwidth/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='Based on the provided documentation excerpt (\"Please enable JavaScript to proceed.\"), it is impossible to determine what the \\'wcwidth\\' package does, its key features, or its common use cases. The excerpt contains no information about the package itself.')"
+  },
+  "wrapt": {
+    "name": "wrapt",
+    "version": "1.17.2",
+    "description": "Module for decorators, wrappers and monkey patching.",
+    "website": "https://pypi.org/project/wrapt/",
+    "category": "other",
+    "docs_url": "https://wrapt.readthedocs.io/",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  },
+  "zipp": {
+    "name": "zipp",
+    "version": "3.21.0",
+    "description": "Backport of pathlib-compatible object wrapper for zip files",
+    "website": "https://pypi.org/project/zipp/",
+    "category": "other",
+    "docs_url": "",
+    "github_url": "",
+    "summary": "AgentRunResult(output='')"
+  }
+}

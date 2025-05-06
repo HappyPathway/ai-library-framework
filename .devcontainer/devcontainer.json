@@ -6,7 +6,6 @@
     },
     "mounts": [
         "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
-        "source=${localWorkspaceFolder}/.env,target=/workspace/.env,type=bind,consistency=cached,optional=true",
         "source=${localEnv:HOME}/.config/gcloud,target=/home/vscode/.config/gcloud,type=bind,consistency=cached,optional=true",
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,optional=true"
     ],
