@@ -315,36 +315,90 @@ class AutodocAgent:
             logger.error(f"Error enriching {name}: {e}")
 
     async def _get_pypi_info(self, package_name: str) -> Optional[Dict]:
-        """Get package information from PyPI."""
+        """Get package information from PyPI.
+
+        Args:
+            package_name: Name of the package to look up
+
+        Returns:
+            Dict with package information or None if not found
+        """
         pypi_url = f"https://pypi.org/pypi/{package_name}/json"
 
-        try:
-            # Remove the timeout parameter that was causing the error
-            response = await asyncio.to_thread(
-                self.scraper.get, pypi_url
-            )
+        # Max retries for 503 errors
+        max_retries = 3
+        retry_count = 0
+        base_delay = 1.0
 
-            if not response or response.status_code != 200:
+        while retry_count <= max_retries:
+            try:
+                # Fetch data from PyPI
+                response = await asyncio.to_thread(
+                    self.scraper.get, pypi_url
+                )
+
+                if not response:
+                    logger.warning(f"Package {package_name} not found on PyPI (no response)")
+                    return None
+
+                if response.status_code == 503:
+                    # Service unavailable, retry with backoff
+                    if retry_count < max_retries:
+                        delay = base_delay * (2 ** retry_count)
+                        retry_count += 1
+                        logger.warning(f"PyPI service unavailable (503) for {package_name}, retrying in {delay}s (attempt {retry_count}/{max_retries})")
+                        await asyncio.sleep(delay)
+                        continue
+                    else:
+                        logger.error(f"Maximum retries reached for {package_name} - PyPI service unavailable")
+                        return None
+
+                if response.status_code != 200:
+                    logger.warning(f"Package {package_name} not found on PyPI (status: {response.status_code})")
+                    return None
+
+                # Parse JSON response
+                try:
+                    data = response.json()
+                except json.JSONDecodeError:
+                    logger.error(f"Invalid JSON response for {package_name}")
+                    return None
+
+                # Extract information with proper error handling
+                if not data:
+                    logger.warning(f"Empty data from PyPI for {package_name}")
+                    return None
+
+                info = data.get('info', {})
+                if not info:
+                    logger.warning(f"No info section found for {package_name}")
+                    return None
+
+                # Handle None project_urls with fallback to empty dict
+                project_urls = info.get('project_urls')
+                if project_urls is None:
+                    project_urls = {}
+
+                # Create result with safe attribute access
+                result = {
+                    'summary': info.get('summary', ''),
+                    'project_url': info.get('project_url', info.get('home_page', '')),
+                    'docs_url': project_urls.get('Documentation', '')
+                }
+
+                # Handle GitHub URL with proper error checks
+                result['github_url'] = ''
+                if project_urls and isinstance(project_urls, dict):
+                    for name, url in project_urls.items():
+                        if name and url and ('github' in name.lower() or 'repository' in name.lower()):
+                            result['github_url'] = url
+                            break
+
+                return result
+
+            except Exception as e:
+                logger.error(f"Error fetching PyPI info for {package_name}: {e}")
                 return None
-
-            data = response.json()
-            info = data.get('info', {})
-
-            project_urls = info.get('project_urls', {})
-
-            result = {
-                'summary': info.get('summary', ''),
-                'project_url': info.get('project_url', info.get('home_page', '')),
-                'docs_url': project_urls.get('Documentation', ''),
-                'github_url': next((url for name, url in project_urls.items()
-                                    if 'github' in name.lower() or 'repository' in name.lower()), '')
-            }
-
-            return result
-
-        except Exception as e:
-            logger.error(f"Error fetching PyPI info for {package_name}: {e}")
-            return None
 
     async def _fetch_docs_summary(self, package_name: str, url: str) -> str:
         """Fetch and summarize documentation using AI."""
@@ -595,6 +649,15 @@ async def main():
             deps_list = list(agent.dependencies.items())[:args.limit]
             agent.dependencies = dict(deps_list)
             logger.info(f"Limited packages to {args.limit}/{original_count}")
+
+        # Rebuild categorized_deps based on filtered dependencies
+        if args.filter or args.category or args.limit > 0:
+            # Clear existing categorized deps
+            agent.categorized_deps = defaultdict(list)
+            # Re-categorize based on filtered dependencies
+            for name, dep_info in agent.dependencies.items():
+                agent.categorized_deps[dep_info.category].append(dep_info)
+            logger.info(f"Rebuilt category groups with {len(agent.dependencies)} packages")
 
     if not args.skip_ai:
         await agent.enrich_dependency_info(batch_size=args.batch_size)

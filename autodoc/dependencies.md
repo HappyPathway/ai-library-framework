@@ -22,7 +22,7 @@ Asynchronous programming tools
 
 Low-level AMQP client for Python (fork of amqplib).
 
-AgentRunResult(output='')
+AgentRunResult(output='The provided documentation excerpt, "Please enable JavaScript to proceed," does not contain any information about the Python package \'amqp\'. Therefore, I cannot summarize its purpose, features, or use cases based on this text.')
 
 **Links:** [Website](https://pypi.org/project/amqp/)
 
@@ -32,7 +32,7 @@ AgentRunResult(output='')
 
 High level compatibility layer for multiple asynchronous event loop implementations
 
-AgentRunResult(output='')
+AgentRunResult(output="AnyIO is an asynchronous networking and concurrency library that enables code to run unmodified on either `asyncio` or `trio` backends. Key features include trio-like structured concurrency (task groups), cancellation, timeouts, synchronization primitives, and asynchronous file I/O. It's commonly used for building backend-agnostic I/O-bound applications and libraries that require robust concurrent operations.")
 
 **Links:** [Website](https://pypi.org/project/anyio/) | [Documentation](https://anyio.readthedocs.io/en/latest/)
 
@@ -42,7 +42,7 @@ AgentRunResult(output='')
 
 Timeout context manager for asyncio programs
 
-AgentRunResult(output='')
+AgentRunResult(output='The provided documentation excerpt ("Please enable JavaScript to proceed.") does not contain any information about the \'async-timeout\' Python package. Therefore, I cannot summarize its purpose, features, or common use cases based on this text.')
 
 **Links:** [Website](https://pypi.org/project/async-timeout/) | [GitHub](https://github.com/aio-libs/async-timeout/actions)
 
@@ -52,7 +52,7 @@ AgentRunResult(output='')
 
 Distributed Task Queue.
 
-AgentRunResult(output='Based on the provided documentation:\n\nCelery is a distributed task queue system designed to process vast amounts of messages, focusing on real-time execution while also supporting task scheduling. It provides a simple, flexible, and reliable way to run background tasks asynchronously or schedule them for later execution in distributed environments.')
+AgentRunResult(output='Based on the excerpt, Celery is a distributed task queue system designed to process large volumes of messages asynchronously. Its key features include real-time processing and task scheduling, making it suitable for offloading long-running operations, handling background work, and executing periodic tasks in a distributed environment.')
 
 **Links:** [Website](https://pypi.org/project/celery/) | [Documentation](https://docs.celeryq.dev/en/stable/)
 
@@ -86,7 +86,7 @@ AgentRunResult(output='')
 
 Bash tab completion for argparse
 
-AgentRunResult(output='')
+AgentRunResult(output="Argcomplete is a Python package that enables bash/zsh tab completion for command-line arguments defined using Python's `argparse` module. Key features include the `argcomplete.autocomplete(parser)` function to register an argparse parser, support for various completers like `ChoicesCompleter`, `DirectoriesCompleter`, and `FilesCompleter`, and the ability to activate global completion. It is commonly used to enhance the user experience of Python command-line interface (CLI) applications by making argument input faster and less error-prone.")
 
 **Links:** [Website](https://pypi.org/project/argcomplete/) | [Documentation](https://kislyuk.github.io/argcomplete)
 
@@ -126,7 +126,7 @@ AgentRunResult(output='')
 
 Python package for providing Mozilla's CA Bundle.
 
-AgentRunResult(output='')
+AgentRunResult(output="Certifi is a Python package that supplies Mozilla's carefully curated collection of Root Certificates (CA Bundle). Its key function is to enable Python applications to validate the trustworthiness of SSL certificates and verify TLS host identities by providing a reliable, portable root of trust, though it doesn't allow modification of the bundle.")
 
 **Links:** [Website](https://pypi.org/project/certifi/)
 
@@ -136,7 +136,7 @@ AgentRunResult(output='')
 
 Foreign Function Interface for Python calling C code.
 
-AgentRunResult(output='CFFI is a Python package providing a C Foreign Function Interface, allowing Python code to interact with almost any C code. Its key feature is using C-like declarations,')
+AgentRunResult(output='cffi is a Python package that enables interaction with C code, allowing Python to call C functions and work with C data structures. It primarily')
 
 **Links:** [Website](https://pypi.org/project/cffi/) | [Documentation](http://cffi.readthedocs.org/)
 
@@ -146,7 +146,7 @@ AgentRunResult(output='CFFI is a Python package providing a C Foreign Function I
 
 The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet.
 
-AgentRunResult(output='')
+AgentRunResult(output='Charset-normalizer is a Python library that helps read text from unknown character encodings by finding an encoding that best transposes the content to Unicode, rather than trying to determine the original encoding. Key features include support')
 
 **Links:** [Website](https://pypi.org/project/charset-normalizer/) | [Documentation](https://charset-normalizer.readthedocs.io/)
 
@@ -154,13 +154,17 @@ AgentRunResult(output='')
 
 ### cohere (5.15.0)
 
+AgentRunResult(output='The provided documentation excerpt, "Please enable JavaScript to proceed," does not contain any information about the Python package \'cohere\'. Therefore, it\'s not possible to summarize what the package does, its key features, or its common use cases based solely on this text.')
+
+**Links:** [Website](https://pypi.org/project/cohere/)
+
 ---
 
 ### colorama (0.4.6)
 
 Cross-platform colored terminal text.
 
-AgentRunResult(output='')
+AgentRunResult(output='Colorama is a Python package that enables cross-platform colored terminal text and cursor positioning by making ANSI escape sequences work correctly, especially on MS Windows. Its key capability is translating these sequences for Windows, allowing developers to create visually richer command-line interfaces that behave consistently across different operating systems.')
 
 **Links:** [Website](https://pypi.org/project/colorama/)
 
@@ -170,7 +174,7 @@ AgentRunResult(output='')
 
 cryptography is a package which provides cryptographic recipes and primitives to Python developers.
 
-AgentRunResult(output='')
+AgentRunResult(output="The 'cryptography' Python package provides developers with cryptographic recipes (high-level operations) and primitives (low-level building blocks). It is a production-stable library, supporting various Python versions and operating systems, commonly used for implementing security features within Python applications.")
 
 **Links:** [Website](https://pypi.org/project/cryptography/)
 
@@ -200,7 +204,7 @@ AgentRunResult(output='')
 
 Distro - an OS platform information API
 
-AgentRunResult(output="The 'distro' Python package provides a stable API to reliably identify the underlying Linux or BSD operating system distribution and its version. It is primarily used by developers and system administrators needing to query OS platform details within their Python applications or scripts, often for conditional logic or system reporting.")
+AgentRunResult(output="The 'distro' Python package provides an API to retrieve operating system platform information, specifically for Linux and various BSD distributions. It is primarily used by developers and system administrators to identify the OS, enabling them to write platform-aware code or perform OS-dependent system tasks.")
 
 **Links:** [Website](https://pypi.org/project/distro/)
 
@@ -240,7 +244,7 @@ AgentRunResult(output='')
 
 A platform independent file lock.
 
-AgentRunResult(output='')
+AgentRunResult(output="The 'filelock' package provides a platform-independent file locking mechanism for inter-process communication, using a separate `.lock` file to signal that a resource or working directory is in use. Key features include exclusive, recursive locks, support for timeouts, and non-blocking acquisition. It's commonly used to coordinate access to shared resources, such as ensuring only one process writes to a file while others can read it, thus preventing race conditions.")
 
 **Links:** [Website](https://pypi.org/project/filelock/) | [Documentation](https://py-filelock.readthedocs.io)
 
@@ -260,7 +264,7 @@ AgentRunResult(output='')
 
 Git Object Database
 
-AgentRunResult(output='')
+AgentRunResult(output="GitDB is a pure-Python library that provides an interface to Git's object database, allowing developers to read and potentially write Git objects like blobs, trees, and commits. Its key capability is offering low-level, programmatic access to Git's internal data structures without external dependencies. This is commonly used by developers building custom Git tooling, analysis scripts, or applications that need to interact directly with repository data.")
 
 **Links:** [Website](https://pypi.org/project/gitdb/)
 
@@ -270,7 +274,7 @@ AgentRunResult(output='')
 
 GitPython is a Python library used to interact with Git repositories
 
-AgentRunResult(output='')
+AgentRunResult(output='GitPython is a Python library that allows developers to interact with Git repositories. It offers both high-level (like git-porcelain) and low-level (like git-plumbing) interfaces, making it suitable for programmatically managing repositories, automating Git workflows, or building custom Git tooling.')
 
 **Links:** [Website](https://pypi.org/project/GitPython/)
 
@@ -298,7 +302,7 @@ AgentRunResult(output='')
 
 Google Authentication Library
 
-AgentRunResult(output='The `google-auth` Python library simplifies the process of authenticating applications, particularly in server-to-server scenarios, to access Google APIs. It handles various Google authentication mechanisms, making it easier for developers to securely connect their applications to Google services. Common use cases involve any Python application needing programmatic access to Google Cloud Platform or other Google APIs.')
+AgentRunResult(output='The `google-auth` Python package simplifies server-to-server authentication for accessing Google APIs. Key features include handling various Google authentication mechanisms and offering optional extras for specific needs like different HTTP client integrations or enterprise certificate support. It is primarily used by developers whose applications need to securely authenticate with Google services programmatically.')
 
 **Links:** [Website](https://pypi.org/project/google-auth/)
 
@@ -308,7 +312,7 @@ AgentRunResult(output='The `google-auth` Python library simplifies the process o
 
 Google Authentication Library: httplib2 transport
 
-AgentRunResult(output='')
+AgentRunResult(output='The `google-auth-httplib2` Python package provides an `httplib2` transport layer for the `google-auth` library. Its key capability and primary use case is to assist developers in migrating existing applications that use `oauth2client` (which often relies on `httplib2`) to the newer `google-auth` library, despite `httplib2` being discouraged due to issues like lack of thread safety.')
 
 **Links:** [Website](https://pypi.org/project/google-auth-httplib2/)
 
@@ -318,7 +322,7 @@ AgentRunResult(output='')
 
 A python wrapper of the C library 'Google CRC32C'
 
-AgentRunResult(output="Based on the provided documentation:\n\nThe `google-crc32c` package is a Python wrapper for Google's C library implementation of the CRC32C hashing algorithm, leveraging hardware acceleration where available. It provides pre-compiled wheels for various platforms and Python versions (3.9+), enabling developers to easily integrate and efficiently compute CRC3")
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/google-crc32c/)
 
@@ -328,7 +332,7 @@ AgentRunResult(output="Based on the provided documentation:\n\nThe `google-crc32
 
 Utilities for Google Media Downloads and Resumable Uploads
 
-AgentRunResult(output='The `google-resumable-media` Python package provides utilities for managing media interactions with Google services. Its key features are facilitating media downloads and enabling resumable uploads, which allow large file transfers to continue even if interrupted. Developers commonly use this package for reliable, programmatic media file transfers to and from Google platforms.')
+AgentRunResult(output='The `google-resumable-media` Python package provides utilities for handling Google media downloads and, crucially, resumable uploads, allowing large file transfers to be paused and resumed')
 
 **Links:** [Website](https://pypi.org/project/google-resumable-media/)
 
@@ -398,7 +402,7 @@ AgentRunResult(output='')
 
 Status proto mapping for gRPC
 
-AgentRunResult(output='')
+AgentRunResult(output='The `grpcio-status` Python package provides the reference implementation for mapping gRPC status information (including error details) to Protocol Buffer messages. It is a production-stable package, depending on `grpcio`, used when Python gRPC applications need to define or interpret rich, structured status/error information beyond standard gRPC status codes.')
 
 **Links:** [Website](https://pypi.org/project/grpcio-status/)
 
@@ -418,7 +422,7 @@ AgentRunResult(output='')
 
 A minimal low-level HTTP client.
 
-AgentRunResult(output='`httpcore` is a minimal, low-')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/httpcore/) | [Documentation](https://www.encode.io/httpcore)
 
@@ -428,7 +432,7 @@ AgentRunResult(output='`httpcore` is a minimal, low-')
 
 A comprehensive HTTP client library.
 
-AgentRunResult(output='Based on the provided documentation excerpt ("Please enable JavaScript to proceed."), it is impossible to summarize the `httplib2` package. The text does not contain any information about the package\'s purpose, features, or use cases.')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/httplib2/)
 
@@ -438,7 +442,7 @@ AgentRunResult(output='Based on the provided documentation excerpt ("Please enab
 
 Internationalized Domain Names in Applications (IDNA)
 
-AgentRunResult(output='')
+AgentRunResult(output='The provided documentation excerpt ("Please enable JavaScript to proceed.") does not contain any information about the Python package \'idna\'.\n\nHowever, based on general knowledge, the Python \'idna\' package implements the Internationalized Domain Names in Applications (IDNA) 2008 standard. Its key capability is to convert Unicode domain names (which can contain non-ASCII characters) into an ASCII-compatible encoding (ACE), known as Punycode, and vice-versa, which is essential for applications like web browsers or email clients to correctly handle internationalized domain names.')
 
 **Links:** [Website](https://pypi.org/project/idna/)
 
@@ -458,7 +462,7 @@ AgentRunResult(output='')
 
 brain-dead simple config-ini parsing
 
-AgentRunResult(output='`iniconfig` is a simple Python library designed for parsing INI configuration files. Its key features include maintaining the original order of sections and entries and supporting multi-line values, making it useful for developers needing a straightforward utility to read configuration settings.')
+AgentRunResult(output="Based on the documentation, 'iniconfig' is a small and simple Python package designed for parsing INI configuration files. Its key features include maintaining the order of sections and entries and supporting multi-line values, making it useful for developers who need a straightforward way to read settings from INI files in their applications.")
 
 **Links:** [Website](https://pypi.org/project/iniconfig/)
 
@@ -478,7 +482,7 @@ AgentRunResult(output='')
 
 JSON Matching Expressions
 
-AgentRunResult(output='')
+AgentRunResult(output='JMESPath is a Python package that allows developers to declaratively extract specific elements from')
 
 **Links:** [Website](https://pypi.org/project/jmespath/)
 
@@ -488,7 +492,7 @@ AgentRunResult(output='')
 
 Messaging library for Python.
 
-AgentRunResult(output='')
+AgentRunResult(output='The provided documentation excerpt ("Please enable JavaScript to proceed.") does not')
 
 **Links:** [Website](https://pypi.org/project/kombu/)
 
@@ -508,7 +512,7 @@ AgentRunResult(output='')
 
 McCabe checker, plugin for flake8
 
-AgentRunResult(output='Based on the provided text, `mccabe` is a Python package that checks the McCabe complexity of code, functioning as a plugin for the `flake8` code checker. Developers use it as part of their software development and quality assurance process to assess and manage code complexity.')
+AgentRunResult(output="The 'mccabe' package is a Python tool, functioning as a plugin for flake8, that measures the McCabe cyclomatic complexity of code. Its key capability is to identify overly complex code sections, commonly used by developers to improve code quality and maintainability as part of their software development and quality assurance processes.")
 
 **Links:** [Website](https://pypi.org/project/mccabe/)
 
@@ -528,7 +532,7 @@ AgentRunResult(output='')
 
 Markdown URL utilities
 
-AgentRunResult(output='Based on')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/mdurl/)
 
@@ -538,7 +542,7 @@ AgentRunResult(output='Based on')
 
 Node.js virtual environment builder
 
-AgentRunResult(output='Nodeenv is a Python tool designed to create isolated Node.js virtual environments, ensuring each environment has its own installation directories and libraries, preventing conflicts. Key features include the creation of self-contained Node.js setups and the ability to integrate these environments with Python virtual environments created by `virtualenv`. This makes it particularly useful for developers managing multiple Node.js projects or projects combining both Python and Node.js technologies.')
+AgentRunResult(output="Nodeenv is a Python tool that creates isolated Node.js virtual environments, ensuring each environment has its own installation directories and doesn't share libraries with others. Key features include this isolation and the ability to integrate with Python's `virtualenv`, making it useful for managing project-specific Node.js dependencies and versions, especially in development scenarios involving both Node.js and Python.")
 
 **Links:** [Website](https://pypi.org/project/nodeenv/)
 
@@ -548,7 +552,7 @@ AgentRunResult(output='Nodeenv is a Python tool designed to create isolated Node
 
 OpenTelemetry Python API
 
-AgentRunResult(output='Based on the provided documentation excerpt ("Please enable JavaScript to proceed."), it is impossible to summarize the \'opentelemetry-api\' package. The text contains no information about the package\'s purpose, features, capabilities, or common use cases. It appears to be a placeholder or error message from a web page rendering issue.')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/opentelemetry-api/) | [GitHub](https://github.com/open-telemetry/opentelemetry-python)
 
@@ -558,7 +562,7 @@ AgentRunResult(output='Based on the provided documentation excerpt ("Please enab
 
 OpenTelemetry Protobuf encoding
 
-AgentRunResult(output="This package provides shared Protobuf encoding capabilities for OpenTelemetry data. It primarily functions as an internal dependency, handling the serialization logic for other OTLP exporters like `opentelemetry-exporter-otlp-proto-grpc` and `opentelemetry-exporter-otlp-proto-http`. Developers typically don't interact with it directly but rely on it when using those specific OTLP Protobuf exporters.")
+AgentRunResult(output='The `opentelemetry-exporter-otlp-proto-common` package provides shared functionality for encoding OpenTelemetry data into the Protobuf format. Its key capability is to offer a common Protobuf encoding mechanism, primarily used as an internal dependency by other OpenTelemetry exporters like `opentelemetry-exporter-otlp-proto-grpc` and `opentelemetry-exporter-otlp-proto')
 
 **Links:** [Website](https://pypi.org/project/opentelemetry-exporter-otlp-proto-common/) | [GitHub](https://github.com/open-telemetry/opentelemetry-python)
 
@@ -568,7 +572,7 @@ AgentRunResult(output="This package provides shared Protobuf encoding capabiliti
 
 OpenTelemetry Collector Protobuf over HTTP Exporter
 
-AgentRunResult(output='')
+AgentRunResult(output='The `opentelemetry-exporter-otlp-proto-http` Python package enables applications to export telemetry data to an OpenTelemetry Collector. It achieves this by using the OpenTelemetry Protocol (OTLP) with Protobuf payloads transported over HTTP, primarily for developers integrating Python applications with OpenTelemetry.')
 
 **Links:** [Website](https://pypi.org/project/opentelemetry-exporter-otlp-proto-http/) | [GitHub](https://github.com/open-telemetry/opentelemetry-python)
 
@@ -588,7 +592,7 @@ AgentRunResult(output='')
 
 OpenTelemetry Python Proto
 
-AgentRunResult(output='')
+AgentRunResult(output='The `opentelemetry-proto` package provides the Python-generated code for the OpenTelemetry protobuf data model, based on a specific version of the `opentelemetry-proto` specifications. Its key capability is to offer these pre-generated Python')
 
 **Links:** [Website](https://pypi.org/project/opentelemetry-proto/) | [GitHub](https://github.com/open-telemetry/opentelemetry-python)
 
@@ -598,7 +602,7 @@ AgentRunResult(output='')
 
 OpenTelemetry Python SDK
 
-AgentRunResult(output='')
+AgentRunResult(output='The `opentelemetry-sdk` is the official Python Software Development Kit for the OpenTelemetry framework, enabling developers to instrument their Python applications. It is a production-stable package, primarily used by developers to integrate OpenTelemetry for collecting telemetry data from their services.')
 
 **Links:** [Website](https://pypi.org/project/opentelemetry-sdk/) | [GitHub](https://github.com/open-telemetry/opentelemetry-python)
 
@@ -618,7 +622,7 @@ AgentRunResult(output='')
 
 Core utilities for Python packages
 
-AgentRunResult(output="Based on the provided excerpt:\n\nThe Python 'packaging' library provides reusable core utilities for implementing standard packaging interoperability specifications, such as version parsing (PEP 440) and platform tags (PEP 425). Its main purpose is to offer a single, correct, shared implementation for these standards, ensuring consistency for tools that need to work with package metadata and compatibility.")
+AgentRunResult(output='The `packaging` library provides reusable core utilities for implementing Python packaging interoperability specifications. Key features include offering a single, correct implementation for standards like PEP 440 (versioning) and PEP 425 (compatibility tags). It is commonly used by other Python packaging tools to ensure consistent interpretation and handling of package metadata.')
 
 **Links:** [Website](https://pypi.org/project/packaging/) | [Documentation](https://packaging.pypa.io/)
 
@@ -628,7 +632,7 @@ AgentRunResult(output="Based on the provided excerpt:\n\nThe Python 'packaging' 
 
 Utility library for gitignore style pattern matching of file paths.
 
-AgentRunResult(output='')
+AgentRunResult(output="Based on the documentation excerpt, the 'pathspec' Python package is designed for matching file paths against specified patterns. It prominently features capabilities related to `.gitignore` style patterns (specifically `gitwildmatch`), making it commonly used for implementing file filtering or ignore logic similar to how Git handles `.gitignore` files.")
 
 **Links:** [Website](https://pypi.org/project/pathspec/) | [Documentation](https://python-path-specification.readthedocs.io/en/latest/index.html)
 
@@ -638,7 +642,7 @@ AgentRunResult(output='')
 
 A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`.
 
-AgentRunResult(output='`platformdirs` is a Python library designed to find standard, platform-specific directory locations across different operating systems (like Windows, macOS, Linux, Android). Its key capability is providing the correct paths for common use cases such as storing application')
+AgentRunResult(output='Platformdirs is a Python library that determines platform-specific system directories for storing application files. It identifies standard locations for user-specific data (cache, config, logs, documents) and shared data across various operating systems like Android, macOS, Unix, and Windows. This is commonly used by applications to save configuration, cache, or user data in the correct, OS-idiomatic locations.')
 
 **Links:** [Website](https://pypi.org/project/platformdirs/) | [Documentation](https://platformdirs.readthedocs.io)
 
@@ -648,7 +652,7 @@ AgentRunResult(output='`platformdirs` is a Python library designed to find stand
 
 plugin and hook calling mechanisms for python
 
-AgentRunResult(output='')
+AgentRunResult(output='Pluggy is a Python package that provides core mechanisms for managing plugins and calling hooks, enabling extensibility in applications. It is a mature framework primarily used by developers to build extensible software development and testing tools, as seen in projects like pytest, tox, and devpi.')
 
 **Links:** [Website](https://pypi.org/project/pluggy/)
 
@@ -664,7 +668,7 @@ Beautiful, Pythonic protocol buffers
 
 ### protobuf (5.29.4)
 
-AgentRunResult(output="Based on the provided documentation excerpt, the Python 'protobuf' package does not have a description outlining its specific function or purpose. The available information mainly covers metadata like its license (3-Clause BSD), author, Python version requirements (>=3.9), and release history, including details about yanked versions. Therefore, its key features, capabilities, and common use cases cannot be determined from this text alone.")
+AgentRunResult(output="Based on this documentation excerpt, the 'protobuf' Python package is installable via pip and requires Python 3.9 or higher, but its specific purpose, features, and common use cases are not described. The provided information focuses on metadata like licensing (3-Clause BSD), author, and release history, which includes details about yanked versions due to issues like incorrect Python version configuration.")
 
 **Links:** [Website](https://pypi.org/project/protobuf/)
 
@@ -694,7 +698,7 @@ AgentRunResult(output='')
 
 Python style guide checker
 
-AgentRunResult(output='Based on the documentation')
+AgentRunResult(output="pycodestyle is a tool that checks Python code against the style conventions found in PEP 8, acting as a Python style guide checker. Its key capability is to identify deviations from PEP 8, and it's commonly used by developers to ensure their code adheres to Python's official style guide for improved readability and consistency.")
 
 **Links:** [Website](https://pypi.org/project/pycodestyle/)
 
@@ -704,7 +708,7 @@ AgentRunResult(output='Based on the documentation')
 
 C parser in Python
 
-AgentRunResult(output='`pycparser` is a pure Python package that functions as a complete parser for the C language. It transforms C code into an Abstract Syntax Tree (AST), serving as a front-end for applications like C compilers or code analysis tools.')
+AgentRunResult(output='`pycparser` is a complete C language parser written entirely in Python, leveraging the PLY parsing library. Its key capability is to parse C code and generate an Abstract Syntax Tree (AST), making it useful as a front-end for C compilers or various C code analysis tools.')
 
 **Links:** [Website](https://pypi.org/project/pycparser/)
 
@@ -714,7 +718,7 @@ AgentRunResult(output='`pycparser` is a pure Python package that functions as a 
 
 passive checker of Python programs
 
-AgentRunResult(output='Pyflakes is a simple, passive checker that analyzes Python source files (Python 3.9+) for various errors without importing or executing the code. Its key features include speed and safety, as it works purely by parsing, making it suitable for checking modules with side effects. Developers commonly use Pyflakes as a fast utility to detect potential errors in their code during development.')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/pyflakes/)
 
@@ -724,7 +728,7 @@ AgentRunResult(output='Pyflakes is a simple, passive checker that analyzes Pytho
 
 Use the full Github API v3
 
-AgentRunResult(output='Based on the provided excerpt ("© Copyright 2025, Vincent Jacques."), it is impossible to summarize what the \'pygithub\' package does, its features, or its use cases. The text only contains copyright information and lacks any descriptive content about the package itself.')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/PyGithub/) | [Documentation](https://pygithub.readthedocs.io/en/stable/)
 
@@ -734,7 +738,7 @@ AgentRunResult(output='Based on the provided excerpt ("© Copyright 2025, Vincen
 
 Pygments is a syntax highlighting package written in Python.
 
-AgentRunResult(output='Based on the documentation structure provided, Pygments appears to be a Python package focused on processing and presenting code. It offers capabilities like a command-line interface, a Python API for integration, support for Unicode/encodings, and extensibility through custom formatters and')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/Pygments/) | [Documentation](https://pygments.org/docs)
 
@@ -744,7 +748,7 @@ AgentRunResult(output='Based on the documentation structure provided, Pygments a
 
 JSON Web Token implementation in Python
 
-AgentRunResult(output='')
+AgentRunResult(output='PyJWT is a stable Python library that implements JSON Web Tokens (JWTs) according to RFC 7519. Its key capabilities include encoding (signing) and decoding (verifying) JWTs, making it commonly used for adding secure token-based authentication to Python web applications and projects.')
 
 **Links:** [Website](https://pypi.org/project/PyJWT/)
 
@@ -754,7 +758,7 @@ AgentRunResult(output='')
 
 Python binding to the Networking and Cryptography (NaCl) library
 
-AgentRunResult(output='PyNaCl is a Python package providing bindings to the libsodium/NaCl cryptography library, designed for improved usability, security, and speed. It')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/PyNaCl/)
 
@@ -764,7 +768,7 @@ AgentRunResult(output='PyNaCl is a Python package providing bindings to the libs
 
 pyparsing module - Classes and methods to define and execute parsing grammars
 
-AgentRunResult(output='Pyparsing is a Python package enabling developers to define and execute parsing grammars directly within Python code using provided classes. It offers an alternative approach to traditional lex/yacc methods or regular expressions for creating parsers. Common use cases involve text processing and tasks within software development, such as building compilers or interpreters for simple languages.')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/pyparsing/)
 
@@ -774,7 +778,7 @@ AgentRunResult(output='Pyparsing is a Python package enabling developers to defi
 
 Extensions to the standard Python datetime module
 
-AgentRunResult(output='')
+AgentRunResult(output="The `python-dateutil` package offers powerful extensions to Python's standard `datetime` module, enabling advanced date and time manipulations. Key features include computing relative deltas (e.g., next month, next Monday), parsing dates from almost any string format, handling complex recurrence rules (iCalendar), and comprehensive timezone support with an internal Olson database. Common use cases involve parsing diverse date strings, calculating future/recurring")
 
 **Links:** [Website](https://pypi.org/project/python-dateutil/) | [Documentation](https://dateutil.readthedocs.io/en/stable/)
 
@@ -784,7 +788,7 @@ AgentRunResult(output='')
 
 A streaming multipart parser for Python
 
-AgentRunResult(output='')
+AgentRunResult(output='Python-Multipart is a streaming multipart parser for Python, designed to efficiently process `multipart/form-data` request bodies. Its key capability is handling incoming data, such as file uploads, in chunks via callbacks without needing to store entire parts in memory. This makes it well-suited for WSGI applications that need to manage form submissions, especially')
 
 **Links:** [Website](https://pypi.org/project/python-multipart/) | [Documentation](https://kludex.github.io/python-multipart/)
 
@@ -804,7 +808,7 @@ AgentRunResult(output='')
 
 Python 2 and 3 compatibility utilities
 
-AgentRunResult(output="Based on the documentation, the 'six' package is a Python 2 and 3 compatibility library. It provides utility functions to help developers write code that runs smoothly on both Python 2.7 and Python 3.3+ by abstracting away version-specific differences. Its primary use case is enabling cross-version compatibility for Python projects.")
+AgentRunResult(output='Six is a Python 2 and 3 compatibility library that enables developers to write code compatible with both Python 2.7+ and 3.3+. It achieves this by providing utility functions to smooth over version differences and is conveniently packaged as a single, easily integratable Python file. Its primary use case is for projects needing to maintain cross-version Python compatibility.')
 
 **Links:** [Website](https://pypi.org/project/six/)
 
@@ -834,7 +838,7 @@ AgentRunResult(output='')
 
 A modern CSS selector implementation for Beautiful Soup.
 
-AgentRunResult(output='')
+AgentRunResult(output="Soupsieve is a modern CSS selector library specifically designed to enhance Beautiful Soup 4 by providing advanced selecting, matching, and filtering capabilities for HTML/XML content. Its key features include support for a wide range of CSS selectors (from Level 1 up to Level 4+ drafts) and the ability to be used directly via its API or as the backend for Beautiful Soup's `select` method. Common use cases involve precise element extraction from web pages for data scraping or parsing structured documents.")
 
 **Links:** [Website](https://pypi.org/project/soupsieve/)
 
@@ -864,7 +868,7 @@ AgentRunResult(output='')
 
 HTTP library with thread-safe connection pooling, file post, and more.
 
-AgentRunResult(output='`urllib3` is a powerful, user-friendly HTTP client library for Python, widely used within the ecosystem for making web requests. Key features include client-side TLS/SSL verification, multipart file uploads, automatic request retries and redirect handling, support for various compression encodings (gzip, deflate, brotli, zstd), and HTTP/SOCKS proxy support. It simplifies common HTTP tasks that require more complex handling with standard libraries.')
+AgentRunResult(output='urllib3 is a powerful, user-friendly HTTP client for Python, widely used within the Python ecosystem. It provides critical features often missing from standard libraries, such as client-side TLS/SSL verification, file uploads with multipart encoding, request retries, redirect handling, support for various content encodings (gzip, deflate, brotli, zstd), and proxy support for HTTP/SOCKS. This makes it ideal for making robust, secure, and versatile web requests.')
 
 **Links:** [Website](https://pypi.org/project/urllib3/) | [Documentation](https://urllib3.readthedocs.io)
 
@@ -874,7 +878,7 @@ AgentRunResult(output='`urllib3` is a powerful, user-friendly HTTP client librar
 
 Python promises.
 
-AgentRunResult(output='Based on the provided text "Please enable JavaScript to proceed," it is impossible to determine what the \'vine\' Python package does, its key features, or common use cases. The text is a browser message indicating that JavaScript is required to view the actual documentation content, which is not present in the excerpt. Therefore, no summary of the \'vine\' package can be generated from this information.')
+AgentRunResult(output='Vine is a Python package that provides a special implementation of promises, designed for both promising a future value and lazy evaluation. Its key capability is that all components within a promise, such as filters, callbacks, and errbacks, can themselves be promises, making it suitable for managing complex asynchronous operations or deferred computations.')
 
 **Links:** [Website](https://pypi.org/project/vine/)
 
@@ -884,7 +888,7 @@ AgentRunResult(output='Based on the provided text "Please enable JavaScript to p
 
 Measures the displayed width of unicode strings in a terminal
 
-AgentRunResult(output='Based on the provided documentation excerpt ("Please enable JavaScript to proceed."), it is impossible to determine what the \'wcwidth\' package does, its key features, or its common use cases. The excerpt contains no information about the package itself.')
+AgentRunResult(output='The `wcwidth` Python package measures the display width of Unicode strings in a terminal, accurately accounting for characters that occupy zero, one, or two cells (like CJK characters or emoji). It provides Python equivalents of the POSIX `wcwidth()` and `wcswidth()` C functions, primarily used by CLI programs and terminal emulators to correctly format text output.')
 
 **Links:** [Website](https://pypi.org/project/wcwidth/)
 
@@ -928,7 +932,7 @@ AgentRunResult(output='')
 
 Google Ai Generativelanguage API client library
 
-AgentRunResult(output='')
+AgentRunResult(output='The')
 
 **Links:** [Website](https://pypi.org/project/google-ai-generativelanguage/)
 
@@ -948,7 +952,7 @@ AgentRunResult(output='')
 
 Client library to download and publish models, datasets and other repos on the huggingface.co hub
 
-AgentRunResult(output='')
+AgentRunResult(output='The `huggingface-hub` Python package is the official client library for interacting with the Hugging Face Hub, allowing users to programmatically download and publish models, datasets, and other machine learning resources. Its key capabilities include managing repository access and facilitating the sharing and discovery of assets, primarily for developers and researchers working on AI and machine learning projects.')
 
 **Links:** [Website](https://pypi.org/project/huggingface-hub/)
 
@@ -958,7 +962,7 @@ AgentRunResult(output='')
 
 Python Client SDK for the Mistral AI API.
 
-AgentRunResult(output='')
+AgentRunResult(output='The `mistralai` Python package is a client SDK designed to enable developers to interact with the Mistral AI API. Key capabilities include accessing Chat Completion and Embeddings services, with features like server-sent event streaming, file uploads, and robust error handling. This allows for')
 
 **Links:** [Website](https://pypi.org/project/mistralai/) | [GitHub](https://github.com/mistralai/client-python.git)
 
@@ -983,6 +987,12 @@ Agent Framework / shim to use Pydantic with LLMs
 ---
 
 ### pydantic-ai-slim (0.1.9)
+
+Agent Framework / shim to use Pydantic with LLMs, slim package
+
+AgentRunResult(output='')
+
+**Links:** [Website](https://pypi.org/project/pydantic-ai-slim/)
 
 ---
 
@@ -1060,7 +1070,7 @@ AgentRunResult(output='')
 
 Consume Server-Sent Event (SSE) messages with HTTPX.
 
-AgentRunResult(output='')
+AgentRunResult(output='The `httpx-sse` package enables Python applications to consume Server-Sent Event (SSE) messages using the HTTP')
 
 **Links:** [Website](https://pypi.org/project/httpx-sse/)
 
@@ -1080,7 +1090,7 @@ AgentRunResult(output='')
 
 SSE plugin for Starlette
 
-AgentRunResult(output='`sse-starlette` is a Python package that')
+AgentRunResult(output='The `sse-starlette` Python package is a production-stable plugin that implements the Server-Sent Events (SSE) specification for Starlette and FastAPI applications. It enables these web frameworks to push real-time, unidirectional data updates from the server to clients, making it suitable for applications requiring live notifications or streaming data feeds.')
 
 **Links:** [Website](https://pypi.org/project/sse-starlette/)
 
@@ -1090,7 +1100,7 @@ AgentRunResult(output='`sse-starlette` is a Python package that')
 
 The little ASGI library that shines.
 
-AgentRunResult(output='Starlette is a lightweight, high-performance ASGI framework and toolkit designed for building asynchronous web services and APIs in Python. Key features include support for background')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/starlette/) | [Documentation](https://www.starlette.io/)
 
@@ -1120,7 +1130,7 @@ AgentRunResult(output='')
 
 The lightning-fast ASGI server.
 
-AgentRunResult(output='Uvicorn is a high-performance ASGI web server implementation for Python. Its primary function is to serve web applications built with modern asynchronous Python frameworks that adhere to the ASGI specification. Common use cases involve deploying async web applications and APIs where speed is essential.')
+AgentRunResult(output='Uvicorn is a "lightning-fast" ASGI web server implementation for Python, designed to run asynchronous web applications. Its key capability is providing the low-level server interface defined by the ASGI specification, making it a common tool for developers building and deploying web applications with modern async Python frameworks.')
 
 **Links:** [Website](https://pypi.org/project/uvicorn/)
 
@@ -1134,7 +1144,7 @@ Development tools and utilities
 
 The uncompromising code formatter.
 
-AgentRunResult(output='')
+AgentRunResult(output='Black is an uncompromising Python code formatter that automatically reformats code to a consistent style, ceding control over manual formatting minutiae. Key features include producing the smallest possible diffs for faster code reviews, ensuring deterministic output')
 
 **Links:** [Website](https://pypi.org/project/black/) | [Documentation](https://black.readthedocs.io/) | [GitHub](https://github.com/psf/black)
 
@@ -1144,7 +1154,7 @@ AgentRunResult(output='')
 
 Extensible memoizing collections and decorators
 
-AgentRunResult(output='Based on')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/cachetools/)
 
@@ -1161,6 +1171,12 @@ AgentRunResult(output='')
 ---
 
 ### prompt_toolkit (3.0.51)
+
+Library for building powerful interactive command lines in Python
+
+AgentRunResult(output='Based on the provided documentation excerpt, "Please enable JavaScript to proceed," it is not possible to determine what the \'prompt_toolkit\' package does, its key features, or common use cases. The excerpt only indicates a requirement for JavaScript to view the actual content.')
+
+**Links:** [Website](https://pypi.org/project/prompt-toolkit/)
 
 ---
 
@@ -1202,7 +1218,7 @@ AgentRunResult(output='')
 
 Google Cloud API client core library
 
-AgentRunResult(output='')
+AgentRunResult(output='The `google-cloud-core` package is a foundational library for Google Cloud API clients in Python, providing common helper utilities like base client classes. It is not intended for standalone use but serves as an essential dependency for other `google-cloud-*` packages, ensuring consistent functionality across different Google Cloud services accessed via Python.')
 
 **Links:** [Website](https://pypi.org/project/google-cloud-core/)
 
@@ -1222,7 +1238,7 @@ AgentRunResult(output='')
 
 Google Cloud Storage API client library
 
-AgentRunResult(output='The `google-cloud-storage` Python package is a client library enabling developers to interact with the Google Cloud Storage API.')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/google-cloud-storage/)
 
@@ -1246,7 +1262,7 @@ Core Python functionality extensions
 
 Composable command line interface toolkit
 
-AgentRunResult(output='Click is a Python package designed for creating beautiful and composable command line interfaces (CLIs) with minimal code. Key features include arbitrary command nesting, automatic help page generation, and lazy loading of subcommands, making it ideal for quickly and easily developing command line tools.')
+AgentRunResult(output='Click is a Python package for creating beautiful, composable command-line interfaces (CLIs) with minimal code, aiming to make CLI development quick and fun. Key features include arbitrary nesting of commands, automatic help page generation, and support for lazy loading of subcommands. It is commonly used for building well-structured and user-friendly command-line tools in Python.')
 
 **Links:** [Website](https://pypi.org/project/click/) | [Documentation](https://click.palletsprojects.com/)
 
@@ -1256,7 +1272,7 @@ AgentRunResult(output='Click is a Python package designed for creating beautiful
 
 Enables git-like *did-you-mean* feature in click
 
-AgentRunResult(output='`click-didyoumean` is a Python package that adds a Git-like "did you mean?" feature to command-line interfaces built with the `click` library. It suggests valid commands when a user enters a typo, improving usability. Key features include easy integration using specific group/collection classes and configurable limits on the number of suggestions and the required similarity score.')
+AgentRunResult(output='The provided documentation excerpt, "Please enable JavaScript to proceed," does not contain any information about the Python package \'click-didyoumean\'. Therefore, it\'s impossible to summarize what the package does, its key features, or common use cases based on this content.')
 
 **Links:** [Website](https://pypi.org/project/click-didyoumean/) | [GitHub](https://github.com/click-contrib/click-didyoumean)
 
@@ -1266,7 +1282,7 @@ AgentRunResult(output='`click-didyoumean` is a Python package that adds a Git-li
 
 An extension module for click to enable registering CLI commands via setuptools entry-points.
 
-AgentRunResult(output='`click-plugins` extends the Click library to allow external')
+AgentRunResult(output="'click-plugins' is a Python package that extends `click` to allow registration of external CLI commands and sub-groups using `setuptools` entry points. This enables developers to create extensible command-line interfaces where third-party plugins can add functionality (e.g., domain-specific features or commands with extra dependencies) without modifying the core application, and it gracefully handles broken or incompatible plugins.")
 
 **Links:** [Website](https://pypi.org/project/click-plugins/)
 
@@ -1292,13 +1308,19 @@ The best Python observability tool! 🪵🔥
 
 ### logfire-api (3.14.1)
 
+Shim for the Logfire SDK which does nothing unless Logfire is installed
+
+AgentRunResult(output="The 'logfire-api' package is a shim that mirrors the Logfire SDK's Python API, doing nothing by default. Its key capability is to allow other packages to offer opt-in integration with Logfire; it only makes real calls if the full Logfire SDK is actually installed, thus avoiding a hard dependency for end-users.")
+
+**Links:** [Website](https://pypi.org/project/logfire-api/)
+
 ---
 
 ### python-dotenv (1.0.0)
 
 Read key-value pairs from a .env file and set them as environment variables
 
-AgentRunResult(output='')
+AgentRunResult(output='Python-dotenv reads key-value pairs from a `.env` file and sets them as environment variables, primarily to help manage application configurations and secrets separately from code, aligning with 12-factor app principles. Key capabilities include loading configurations without altering the global environment, parsing them as a stream, and supporting IPython integration')
 
 **Links:** [Website](https://pypi.org/project/python-dotenv/)
 
@@ -1308,7 +1330,7 @@ AgentRunResult(output='')
 
 Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal
 
-AgentRunResult(output='')
+AgentRunResult(output='Rich is a Python library for creating rich and beautiful command-line interfaces and terminal output. Its key features include styled text, tables, progress bars, syntax highlighting, pretty printing, advanced traceback formatting, and layout tools. Common use cases involve enhancing CLI applications, improving debugging output, displaying structured data effectively, and making logs more readable.')
 
 **Links:** [Website](https://pypi.org/project/rich/) | [Documentation](https://rich.readthedocs.io/en/latest/)
 
@@ -1318,7 +1340,7 @@ AgentRunResult(output='')
 
 Fast, Extensible Progress Meter
 
-AgentRunResult(output='Based on the provided excerpt:\n\n`tqdm` is a fast and extensible Python package that provides progress meters (progress bars) for visualizing the execution of tasks. Key features include displaying progress rate and estimated time remaining (ETA) in console, terminal, and notebook environments across various operating systems. It is commonly used by developers to add visual feedback to loops or long-running operations in scripts and applications.')
+AgentRunResult(output='Based on the documentation, `tqdm` is a Python package that provides a fast and extensible progress meter for console applications and Jupyter notebooks. Key features include displaying rate, ETA (estimated time of arrival), and its')
 
 **Links:** [Website](https://pypi.org/project/tqdm/) | [GitHub](https://github.com/tqdm/tqdm)
 
@@ -1328,7 +1350,7 @@ AgentRunResult(output='Based on the provided excerpt:\n\n`tqdm` is a fast and ex
 
 Runtime typing introspection tools
 
-AgentRunResult(output='Based on the provided excerpt:\n\n`typing-inspection` is a Python package that provides tools to inspect type annotations programmatically at runtime. Its key capability is enabling the examination of type hints during program execution. This is useful for scenarios where runtime decisions or')
+AgentRunResult(output='The `typing-inspection` package provides tools for runtime inspection of Python type annotations. Its key capability is enabling developers to examine and understand type hints programmatically during execution, which is useful for building tools or frameworks that need to dynamically react to type information.')
 
 **Links:** [Website](https://pypi.org/project/typing-inspection/) | [Documentation](https://pydantic.github.io/typing-inspection/dev/)
 
@@ -1338,7 +1360,7 @@ AgentRunResult(output='Based on the provided excerpt:\n\n`typing-inspection` is 
 
 Backported and Experimental Type Hints for Python 3.8+
 
-AgentRunResult(output="`typing_extensions` complements Python's standard `typing` module by providing runtime support for new and experimental type hinting features specified in PEPs. Its key capabilities are backporting newer typing constructs (like `TypeGuard`) to older")
+AgentRunResult(output="The `typing_extensions` package complements Python's standard `typing` module, primarily enabling the use of new type system features (e.g., `TypeGuard`) on older Python versions and allowing experimentation with features from proposed PEPs before they become standard. This allows developers to write modern,")
 
 **Links:** [Website](https://pypi.org/project/typing-extensions/) | [Documentation](https://typing-extensions.readthedocs.io/) | [GitHub](https://github.com/python/typing_extensions)
 
@@ -1352,7 +1374,7 @@ Testing and quality assurance
 
 Code coverage measurement for Python
 
-AgentRunResult(output='Coverage.py is a Python tool that measures code coverage by monitoring program execution to identify which lines of code have been run and which have not. Its key capability is analyzing the source to find potentially executable but unexecuted code, commonly used to gauge the effectiveness of tests by showing which parts of the codebase are exercised.')
+AgentRunResult(output='Coverage.py is a tool that measures Python code coverage by monitoring program execution to identify which parts of the code have been run and which have not. Key capabilities include branch coverage measurement, measuring subprocesses, and excluding specific code, commonly used to gauge the effectiveness of tests by showing what code they exercise.')
 
 **Links:** [Website](https://pypi.org/project/coverage/) | [Documentation](https://coverage.readthedocs.io/en/7.8.0)
 
@@ -1382,7 +1404,7 @@ AgentRunResult(output='')
 
 Type system extensions for programs checked with the mypy type checker.
 
-AgentRunResult(output="Based on the provided excerpt:\n\nThe `mypy_extensions` package provides extensions to Python's standard `typing` module, specifically designed for programs checked with the `mypy` type checker. Its key capability is offering additional type system features that are recognized and supported by both `mypy` and the `mypyc` compiler. Developers use this package to leverage these extended typing capabilities for more precise static analysis")
+AgentRunResult(output="The `mypy_extensions` package provides extensions to Python's standard `typing` module, specifically designed for use with the mypy type checker and mypyc compiler. Its key capability is to offer additional type system features not yet in the standard library, enabling developers to write more precise type annotations for improved static analysis and compiled code. This is commonly used by developers seeking to leverage advanced or experimental typing features within the mypy ecosystem.")
 
 **Links:** [Website](https://pypi.org/project/mypy-extensions/)
 
@@ -1392,7 +1414,7 @@ AgentRunResult(output="Based on the provided excerpt:\n\nThe `mypy_extensions` p
 
 python code static checker
 
-AgentRunResult(output='')
+AgentRunResult(output='Pylint is a static code analyzer for Python that examines code without running it to identify errors, enforce coding standards, and detect "code smells." Key capabilities include error checking, style enforcement, and offering refactoring suggestions, making it commonly used by developers to improve code quality and maintainability.')
 
 **Links:** [Website](https://pypi.org/project/pylint/)
 
@@ -1402,7 +1424,7 @@ AgentRunResult(output='')
 
 Command line wrapper for pyright
 
-AgentRunResult(output='')
+AgentRunResult(output="The Python package 'pyright' is a command-line wrapper")
 
 **Links:** [Website](https://pypi.org/project/pyright/)
 
@@ -1412,7 +1434,7 @@ AgentRunResult(output='')
 
 pytest: simple powerful testing with Python
 
-AgentRunResult(output='')
+AgentRunResult(output='Pytest is a Python package for writing tests, ranging from simple unit tests to complex functional testing for applications and libraries. Key features include its use of plain `assert` statements with detailed failure introspection, auto-discovery of test modules and functions, and scalability. Developers commonly use it to ensure the reliability and correctness of their Python code.')
 
 **Links:** [Website](https://pypi.org/project/pytest/)
 
@@ -1422,7 +1444,7 @@ AgentRunResult(output='')
 
 Pytest support for asyncio
 
-AgentRunResult(output='Based on the provided text:\n\n`pytest-asyncio` is a pytest plugin designed to help test Python code written using the `asyncio` library. Its key capability is allowing test functions to be defined as coroutines (`async def`), enabling the use of `await` directly within tests. This makes it useful for testing asynchronous functions, applications, or libraries that rely on `asyncio`.')
+AgentRunResult(output='')
 
 **Links:** [Website](https://pypi.org/project/pytest-asyncio/) | [Documentation](https://pytest-asyncio.readthedocs.io)
 
@@ -1432,7 +1454,7 @@ AgentRunResult(output='Based on the provided text:\n\n`pytest-asyncio` is a pyte
 
 Pytest plugin for measuring coverage.
 
-AgentRunResult(output='Based on the documentation excerpt, pytest-cov is a plugin for the pytest testing framework that measures code coverage during test execution.')
+AgentRunResult(output='Based on the excerpt, `pytest-cov` is a Python package that integrates with pytest to measure code coverage. Key capabilities include support for distributed testing (with `xdist`) and coverage tracking in subprocesses, including those using `multiprocessing`. It is commonly used to generate and manage coverage data files to understand how much code is exercised by tests, especially in parallel or multi')
 
 **Links:** [Website](https://pypi.org/project/pytest-cov/) | [Documentation](https://pytest-cov.readthedocs.io/)
 
@@ -1488,7 +1510,7 @@ Settings management using Pydantic
 
 Core functionality for Pydantic validation and serialization
 
-AgentRunResult(output='')
+AgentRunResult(output='Pydantic-core provides the high-performance (reportedly 17x faster than Pydantic V1) core validation and serialization engine for the Pydantic library, leveraging Rust for speed. It is not intended for direct developer use; rather, it serves as an internal dependency that Pydantic itself utilizes to handle data validation and serialization tasks efficiently.')
 
 **Links:** [Website](https://pypi.org/project/pydantic-core/)
 
