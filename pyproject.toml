@@ -2,6 +2,15 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+# Use a src layout to avoid accidental inclusion of unwanted files
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ailf*"]
+exclude = ["tests*", "examples*", "docs*", "pyutils*", "setup*", "utils*"]
+
 [project]
 name = "ailf"
 version = "0.1.0"
@@ -17,7 +26,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3 :: Only",
-    "License :: OSI Approved :: MIT License",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
