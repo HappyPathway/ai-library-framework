@@ -78,6 +78,7 @@ CLASSIFIERS = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development :: Libraries",
 ]
 
@@ -110,7 +111,7 @@ setuptools.setup(
     }},
     classifiers={CLASSIFIERS},
     packages=setuptools.find_packages(),
-    python_requires=">=3.8",
+    python_requires=">=3.12",
     install_requires=[
         "pydantic>=2.0.0",
         "pyzmq>=24.0.0",

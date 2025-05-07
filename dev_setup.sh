@@ -4,6 +4,19 @@
 # Exit on error
 set -e
 
+# Check Python version
+python_version=$(python --version 2>&1 | sed 's/Python //')
+python_major=$(echo $python_version | cut -d. -f1)
+python_minor=$(echo $python_version | cut -d. -f2)
+
+if [ "$python_major" -lt 3 ] || [ "$python_major" -eq 3 -a "$python_minor" -lt 12 ]; then
+    echo "Error: This project requires Python 3.12 or higher"
+    echo "Current version: $python_version"
+    exit 1
+fi
+
+echo "Python version $python_version is compatible"
+
 # Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
     echo "Creating virtual environment..."

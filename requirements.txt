@@ -1,3 +1,4 @@
+# Python 3.12+ required
 amqp==5.3.1
 annotated-types==0.7.0
 anthropic==0.50.0

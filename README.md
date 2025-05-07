@@ -15,6 +15,11 @@ A comprehensive toolkit for building sophisticated AI agent systems.
 - **Comprehensive Logging**: Centralized logging configuration
 - **Secure Secret Management**: Handle credentials and API keys securely
 
+## Requirements
+
+- Python 3.12 or higher
+- pip
+
 ## Installation
 
 ### Basic Installation

@@ -9,8 +9,34 @@ For most use cases, you should use the following commands:
 
 import setuptools
 
+# Read long description from README.md
+with open("README.md", "r", encoding="utf-8") as f:
+    long_description = f.read()
+
 # This setup.py is a thin wrapper around the pyproject.toml configuration
 setuptools.setup()
+
+# Core dependencies
+CORE_DEPS = [
+    "pydantic>=2.7.2",
+    "python-dotenv>=1.0.0",
+]
+
+# AI dependencies
+AI_DEPS = [
+    "anthropic>=0.50.0",
+    "openai>=1.77.0",
+    "google-generativeai>=0.8.5",
+    "pydantic-ai>=0.1.9",
+]
+
+# MCP dependencies
+MCP_DEPS = [
+    "mcp>=1.7.1",
+    "fastapi>=0.95.1",
+    "sse-starlette>=1.6.1",
+    "uvicorn>=0.23.1",
+]
 
 # Cloud dependencies
 CLOUD_DEPS = [
@@ -71,13 +97,13 @@ setup(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3 :: Only",
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     keywords="agent, development, ai, llm, tools, utils, pydantic",
-    packages=find_packages(
-        exclude=["tests", "*.tests", "*.tests.*", "tests.*", "examples", "docs"]),
+    packages=setuptools.find_packages(include=["ailf", "ailf.*"]),  # Only include ailf package and its subpackages
     python_requires=">=3.12",
     install_requires=CORE_DEPS,
     extras_require=extras_require,

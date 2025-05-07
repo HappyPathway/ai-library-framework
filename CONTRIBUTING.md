@@ -2,6 +2,12 @@
 
 Thank you for your interest in contributing to the AI Liberation Front (ailf)! This document provides guidelines and instructions for contributing to this project.
 
+## Prerequisites
+
+- Python 3.12 or higher
+- pip
+- Redis (for messaging functionality)
+
 ## Development Environment
 
 1. Clone the repository:
