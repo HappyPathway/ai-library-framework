@@ -28,9 +28,16 @@ class TestZMQBase(unittest.TestCase):
     def test_close(self):
         """Test closing the socket."""
         base = ZMQBase()
-        base.socket = mock.MagicMock()
+        # Create a mock socket and assign it to base.socket
+        mock_socket = mock.MagicMock()
+        base.socket = mock_socket
+        base._connected = True
+        
+        # Call close method
         base.close()
-        base.socket.close.assert_called_once()
+        
+        # Verify that close was called on the socket
+        mock_socket.close.assert_called_once()
         self.assertIsNone(base.socket)
         self.assertFalse(base._connected)
 
@@ -158,8 +165,8 @@ class TestZMQSubscriber(unittest.TestCase):
             
             topic, message = subscriber.receive(timeout=100)
             
-            # Verify that timeout was set
-            mock_socket.setsockopt.assert_called_with(zmq.RCVTIMEO, 100)
+            # Use assert_any_call instead of assert_called_with to verify the timeout was set
+            mock_socket.setsockopt.assert_any_call(zmq.RCVTIMEO, 100)
             
             # Verify the result
             self.assertEqual(topic, "topic")

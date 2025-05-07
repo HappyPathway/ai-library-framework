@@ -14,7 +14,7 @@ import threading
 from queue import Queue
 import json
 
-from ailf import RedisClient, RedisPubSub, RedisStream, RedisConfig
+from src.ailf import RedisClient, RedisPubSub, RedisStream, RedisConfig
 
 # Store received messages for verification
 received_messages = Queue()

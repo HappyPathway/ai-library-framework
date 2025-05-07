@@ -14,12 +14,12 @@ import pytest
 
 # Try to import mock implementations if available
 try:
-    from ailf.messaging.mock_redis import MockAsyncRedisClient, MockRedisClient
+    from src.ailf.messaging.mock_redis import MockAsyncRedisClient, MockRedisClient
     MOCK_AVAILABLE = True
 except ImportError:
     MOCK_AVAILABLE = False
 
-from ailf.messaging.redis import (
+from src.ailf.messaging.redis import (
     AsyncRedisClient,
     RedisClient,
     RedisConfig,

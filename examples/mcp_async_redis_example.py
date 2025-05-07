@@ -23,11 +23,11 @@ from typing import Any, AsyncIterator, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 # Import our utils
-from ailf.base_mcp import Context, BaseMCP as FastMCP
-from ailf.async_tasks import TaskManager
+from src.ailf.base_mcp import Context, BaseMCP as FastMCP
+from src.ailf.async_tasks import TaskManager
 # Configure logging
-from ailf.core.logging import setup_logging
-from ailf.messaging.redis import AsyncRedisClient, RedisPubSub
+from src.ailf.core.logging import setup_logging
+from src.ailf.messaging.redis import AsyncRedisClient, RedisPubSub
 
 logger = setup_logging("mcp_async_redis")
 

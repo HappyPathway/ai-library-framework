@@ -119,16 +119,22 @@ class TestDeviceManager(unittest.TestCase):
 
 
 @pytest.mark.integration
-class TestCreateDeviceContextManager:
+class TestCreateDeviceContextManager(unittest.TestCase):
     """Test the create_device context manager."""
     
     def test_create_device_context_manager(self):
         """Test the create_device context manager."""
         # Use patch to avoid actual ZMQ socket operations
-        with mock.patch('ailf.messaging.zmq_devices.ZMQForwarder') as MockForwarder:
-            # Mock instance
+        with mock.patch('ailf.messaging.zmq_device_manager.DeviceManager') as MockManager:
+            # Set up the mock manager to return a mock device
             mock_device = mock.MagicMock()
-            MockForwarder.return_value = mock_device
+            mock_manager = mock.MagicMock()
+            MockManager.return_value = mock_manager
+            mock_manager.create_device.return_value = mock_device
+            
+            # Patch the start method
+            mock_device.start = mock.MagicMock()
+            mock_device.stop = mock.MagicMock()
             
             # Use the context manager
             with create_device(
@@ -136,13 +142,13 @@ class TestCreateDeviceContextManager:
                 "inproc://test-frontend", 
                 "inproc://test-backend"
             ) as device:
-                # Verify that start was called
-                mock_device.start.assert_called_once()
+                # Verify the device is what we expect
+                self.assertEqual(device, mock_device)
                 
-                # Check that device is the mock device
-                assert device is mock_device
+                # Verify start was called
+                mock_device.start.assert_called_once()
             
-            # Verify that stop was called
+            # Verify stop was called
             mock_device.stop.assert_called_once()
 
 

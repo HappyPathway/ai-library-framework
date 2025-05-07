@@ -521,3 +521,30 @@ def create_device(
         yield device
     finally:
         device.stop()
+
+
+class ZmqDevice:
+    """ZMQ Device for managing message flow between sockets."""
+
+    def __init__(self, context):
+        """Initialize the ZMQ Device.
+
+        Args:
+            context: The ZMQ context to use.
+        """
+        self.context = context
+
+    def start(self, sender, receiver):
+        """Start the ZMQ device to forward messages.
+
+        Args:
+            sender: The sending socket.
+            receiver: The receiving socket.
+        """
+        while True:
+            message = sender.recv()
+            receiver.send(message)
+
+    def close(self):
+        """Close the ZMQ device."""
+        self.context.term()

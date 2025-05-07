@@ -23,7 +23,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Dict, List, Any, Optional, Callable
 
-from ailf import RedisClient, RedisStream, RedisPubSub
+from src.ailf import RedisClient, RedisStream, RedisPubSub
 
 
 # Define agent states
