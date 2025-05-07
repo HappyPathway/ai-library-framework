@@ -70,9 +70,6 @@ setup(
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries :: Python Modules",
@@ -81,7 +78,7 @@ setup(
     keywords="agent, development, ai, llm, tools, utils, pydantic",
     packages=find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "tests.*", "examples", "docs"]),
-    python_requires=">=3.10",
+    python_requires=">=3.12",
     install_requires=CORE_DEPS,
     extras_require=extras_require,
     include_package_data=True,

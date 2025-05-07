@@ -26,7 +26,7 @@ setup(
     author_email="info@ailf.dev",
     url="https://github.com/ailf-dev/template-python-dev",
     packages=find_packages(exclude=["tests*", "examples*"]),
-    python_requires=">=3.8",
+    python_requires=">=3.12",
     include_package_data=True,
     install_requires=[
         "pydantic>=2.0.0",
@@ -77,10 +77,7 @@ CLASSIFIERS = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries",
 ]
 
