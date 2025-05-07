@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from utils.ai_engine import AIEngine
+from ailf.ai_engine import AIEngine
 
 
 @pytest.mark.integration

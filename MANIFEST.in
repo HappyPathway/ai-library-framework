@@ -1,0 +1,22 @@
+include LICENSE
+include README.md
+include CONTRIBUTING.md
+include pyproject.toml
+include setup.py
+include setup.cfg
+
+# Include type information
+recursive-include ailf py.typed
+
+# Documentation
+recursive-include docs/source *.md *.py
+recursive-include docs/source/_static *
+
+# Examples
+recursive-include examples *.py README.md
+
+# Tests
+recursive-include tests *.py
+
+# Requirements
+recursive-include requirements *.txt

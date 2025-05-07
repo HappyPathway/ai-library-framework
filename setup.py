@@ -1,33 +1,16 @@
-import os
-import pathlib
+"""
+This file is kept for backwards compatibility. The actual build configuration
+is in pyproject.toml as per PEP 517/518 standards.
 
-from setuptools import find_packages, setup
+For most use cases, you should use the following commands:
+- To install in development mode: pip install -e .
+- To build the package: python -m build
+"""
 
-# Read long description from README
-here = pathlib.Path(__file__).parent.resolve()
-long_description = (here / "README.md").read_text(encoding="utf-8")
+import setuptools
 
-# Core dependencies needed for minimal functionality
-CORE_DEPS = [
-    "pydantic>=2.7.2",
-    "python-dotenv>=1.0.0",
-]
-
-# AI dependencies
-AI_DEPS = [
-    "anthropic>=0.50.0",
-    "openai>=1.77.0",
-    "google-generativeai>=0.8.5",
-    "pydantic-ai>=0.1.9",
-]
-
-# MCP server dependencies
-MCP_DEPS = [
-    "mcp>=1.7.1",
-    "fastapi>=0.95.1",
-    "sse-starlette>=1.6.1",
-    "uvicorn>=0.23.1",
-]
+# This setup.py is a thin wrapper around the pyproject.toml configuration
+setuptools.setup()
 
 # Cloud dependencies
 CLOUD_DEPS = [
@@ -77,30 +60,35 @@ extras_require = {
 }
 
 setup(
-    name="template-python-dev",
+    name="ailf",
     version="0.1.0",
-    description="Template for Python agent development projects",
+    description="AI Liberation Front: Freedom tools for AI agent development",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="",
-    author_email="",
+    author="AI Liberation Front Team",
+    author_email="ailf@example.com",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "License :: OSI Approved :: MIT License",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    keywords="agent, development, template, ai, llm",
+    keywords="agent, development, ai, llm, tools, utils, pydantic",
     packages=find_packages(
-        exclude=["tests", "*.tests", "*.tests.*", "tests.*", "src"]),
+        exclude=["tests", "*.tests", "*.tests.*", "tests.*", "examples", "docs"]),
     python_requires=">=3.10",
     install_requires=CORE_DEPS,
     extras_require=extras_require,
     include_package_data=True,
-    package_dir={"": "."},  # Explicitly specify the root directory
+    package_data={"ailf": ["py.typed"]},
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/template-python-dev/issues",
-        "Source": "https://github.com/yourusername/template-python-dev",
+        "Bug Reports": "https://github.com/ai-liberation-front/ailf/issues",
+        "Source": "https://github.com/ai-liberation-front/ailf",
+        "Documentation": "https://ailf.readthedocs.io/",
     },
 )

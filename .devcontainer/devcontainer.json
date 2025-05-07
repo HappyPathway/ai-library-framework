@@ -6,26 +6,22 @@
     },
     "mounts": [
         "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
-        "source=${localEnv:HOME}/.config/gcloud,target=/home/vscode/.config/gcloud,type=bind,consistency=cached,optional=true",
-        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,optional=true"
+        "source=${localWorkspaceFolder}/.env,target=/workspace/.env,type=bind,consistency=cached"
     ],
     "forwardPorts": [
         8000,
-        5678,
-        6379
+        5678
     ],
-    "remoteEnv": {
-        "GOOGLE_CLOUD_PROJECT": "${localEnv:GOOGLE_CLOUD_PROJECT}",
-        "CLOUDSDK_CONFIG": "/home/vscode/.config/gcloud",
-        "GOOGLE_APPLICATION_CREDENTIALS": "/home/vscode/.config/gcloud/application_default_credentials.json",
-        "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
-        "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
-        "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
-        "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
-        "GCS_BUCKET_NAME": "${localEnv:GCS_BUCKET_NAME}",
-        "ENVIRONMENT": "${localEnv:ENVIRONMENT}",
-        "LOGFIRE_API_KEY": "${localEnv:LOGFIRE_API_KEY}"
-    },
+    // Mount local .env file
+    "mounts": [
+        "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/.env,target=/workspace/.env,type=bind,consistency=cached"
+    ],
+    // Forward ports for development servers and debugging
+    "forwardPorts": [
+        8000,  // Default web server port
+        5678   // Default debugpy port
+    ],
     "customizations": {
         "vscode": {
             "extensions": [
@@ -39,7 +35,7 @@
                 "GitHub.copilot"
             ],
             "settings": {
-                "python.defaultInterpreterPath": "/usr/local/bin/python3.12",
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
                 "python.linting.enabled": true,
                 "python.linting.pylintEnabled": true,
                 "python.formatting.provider": "black",
@@ -48,27 +44,18 @@
                 "editor.codeActionsOnSave": {
                     "source.organizeImports": true
                 },
-                "editor.rulers": [
-                    88
-                ], // Black's default line length
+                "editor.rulers": [88],  // Black's default line length
                 "python.testing.pytestEnabled": true,
                 "python.testing.unittestEnabled": false,
                 "python.testing.nosetestsEnabled": false,
-                "python.testing.pytestArgs": [
-                    "tests"
-                ]
+                "python.testing.pytestArgs": ["tests"]
             }
         }
     },
     "features": {
         "ghcr.io/devcontainers/features/git:1": {},
-        "ghcr.io/devcontainers/features/github-cli:1": {},
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-        "ghcr.io/devcontainers/features/python:1": {
-            "version": "3.12"
-        }
+        "ghcr.io/devcontainers/features/github-cli:1": {}
     },
-    "postCreateCommand": "bash .devcontainer/post-create.sh",
-    "postAttachCommand": "bash .devcontainer/post-attach.sh",
+    "postCreateCommand": "pip install -r requirements.txt",
     "remoteUser": "vscode"
 }

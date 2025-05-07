@@ -22,14 +22,14 @@ from typing import Any, Dict, List
 from celery.result import AsyncResult
 
 # Import AsyncIO task management
-from utils.async_tasks import TaskManager, TaskStatus
+from ailf.async_tasks import TaskManager, TaskStatus
 # Configure logging
-from utils.logging import setup_logging
-from utils.messaging.async_redis import AsyncRedisPubSub
+from ailf.logging import setup_logging
+from ailf.messaging.async_redis import AsyncRedisPubSub
 # Import Redis components
-from utils.messaging.redis import AsyncRedisClient, RedisConfig
+from ailf.messaging.redis import AsyncRedisClient, RedisConfig
 # Import Celery tasks
-from utils.workers.tasks import analyze_content, process_document
+from ailf.workers.tasks import analyze_content, process_document
 
 logger = setup_logging("async_redis_celery_example")
 

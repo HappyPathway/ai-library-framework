@@ -14,10 +14,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 def test_ai_module_importable():
     """Test that the AI module can be imported."""
     try:
-        import utils.ai_engine
+        import ailf.ai_engine
         assert True
     except ImportError as e:
-        pytest.fail(f"Failed to import utils.ai_engine: {e}")
+        pytest.fail(f"Failed to import ailf.ai_engine: {e}")
 
 
 class TestAIEngineFunctionality:
@@ -27,7 +27,7 @@ class TestAIEngineFunctionality:
         """Test that the AI Engine can be initialized with mock settings."""
         # Skip this test if utils.ai_engine can't be imported
         try:
-            from utils.ai_engine import AIEngine
+            from ailf.ai_engine import AIEngine
 
             # Use a mock configuration for testing
             engine = AIEngine(
@@ -43,7 +43,7 @@ class TestAIEngineFunctionality:
     @pytest.mark.skip(reason="Requires OpenAI package and credentials")
     def test_get_providers(self):
         """Test that the AI Engine can list providers."""
-        from utils.ai_engine import AIEngine
+        from ailf.ai_engine import AIEngine
         engine = AIEngine(feature_name="test-feature", provider="openai", model_name="gpt-3.5-turbo")
         # Check if the settings_map contains providers
         assert hasattr(engine, "settings_map")

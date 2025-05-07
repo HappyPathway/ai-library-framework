@@ -35,4 +35,4 @@ def test_import_project_modules():
     """Test importing project modules."""
     import utils
     from utils import ai_engine, storage
-    from utils.schemas import ai
+    from ailf.schemas import ai
