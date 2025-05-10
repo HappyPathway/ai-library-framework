@@ -5,20 +5,20 @@ Global pytest configuration for the project.
 import os
 import sys
 import pytest
-import redis
-
-from utils.messaging.redis import RedisClient, RedisConfig
-from ailf.messaging.mock_redis import MockRedisClient
+import asyncio
+import redis.asyncio as aioredis  # For type hinting and checking availability
 
 # Add the project root to the path to make imports work
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Skip tests that require external services if running in CI without credentials
+from ailf.messaging import RedisStreamsBackend, MockRedisStreamsBackend
+
+# Default Redis connection URL for tests
+TEST_REDIS_URL = os.environ.get("TEST_REDIS_URL", "redis://localhost:6379/1")  # Use DB 1 for tests
 
 
 def pytest_configure(config):
     """Configure pytest with custom markers."""
-    # Register all markers to avoid warnings
     config.addinivalue_line("markers", "integration: mark test as integration test")
     config.addinivalue_line("markers", "unit: mark test as unit test")
     config.addinivalue_line("markers", "slow: mark test as slow running test")
@@ -27,7 +27,12 @@ def pytest_configure(config):
     )
 
 
-# Define fixtures that should be available to all tests
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for each test session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture(scope="session")
@@ -48,90 +53,89 @@ def test_env():
     }
 
 
-def is_redis_available():
-    """Check if Redis server is available.
-    
-    Returns:
-        bool: True if Redis server is available, False otherwise.
-    """
+async def is_redis_available(redis_url: str) -> bool:
+    """Check if Redis server is available at the given URL."""
     try:
-        r = redis.Redis(host='localhost', port=6379, socket_connect_timeout=1)
-        return r.ping()
-    except (redis.exceptions.ConnectionError, redis.exceptions.ResponseError):
+        r = await aioredis.from_url(redis_url, socket_connect_timeout=1)
+        pong = await r.ping()
+        await r.close()
+        return pong
+    except (OSError, aioredis.RedisError) as e:  # OSError for connection refused
+        print(f"Redis connection failed for check: {e}")
         return False
 
 
-@pytest.fixture
-def redis_config():
-    """Provide Redis configuration for tests.
+@pytest.fixture(scope="function")  # Changed to function scope for cleaner state per test
+async def redis_messaging_backend(request):
+    """Yields a RedisStreamsBackend or MockRedisStreamsBackend instance.
     
-    Returns:
-        RedisConfig: Configuration for Redis client with test-specific settings.
+    If FORCE_MOCK_REDIS is set or a real Redis is not available (and not skipped),
+    it provides a MockRedisStreamsBackend. Otherwise, it provides a real RedisStreamsBackend.
+    The backend is connected and disconnected automatically.
+    The real Redis database (DB 1) is flushed before yielding to ensure a clean state.
     """
-    return RedisConfig(
-        host='localhost',
-        port=6379,
-        db=1,  # Use database 1 for tests to avoid conflicts
-        decode_responses=True
-    )
+    force_mock = os.environ.get('FORCE_MOCK_REDIS', 'false').lower() == 'true'
+    use_mock = force_mock
 
+    # Check if test requires real redis and skip if not available
+    if hasattr(request, "node") and request.node.get_closest_marker("requires_redis"):
+        if not await is_redis_available(TEST_REDIS_URL):
+            pytest.skip("Test requires a real Redis server, but it's not available.")
+        elif force_mock:
+            print("Warning: Test is marked with 'requires_redis' but FORCE_MOCK_REDIS is true. Using mock.")
+        else:
+            use_mock = False  # Definitely use real Redis
+    elif not force_mock and not await is_redis_available(TEST_REDIS_URL):
+        print("Real Redis not available, falling back to mock for non-marked test.")
+        use_mock = True
 
-@pytest.fixture
-def redis_client(redis_config):
-    """Return a Redis client for testing.
-    
-    Tries to use a real Redis server if available, otherwise falls back to mock.
-    Redis database is flushed before and after tests to ensure clean state.
-    
-    Args:
-        redis_config: Redis configuration fixture
-    
-    Returns:
-        RedisClient or MockRedisClient: Redis client instance
-    """
-    if os.environ.get('FORCE_MOCK_REDIS'):
-        # Force mock Redis if explicitly requested
-        client = MockRedisClient(redis_config)
-        yield client
-        return
-    
-    if is_redis_available():
-        # Use real Redis if available
-        client = RedisClient(redis_config)
-        
-        # Clean database before test
-        client.client.flushdb()
-        
-        yield client
-        
-        # Clean up after test
-        client.client.flushdb()
-        client.close()
+    if use_mock:
+        print("Using MockRedisStreamsBackend")
+        backend = MockRedisStreamsBackend(redis_url=TEST_REDIS_URL)
     else:
-        # Fall back to mock Redis if real Redis isn't available
-        print("Real Redis not available, using mock implementation")
-        client = MockRedisClient(redis_config)
-        yield client
+        print(f"Using RedisStreamsBackend with URL: {TEST_REDIS_URL}")
+        backend = RedisStreamsBackend(redis_url=TEST_REDIS_URL)
+        # Clean the test database before the test runs for real Redis
+        try:
+            r = await aioredis.from_url(TEST_REDIS_URL)
+            await r.flushdb()
+            await r.close()
+            print(f"Flushed Redis DB for {TEST_REDIS_URL}")
+        except Exception as e:
+            pytest.skip(f"Could not connect to or flush Redis DB {TEST_REDIS_URL}: {e}")
 
-
-@pytest.fixture
-def clear_redis(redis_client):
-    """Ensure Redis database is empty.
-    
-    This fixture can be used when tests need to start with a clean Redis state.
-    
-    Args:
-        redis_client: Redis client fixture
-    """
-    if hasattr(redis_client, 'client') and hasattr(redis_client.client, 'flushdb'):
-        redis_client.client.flushdb()
-    yield
-    if hasattr(redis_client, 'client') and hasattr(redis_client.client, 'flushdb'):
-        redis_client.client.flushdb()
+    await backend.connect()
+    yield backend
+    await backend.disconnect()
 
 
 @pytest.fixture(scope="function")
-def requires_real_redis():
-    """Skip test if real Redis is not available."""
-    if not is_redis_available():
-        pytest.skip("This test requires a real Redis server")
+async def clear_redis_db(redis_messaging_backend):
+    """Fixture to ensure the Redis database (or mock state) is clean.
+    
+    This is useful if a test needs to explicitly clear state mid-test or ensure
+    it's clean after specific operations, beyond the automatic per-test flush.
+    """
+    if isinstance(redis_messaging_backend, MockRedisStreamsBackend):
+        await redis_messaging_backend.clear_all_state()
+    elif isinstance(redis_messaging_backend, RedisStreamsBackend):
+        # For real Redis, connect and flush the specific test DB
+        try:
+            r = await aioredis.from_url(TEST_REDIS_URL)
+            await r.flushdb()
+            await r.close()
+            print(f"Flushed Redis DB for {TEST_REDIS_URL} via clear_redis_db fixture.")
+        except Exception as e:
+            print(f"Warning: Could not flush Redis DB via clear_redis_db: {e}")
+
+
+@pytest.fixture(scope="function")
+async def requires_real_redis_backend(redis_messaging_backend):
+    """Skips test if the provided backend is not a real RedisStreamsBackend.
+    
+    Use this fixture when a test specifically needs to interact with features
+    of the real RedisStreamsBackend that the mock might not fully implement.
+    """
+    if not isinstance(redis_messaging_backend, RedisStreamsBackend):
+        pytest.skip("This test requires the real RedisStreamsBackend.")
+    yield redis_messaging_backend  # Provide the backend to the test

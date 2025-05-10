@@ -20,7 +20,7 @@ from typing import List, Optional
 
 import zmq
 
-from ailf.messaging import (
+from ailf.messaging.zmq import (  # Changed from ailf.messaging
     DeviceManager, 
     ZMQPublisher, 
     ZMQSubscriber, 

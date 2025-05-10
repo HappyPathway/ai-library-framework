@@ -22,7 +22,7 @@ import logging
 from typing import Dict, Any, Optional, List, Type, TypeVar, Union
 from pydantic import BaseModel, Field
 
-from ailf.ai_engine import AIEngine, AIEngineError
+from ailf.ai_engine import AIEngine
 from ailf.schemas.ai import AIResponse
 
 # Set up logging
@@ -57,6 +57,7 @@ class EnhancedAIEngine(AIEngine):
         self.requests_count = 0
         self.total_tokens = 0
         self.avg_response_time = 0
+        self.AIEngineError = AIEngine.AIEngineError
         
         logger.info(f"Enhanced AI Engine initialized with model {model_name}")
     
@@ -120,7 +121,7 @@ class EnhancedAIEngine(AIEngine):
             
             return response
             
-        except AIEngineError as e:
+        except self.AIEngineError as e:
             logger.error(f"Error in AI request #{self.requests_count}: {str(e)}")
             raise
     

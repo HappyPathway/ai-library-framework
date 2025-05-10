@@ -20,7 +20,7 @@ import threading
 import json
 from typing import Dict, Any
 
-from src.ailf.messaging import RedisClient, RedisPubSub, RedisStream, RedisConfig
+from ailf.messaging import RedisClient, RedisPubSub, RedisStream, RedisConfig
 
 
 def demo_basic_redis_operations():

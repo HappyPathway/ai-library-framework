@@ -9,7 +9,7 @@ to get structured documentation for Python objects.
 import asyncio
 from pprint import pprint
 
-from ailf import get_documentation
+from ailf.documentation import get_documentation  # Changed from ailf import get_documentation
 from ailf.base_mcp import Context
 
 

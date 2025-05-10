@@ -3,10 +3,10 @@
 This module provides Pydantic models for AI interactions.
 """
 
-from utils.schemas.ai import (
+from ailf.ai_engine import (
     AIResponse,
     GeminiSettings,
-    GeminiSafetySettings,
+    GeminiSafetySettings,  # Assuming this is or should be in ailf.ai_engine
     OpenAISettings,
     AnthropicSettings,
     UsageLimits

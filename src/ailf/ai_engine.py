@@ -40,6 +40,10 @@ class GeminiSettings(BaseModel):
     top_p: float = 1.0
     top_k: Optional[int] = None
 
+class GeminiSafetySettings(BaseModel):
+    """Safety settings for Gemini models."""
+    pass  # Added placeholder, to be filled with actual settings
+
 class UsageLimits(BaseModel):
     """Usage limits tracking."""
     total_tokens: int = 0

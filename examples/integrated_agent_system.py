@@ -25,7 +25,7 @@ from celery.result import AsyncResult
 # Import AsyncIO task management
 from ailf.async_tasks import TaskManager, TaskStatus
 # Configure logging
-from ailf.logging import setup_logging
+from ailf.core.logging import setup_logging  # Changed from ailf.logging
 # Import Redis components
 from ailf.messaging.redis import (AsyncRedisClient, RedisLock, RedisPubSub,
                                    RedisStream)
