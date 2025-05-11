@@ -1,10 +1,25 @@
 """Pydantic schemas for ailf.routing."""
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Literal
+from enum import Enum
 from pydantic import BaseModel, Field
 
-# Assuming StandardMessage might be similar to BaseMessage from ailf.schemas.interaction
-# If a specific StandardMessage is needed, it should be defined, possibly importing BaseMessage
-from ailf.schemas.interaction import AnyInteractionMessage # Changed from BaseMessage
+from ailf.schemas.interaction import AnyInteractionMessage
+
+class TaskStatus(str, Enum):
+    """Status values for tasks."""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    TIMEOUT = "timeout"
+
+class TaskPriority(str, Enum):
+    """Priority values for tasks."""
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    CRITICAL = "critical"
 
 class DelegatedTaskMessage(BaseModel):
     """Message for delegating a task to another agent or worker."""
@@ -12,15 +27,21 @@ class DelegatedTaskMessage(BaseModel):
     target_agent_id: Optional[str] = Field(default=None, description="ID of the target agent/worker.")
     task_name: str = Field(description="Name or type of the task to be performed.")
     task_input: Dict[str, Any] = Field(default_factory=dict, description="Input parameters for the task.")
-    # callback_info: Optional[Dict[str, Any]] = Field(default=None, description="Information for callback if needed.")
     source_agent_id: Optional[str] = Field(default=None, description="ID of the agent delegating the task.")
+    priority: TaskPriority = Field(default=TaskPriority.NORMAL, description="Priority of the task.")
+    timeout: Optional[float] = Field(default=None, description="Optional timeout in seconds.")
+    execution_constraints: Optional[Dict[str, Any]] = Field(default=None, description="Optional constraints for task execution.")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata for the task.")
 
 class TaskResultMessage(BaseModel):
     """Message containing the result of a delegated task."""
     task_id: str = Field(description="Unique ID of the task this result corresponds to.")
-    status: str = Field(description="Status of the task (e.g., completed, failed, in_progress).")
+    status: TaskStatus = Field(description="Status of the task.")
     result: Optional[Any] = Field(default=None, description="The output or result of the task.")
     error_message: Optional[str] = Field(default=None, description="Error message if the task failed.")
+    processing_time: Optional[float] = Field(default=None, description="Time taken to process the task in seconds.")
+    execution_metrics: Optional[Dict[str, Any]] = Field(default=None, description="Optional metrics about the execution.")
+    source_agent_id: Optional[str] = Field(default=None, description="ID of the agent that completed the task.")
 
 class RouteDecision(BaseModel):
     """Represents a decision made by the AgentRouter."""

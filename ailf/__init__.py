@@ -6,10 +6,10 @@
 from .cognition import ReActProcessor, TaskPlanner, IntentRefiner, PromptTemplateV1, PromptLibrary
 
 # Communication - Agent Communication Protocol (ACP) related components
-# from .communication import ACPHandler # Assuming ACPHandler will be the main export
+from .communication import ACPHandler
 
 # Feedback - Learning and adaptation mechanisms
-from .feedback import InteractionLogger # Add PerformanceAnalyzer, AdaptiveLearningManager when ready
+from .feedback import InteractionLogger, PerformanceAnalyzer, AdaptiveLearningManager
 
 # Interaction - Managing agent's communication with the external world
 from .interaction import BaseInputAdapter, BaseOutputAdapter, InteractionManager
@@ -41,9 +41,11 @@ __all__ = [
     "PromptTemplateV1",
     "PromptLibrary",
     # Communication
-    # "ACPHandler",
+    "ACPHandler",
     # Feedback
     "InteractionLogger",
+    "PerformanceAnalyzer",
+    "AdaptiveLearningManager",
     # Interaction
     "BaseInputAdapter",
     "BaseOutputAdapter",
