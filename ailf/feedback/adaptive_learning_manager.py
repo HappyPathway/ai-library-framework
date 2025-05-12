@@ -7,7 +7,9 @@ optimization and strategy refinement.
 
 import logging
 import time
-from typing import Any, Dict, Optional, List, Tuple
+import copy
+import uuid
+from typing import Any, Dict, Optional, List, Tuple, Set
 
 from ailf.feedback.performance_analyzer import PerformanceAnalyzer
 from ailf.cognition.prompt_library import PromptLibrary
@@ -43,6 +45,8 @@ class AdaptiveLearningManager:
         self.prompt_library = prompt_library
         self.config = config or {}
         self.ai_engine = ai_engine  # For LLM-based optimizations
+        self._optimization_history = []  # Track optimization actions
+        self._pending_optimizations = {}  # Store optimizations that haven't been applied yet
         logger.info("AdaptiveLearningManager initialized.")
 
     async def apply_insights_to_behavior(self, insights: Dict[str, Any]) -> None:
@@ -64,7 +68,23 @@ class AdaptiveLearningManager:
                 if stats.get("error_rate", 0) > self.config.get("prompt_error_threshold", 0.5):
                     logger.warning(f"Prompt {prompt_id} has high error rate: {stats['error_rate']}. Optimizing prompt template.")
                     await self.optimize_prompts(prompt_template_id=prompt_id, metrics=stats)
-        await self.suggest_prompt_modifications(insights.get("prompt_analysis"))
+        
+        # Generate and collect prompt modification suggestions
+        suggestions = await self.suggest_prompt_modifications(insights.get("prompt_analysis"))
+        
+        # Store suggestions as pending optimizations if they aren't already being tracked
+        for template_id, suggestion in suggestions.items():
+            if template_id not in self._pending_optimizations:
+                self._pending_optimizations[template_id] = {
+                    "suggestion": suggestion,
+                    "timestamp": time.time(),
+                    "metrics": insights.get("prompt_analysis", {}).get(template_id, {}),
+                    "status": "pending"
+                }
+        
+        # If auto-optimization is enabled, apply pending optimizations
+        if self.config.get("auto_optimize_prompts", False):
+            await self.apply_prompt_optimizations()
 
     async def optimize_prompts(self, 
                                prompt_template_id: str, 
@@ -127,19 +147,41 @@ class AdaptiveLearningManager:
         # Update the template if modifications were made
         if modification_made:
             try:
-                # Update the template and increment version
-                new_version = current_template.version + 1 if hasattr(current_template, 'version') else 1
-                current_template.version = new_version
+                # Add optimization tracking information
+                current_template.updated_by_component = "AdaptiveLearningManager"
+                current_template.optimization_source = "performance_metrics"
+                current_template.optimization_metrics = metrics
+                current_template.updated_at = time.time()
                 
-                # In a real implementation, you would use the appropriate method to update
-                # the template in the prompt library
-                # Example: self.prompt_library.update_template(current_template)
+                # Create version notes
+                version_notes = f"Automated optimization based on performance metrics: " \
+                               f"Error rate: {metrics.get('error_rate', 'N/A')}, " \
+                               f"Feedback score: {metrics.get('average_feedback_score', 'N/A')}"
+                current_template.version_notes = version_notes
                 
-                # For now, simulate updating by adding the template with overwrite=True
-                self.prompt_library.add_template(current_template, overwrite=True)
+                # Update the template in the prompt library
+                updated_template = self.prompt_library.update_template(
+                    template_id, 
+                    current_template.dict(),
+                    version_notes=version_notes
+                )
                 
-                logger.info(f"Successfully optimized template {template_id} to version {new_version}")
-                return str(new_version)
+                if updated_template:
+                    logger.info(f"Successfully optimized template {template_id} to version {updated_template.version}")
+                    
+                    # Record this optimization in history
+                    self._optimization_history.append({
+                        "template_id": template_id,
+                        "original_version": version or "1.0",
+                        "new_version": updated_template.version,
+                        "timestamp": time.time(),
+                        "metrics": metrics,
+                        "changes": version_notes
+                    })
+                    
+                    return str(updated_template.version)
+                else:
+                    logger.error(f"Failed to update template {template_id} in prompt library.")
             except Exception as e:
                 logger.error(f"Failed to update template {template_id}: {str(e)}")
                 
@@ -182,7 +224,7 @@ class AdaptiveLearningManager:
                 # Create a copy of the base template with modifications
                 # Note: In a real implementation, we would need to properly deep copy 
                 # the template and modify its attributes based on the variation
-                modified_template = base_template  # This would be a deep copy in real implementation
+                modified_template = copy.deepcopy(base_template)
                 
                 # Apply the variation's changes to the modified template
                 if "system_prompt" in variation:
@@ -191,14 +233,12 @@ class AdaptiveLearningManager:
                     modified_template.user_prompt_template = variation["user_prompt_template"]
                 
                 # Add metadata to track this as part of an A/B test
-                if not hasattr(modified_template, "metadata"):
-                    modified_template.metadata = {}
-                modified_template.metadata["ab_test_id"] = f"test_{prompt_template_id}_{int(variation.get('distribution', 100))}"
-                modified_template.metadata["test_variation"] = i + 1
-                modified_template.metadata["distribution_weight"] = variation.get("distribution", 100)
+                modified_template.updated_by_component = "AdaptiveLearningManager"
+                modified_template.optimization_source = "ab_testing"
+                modified_template.version_notes = f"A/B testing variation {i+1}"
                 
                 # Add the variation to the prompt library
-                self.prompt_library.add_template(modified_template, overwrite=True)
+                self.prompt_library.add_new_template_version(prompt_template_id, modified_template)
                 variation_ids.append(variation_id)
                 
                 logger.info(f"Registered A/B test variation {i+1} for {prompt_template_id} as {variation_id}")
@@ -360,28 +400,294 @@ class AdaptiveLearningManager:
                     results[template_id] = {"status": "skipped", "message": "No improved text"}
                     continue
                 
-                # Calculate new version
-                new_version = template.version + 1 if hasattr(template, "version") else 1
+                # Prepare updated content
+                update_content = {
+                    "user_prompt_template": improved_text,
+                    "updated_by_component": "AdaptiveLearningManager",
+                    "optimization_source": "automated_improvement",
+                    "updated_at": time.time()
+                }
+                
+                # Create version notes
+                version_notes = f"Automated improvement: {improvement.get('reasoning', 'No reasoning provided')}"
                 
                 # Update the template
-                template.user_prompt_template = improved_text
-                template.version = new_version
+                updated_template = self.prompt_library.update_template(
+                    template_id, 
+                    update_content,
+                    version_notes=version_notes
+                )
                 
-                # Save the updated template
-                self.prompt_library.update_template(template_id, improved_text, str(new_version))
-                
-                logger.info(f"Successfully updated template {template_id} to version {new_version}")
-                results[template_id] = {
-                    "status": "success", 
-                    "version": new_version,
-                    "message": f"Updated to version {new_version}"
-                }
+                if updated_template:
+                    logger.info(f"Successfully updated template {template_id} to version {updated_template.version}")
+                    results[template_id] = {
+                        "status": "success", 
+                        "version": updated_template.version,
+                        "message": f"Updated to version {updated_template.version}"
+                    }
+                    
+                    # Record this optimization in history
+                    self._optimization_history.append({
+                        "template_id": template_id,
+                        "original_version": template.version,
+                        "new_version": updated_template.version,
+                        "timestamp": time.time(),
+                        "changes": version_notes
+                    })
+                else:
+                    logger.error(f"Failed to update template {template_id} in prompt library.")
+                    results[template_id] = {"status": "error", "message": "Failed to update template"}
                 
             except Exception as e:
                 logger.error(f"Error applying improvement to {template_id}: {str(e)}")
                 results[template_id] = {"status": "error", "message": str(e)}
                 
         return results
+
+    async def apply_prompt_optimizations(self, max_optimizations: int = None) -> Dict[str, Any]:
+        """
+        Apply pending optimizations to prompt templates in the prompt library.
+        
+        This method represents the key automated step in the end-to-end workflow,
+        taking insights from the AdaptiveLearningManager and actually implementing
+        them in the PromptLibrary.
+        
+        :param max_optimizations: Maximum number of optimizations to apply in one run.
+        :type max_optimizations: Optional[int]
+        :return: Dictionary of results.
+        :rtype: Dict[str, Any]
+        """
+        if not self.prompt_library:
+            logger.warning("Prompt library not available, cannot apply optimizations.")
+            return {"status": "error", "message": "Prompt library not available"}
+        
+        # Check if there are any pending optimizations
+        if not self._pending_optimizations:
+            logger.info("No pending optimizations to apply.")
+            return {"status": "success", "applied": 0, "message": "No pending optimizations"}
+        
+        # Sort pending optimizations by priority (can be enhanced with more complex prioritization)
+        prioritized_optimizations = sorted(
+            self._pending_optimizations.items(),
+            key=lambda x: x[1].get("metrics", {}).get("error_rate", 0),
+            reverse=True  # Higher error rate = higher priority
+        )
+        
+        if max_optimizations:
+            prioritized_optimizations = prioritized_optimizations[:max_optimizations]
+        
+        applied_count = 0
+        failed_count = 0
+        results = {}
+        
+        # Process each optimization
+        for template_id, optimization_data in prioritized_optimizations:
+            # Skip if already processed
+            if optimization_data.get("status") == "applied":
+                continue
+                
+            logger.info(f"Applying optimization to template: {template_id}")
+            
+            try:
+                # Get the template
+                template = self.prompt_library.get_template(template_id)
+                if not template:
+                    logger.error(f"Template {template_id} not found, cannot apply optimization.")
+                    results[template_id] = {"status": "error", "message": "Template not found"}
+                    failed_count += 1
+                    continue
+                
+                # Generate the improvement based on metrics
+                original_prompt = template.user_prompt_template
+                metrics = optimization_data.get("metrics", {})
+                
+                # Use AI engine if available, otherwise use rule-based approach
+                if self.ai_engine and self.config.get("use_ai_for_improvements", True):
+                    # Implementation would depend on your AI engine interface
+                    # This is a placeholder for the AI-based optimization
+                    improved_prompt = await self._generate_ai_improvement(
+                        template, 
+                        metrics,
+                        optimization_data.get("suggestion", "")
+                    )
+                else:
+                    # Rule-based improvement
+                    improved_prompt = self._generate_rule_based_improvement(
+                        template, 
+                        metrics,
+                        optimization_data.get("suggestion", "")
+                    )
+                
+                # Only update if there's actually a change
+                if improved_prompt == original_prompt:
+                    logger.info(f"No changes needed for template {template_id}")
+                    self._pending_optimizations[template_id]["status"] = "skipped"
+                    results[template_id] = {"status": "skipped", "message": "No changes needed"}
+                    continue
+                
+                # Prepare the update
+                update_content = {
+                    "user_prompt_template": improved_prompt,
+                    "updated_by_component": "AdaptiveLearningManager",
+                    "optimization_source": "automated_optimization",
+                    "optimization_metrics": metrics,
+                    "updated_at": time.time()
+                }
+                
+                # Create version notes
+                version_notes = f"Automated optimization based on performance metrics: " \
+                               f"Error rate: {metrics.get('error_rate', 'N/A')}, " \
+                               f"Feedback score: {metrics.get('average_feedback_score', 'N/A')}"
+                
+                # Update the template
+                updated_template = self.prompt_library.update_template(
+                    template_id,
+                    update_content,
+                    version_notes=version_notes
+                )
+                
+                if updated_template:
+                    logger.info(f"Successfully updated template {template_id} to version {updated_template.version}")
+                    self._pending_optimizations[template_id]["status"] = "applied"
+                    self._pending_optimizations[template_id]["applied_at"] = time.time()
+                    self._pending_optimizations[template_id]["new_version"] = updated_template.version
+                    
+                    results[template_id] = {
+                        "status": "success",
+                        "version": updated_template.version,
+                        "message": f"Updated to version {updated_template.version}"
+                    }
+                    
+                    # Record in optimization history
+                    self._optimization_history.append({
+                        "template_id": template_id,
+                        "original_version": template.version,
+                        "new_version": updated_template.version,
+                        "timestamp": time.time(),
+                        "metrics": metrics,
+                        "changes": version_notes,
+                        "optimization_id": str(uuid.uuid4())
+                    })
+                    
+                    applied_count += 1
+                else:
+                    logger.error(f"Failed to update template {template_id}")
+                    results[template_id] = {"status": "error", "message": "Failed to update template"}
+                    failed_count += 1
+            
+            except Exception as e:
+                logger.error(f"Error optimizing template {template_id}: {str(e)}")
+                results[template_id] = {"status": "error", "message": str(e)}
+                failed_count += 1
+        
+        # Prepare the summary response
+        summary = {
+            "status": "success" if failed_count == 0 else "partial",
+            "applied": applied_count,
+            "failed": failed_count,
+            "details": results
+        }
+        
+        logger.info(f"Applied {applied_count} optimizations, {failed_count} failed.")
+        return summary
+
+    async def _generate_ai_improvement(self, 
+                                      template, 
+                                      metrics: Dict[str, Any],
+                                      suggestion: str) -> str:
+        """
+        Generate an improved prompt using the AI engine.
+        
+        :param template: The template to improve.
+        :type template: PromptTemplateV1
+        :param metrics: Performance metrics for the template.
+        :type metrics: Dict[str, Any]
+        :param suggestion: Suggestion text for improvement.
+        :type suggestion: str
+        :return: Improved prompt text.
+        :rtype: str
+        """
+        # This would be implemented based on your AI engine's interface
+        # For now, return the original as a placeholder
+        if not self.ai_engine:
+            return template.user_prompt_template
+            
+        try:
+            # Example of how this might look with a generic AI engine interface
+            system_prompt = """
+            You are an expert prompt engineer. Improve the given prompt template based on 
+            the performance metrics and suggestions provided. The improved prompt should:
+            1. Be clearer and more specific
+            2. Address any issues identified in the metrics (high error rate, low feedback)
+            3. Maintain the original intent and functionality
+            4. Keep all placeholders (variables in {curly braces})
+            """
+            
+            user_prompt = f"""
+            Original prompt template: "{template.user_prompt_template}"
+            
+            Performance metrics:
+            - Error rate: {metrics.get('error_rate', 'N/A')}
+            - Feedback score: {metrics.get('average_feedback_score', 'N/A')}
+            - Success rate: {metrics.get('success_rate', 'N/A')}
+            
+            Suggestion: {suggestion}
+            
+            Please provide an improved version of the prompt template.
+            """
+            
+            response = await self.ai_engine.generate_text(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt
+            )
+            
+            # Process the response to extract just the improved template
+            # This would need to be adjusted based on your AI engine's output format
+            improved_template = response.strip()
+            
+            logger.info(f"Generated AI improvement for template: {template.template_id}")
+            return improved_template
+            
+        except Exception as e:
+            logger.error(f"Error generating AI improvement: {str(e)}")
+            # Fall back to the original template
+            return template.user_prompt_template
+
+    def _generate_rule_based_improvement(self, 
+                                       template, 
+                                       metrics: Dict[str, Any],
+                                       suggestion: str) -> str:
+        """
+        Generate an improved prompt using rule-based strategies.
+        
+        :param template: The template to improve.
+        :type template: PromptTemplateV1
+        :param metrics: Performance metrics for the template.
+        :type metrics: Dict[str, Any]
+        :param suggestion: Suggestion text for improvement.
+        :type suggestion: str
+        :return: Improved prompt text.
+        :rtype: str
+        """
+        prompt = template.user_prompt_template
+        
+        # Strategy 1: Improve clarity for high error rates
+        if metrics.get("error_rate", 0) > 0.3:
+            prompt = prompt.replace("provide", "provide detailed")
+            prompt = prompt.replace("tell me", "explain in detail")
+            
+        # Strategy 2: Add structure for low success rates
+        if metrics.get("success_rate", 0) < 0.6:
+            if not prompt.lower().startswith("please"):
+                prompt = f"Please {prompt.lower()}"
+            if not "step by step" in prompt.lower():
+                prompt = prompt.replace(".", ". Please provide a step-by-step response.")
+        
+        # Strategy 3: Add specificity for low feedback scores
+        if metrics.get("average_feedback_score", 1.0) < 0.5:
+            prompt = prompt.replace(".", ". Be specific and precise in your answer.")
+            
+        return prompt
 
     async def run_learning_cycle(self, auto_optimize: bool = False) -> Dict[str, Any]:
         """
@@ -417,48 +723,25 @@ class AdaptiveLearningManager:
         await self.apply_insights_to_behavior(insights)
         
         # 5. Optionally perform automatic optimizations for underperforming prompts
-        if auto_optimize and self.prompt_library:
-            logger.info("Auto-optimization enabled. Checking for prompts that need improvement...")
-            
-            for prompt_id, stats in prompt_analysis.items():
-                # Check if this prompt is underperforming based on configurable thresholds
-                needs_optimization = False
-                
-                # Example criterion: High error rate
-                if stats.get("error_count", 0) / stats.get("total_uses", 1) > self.config.get("error_rate_threshold", 0.3):
-                    needs_optimization = True
-                
-                # Example criterion: Low feedback score
-                if stats.get("average_feedback_score") is not None and stats["average_feedback_score"] < self.config.get("feedback_optimization_threshold", 0.5):
-                    needs_optimization = True
-                
-                if needs_optimization:
-                    logger.info(f"Attempting to optimize underperforming prompt: {prompt_id}")
-                    new_version = await self.optimize_prompts(prompt_id, stats)
-                    
-                    if new_version:
-                        optimized_prompts.append({
-                            "prompt_id": prompt_id, 
-                            "new_version": new_version,
-                            "metrics_before": stats
-                        })
-            
-            # 6. Potentially set up A/B testing for prompts with multiple optimization strategies
-            if "prompts_for_ab_testing" in insights:
-                for prompt_id, variations in insights["prompts_for_ab_testing"].items():
-                    if len(variations) > 1:  # Only do A/B testing if there are multiple variations
-                        test_config = await self.manage_ab_testing(prompt_id, variations)
-                        if test_config and test_config.get("success"):
-                            ab_test_configs.append(test_config)
+        if auto_optimize:
+            # If auto_optimize flag is set, immediately apply any pending optimizations
+            optimization_results = await self.apply_prompt_optimizations()
+            optimized_prompts = [
+                {"template_id": tid, "result": result}
+                for tid, result in optimization_results.get("details", {}).items()
+                if result.get("status") == "success"
+            ]
         
-        # 7. Complete the learning cycle and return results
+        # 6. Complete the learning cycle and return results
         results = {
             "timestamp": time.time(),
+            "cycle_id": str(uuid.uuid4()),
             "insights": insights,
             "suggestions": suggestions,
             "optimized_prompts": optimized_prompts,
             "ab_tests_created": ab_test_configs,
-            "general_metrics": general_metrics
+            "general_metrics": general_metrics,
+            "auto_optimize": auto_optimize
         }
         
         logger.info(f"Adaptive learning cycle completed. Optimized {len(optimized_prompts)} prompts, created {len(ab_test_configs)} A/B tests.")
@@ -555,10 +838,43 @@ class AdaptiveLearningManager:
             
         # 4. Return results
         return {
+            "cycle_id": str(uuid.uuid4()),
+            "timestamp": time.time(),
             "underperforming_prompts": underperforming,
             "suggested_improvements": suggestions,
             "applied_results": applied_results,
             "auto_apply": auto_apply
+        }
+
+    def get_optimization_history(self, template_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get history of optimizations applied to templates.
+        
+        :param template_id: Optional template ID to filter history.
+        :type template_id: Optional[str]
+        :return: List of optimization records.
+        :rtype: List[Dict[str, Any]]
+        """
+        if template_id:
+            # Filter history by template_id
+            return [
+                record for record in self._optimization_history 
+                if record["template_id"] == template_id
+            ]
+        
+        return self._optimization_history
+
+    def get_pending_optimizations(self) -> Dict[str, Any]:
+        """
+        Get all pending optimizations that haven't been applied yet.
+        
+        :return: Dictionary of pending optimizations.
+        :rtype: Dict[str, Any]
+        """
+        # Filter to only include those with status "pending"
+        return {
+            template_id: data for template_id, data in self._pending_optimizations.items()
+            if data.get("status") == "pending"
         }
 
     async def __aenter__(self):

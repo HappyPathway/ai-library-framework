@@ -23,6 +23,13 @@ class PromptTemplateV1(BaseModel):
     created_at: float = Field(default_factory=time.time, description="Timestamp of template creation.")
     updated_at: Optional[float] = Field(None, description="Timestamp of last template update.")
     
+    # Optimization tracking fields
+    updated_by_component: Optional[str] = Field(None, description="Identifier of the component that last updated this template (e.g., 'AdaptiveLearningManager').")
+    optimization_source: Optional[str] = Field(None, description="Source or trigger for the optimization (e.g., 'feedback', 'error_rate', 'manual').")
+    optimization_metrics: Optional[Dict[str, Any]] = Field(None, description="Metrics that led to this optimization being applied.")
+    previous_version_id: Optional[str] = Field(None, description="Reference to the previous version this template was derived from.")
+    version_notes: Optional[str] = Field(None, description="Notes explaining the changes in this version.")
+    
     # Example usage or notes for developers
     usage_notes: Optional[str] = Field(None, description="Notes on how and when to use this prompt template.")
     
@@ -52,6 +59,8 @@ class PromptLibraryConfig(BaseModel):
     # Potentially add database connection details if templates are stored in a DB
     # db_connection_string: Optional[str] = None
     default_prompt_id: Optional[str] = Field(None, description="Default prompt to use if a specific one isn't requested.")
+    auto_save: bool = Field(True, description="Whether to automatically save template changes to disk.")
+    versioning_strategy: str = Field("increment", description="Strategy for versioning templates: 'increment', 'timestamp', or 'semantic'.")
 
 # Example of how a PromptTemplateV1 might be stored or loaded (e.g., as a JSON file)
 # {
