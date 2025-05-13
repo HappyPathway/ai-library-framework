@@ -107,13 +107,91 @@ class UserInterventionRequestMessage(ACPMessage):
     payload: UserInterventionRequestPayload
 
 # UXNegotiation
+class UXCapability(str, Enum):
+    """Enumeration of UX capabilities."""
+    TEXT = "text"
+    IMAGE = "image"
+    AUDIO = "audio"
+    VIDEO = "video"
+    FILE = "file"
+    STRUCTURED = "structured"
+    MARKDOWN = "markdown"
+    HTML = "html"
+    BUTTON = "button"
+    FORM = "form"
+    WEBVIEW = "webview"
+    CARD = "card"
+    TABLE = "table"
+    CHART = "chart"
+    INTERACTIVE_ELEMENT = "interactive_element"
+    STREAMING = "streaming"
+    PUSH_NOTIFICATION = "push_notification"
+    
+class UXNegotiationStatus(str, Enum):
+    """Enumeration of UX negotiation statuses."""
+    REQUEST = "request"  # Initial request for UX capabilities
+    RESPONSE = "response"  # Response to a request
+    CONFIRM = "confirm"   # Confirmation of agreed capabilities
+    REJECT = "reject"     # Rejection of requested capabilities
+    UPDATE = "update"     # Update to previously negotiated capabilities
+
 class UXNegotiationPayload(BaseModel):
-    """Payload for negotiating UX capabilities and session resumption."""
+    """Payload for negotiating UX capabilities and session resumption.
+    
+    This schema is aligned with A2A's dynamic UX negotiation concepts to allow
+    seamless integration between AILF agents and A2A protocol.
+    """
     session_id: Optional[str] = Field(None, description="Session ID to potentially resume.")
-    supported_ux_elements: List[str] = Field(default_factory=list, description="List of UX element types supported by the sender (e.g., text, button, card, image_url).")
-    requested_ux_elements: Optional[List[str]] = Field(None, description="Specific UX elements the sender wishes the recipient to use or confirm support for.")
-    capabilities: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Key-value pairs describing other relevant capabilities or preferences.")
-    negotiation_status: Optional[str] = Field(None, description="Status of the negotiation (e.g., request, response, confirm, reject).")
+    
+    # UX capabilities support
+    supported_input_modes: List[UXCapability] = Field(
+        default_factory=lambda: [UXCapability.TEXT], 
+        description="Input modes supported by the sender (e.g., text, image, audio)."
+    )
+    supported_output_modes: List[UXCapability] = Field(
+        default_factory=lambda: [UXCapability.TEXT], 
+        description="Output modes supported by the sender (e.g., text, image, audio)."
+    )
+    
+    # Specific UX request
+    requested_input_modes: Optional[List[UXCapability]] = Field(
+        None, 
+        description="Input modes the sender wishes the recipient to use."
+    )
+    requested_output_modes: Optional[List[UXCapability]] = Field(
+        None, 
+        description="Output modes the sender wishes the recipient to use."
+    )
+    
+    # Extended capabilities
+    streaming_support: bool = Field(
+        default=False, 
+        description="Whether streaming output is supported."
+    )
+    state_transition_history: bool = Field(
+        default=False, 
+        description="Whether state transition history is supported."
+    )
+    push_notifications: bool = Field(
+        default=False, 
+        description="Whether push notifications are supported."
+    )
+    
+    # Additional capabilities
+    extended_capabilities: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, 
+        description="Additional key-value pairs describing other capabilities."
+    )
+    
+    # Negotiation metadata
+    negotiation_status: UXNegotiationStatus = Field(
+        default=UXNegotiationStatus.REQUEST, 
+        description="Status of the negotiation."
+    )
+    reason: Optional[str] = Field(
+        None, 
+        description="Optional reason for the negotiation status, especially for rejections."
+    )
 
 class UXNegotiationMessage(ACPMessage):
     header: ACPMessageHeader = Field(..., description="Message header with message_type=UX_NEGOTIATION")

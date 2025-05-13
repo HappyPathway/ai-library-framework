@@ -41,9 +41,9 @@ import time
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, List, Optional, Union
 
-# Try to import from utils if available (for development)
+# Import Redis functionality 
 try:
-    from utils.messaging.redis import (
+    from ailf.messaging.redis import (
         RedisClient,
         AsyncRedisClient,
         RedisPubSub,

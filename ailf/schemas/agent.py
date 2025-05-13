@@ -4,6 +4,8 @@ from pydantic import BaseModel, Field
 import uuid
 from datetime import datetime
 
+from ailf.schemas.a2a import AgentCard, AgentProvider, AgentCapabilities, AgentAuthentication
+
 class CommunicationEndpoint(BaseModel):
     """Describes a communication endpoint for an agent."""
     protocol: str = Field(..., description="Communication protocol (e.g., 'http', 'redis_streams', 'zmq').")
@@ -44,7 +46,56 @@ class AgentDescription(BaseModel):
     cost_information: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Information related to the cost of using this agent.")
     embedding: Optional[List[float]] = Field(default=None, description="Embedding of the agent's description for semantic search in a registry.")
     
+    # A2A protocol support
+    supports_a2a: bool = Field(default=False, description="Whether this agent supports the A2A protocol.")
+    a2a_capabilities: Optional[AgentCapabilities] = Field(default=None, description="Agent capabilities for A2A protocol.")
+    
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional custom metadata for the agent.")
 
     class Config:
         validate_assignment = True
+        
+    def to_a2a_agent_card(self) -> AgentCard:
+        """Convert AgentDescription to A2A-compatible AgentCard.
+        
+        Returns:
+            AgentCard: A2A-compatible agent card representation.
+        
+        Example:
+            >>> agent_desc = AgentDescription(agent_name="MyAgent", agent_type="assistant", description="A helpful agent")
+            >>> agent_card = agent_desc.to_a2a_agent_card()
+        """
+        # Create provider information
+        provider = AgentProvider(
+            name=self.author or "Unknown",
+            url=next((e.address for e in self.communication_endpoints 
+                    if e.protocol == "http" or e.protocol == "https"), None)
+        )
+        
+        # Get HTTP endpoint for the agent
+        agent_url = next((e.address for e in self.communication_endpoints 
+                        if e.protocol == "http" or e.protocol == "https"), "")
+                        
+        # Create authentication if needed
+        authentication = None
+        for endpoint in self.communication_endpoints:
+            if endpoint.details and endpoint.details.get("authentication"):
+                auth_details = endpoint.details.get("authentication", {})
+                authentication = AgentAuthentication(
+                    schemes=auth_details.get("schemes", ["none"]),
+                    credentials=auth_details.get("credentials")
+                )
+                break
+                
+        # Create the AgentCard
+        return AgentCard(
+            name=self.agent_name,
+            description=self.description,
+            url=agent_url,
+            provider=provider,
+            version=self.version,
+            documentationUrl=self.metadata.get("documentation_url"),
+            capabilities=self.a2a_capabilities or AgentCapabilities(),
+            authentication=authentication,
+            metadata=self.metadata
+        )

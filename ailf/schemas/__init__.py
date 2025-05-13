@@ -6,6 +6,7 @@ ensuring a single source of truth for data structures.
 
 # Import and re-export schemas from submodules
 from .acp import *  # noqa: F403, F401 (ACP schemas)
+from .a2a import *  # noqa: F403, F401 (A2A schemas)
 from .cognition import *  # noqa: F403, F401 (Cognition schemas)
 from .feedback import *  # noqa: F403, F401 (Feedback schemas)
 from .interaction import * # noqa: F403, F401 (Interaction schemas)

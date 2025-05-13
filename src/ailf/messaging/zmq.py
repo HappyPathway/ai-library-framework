@@ -4,12 +4,14 @@ This module provides ZeroMQ-based messaging patterns for distributed systems.
 """
 
 try:
-    from utils.zmq import (
+    from ailf.messaging.zmq import (
         ZMQBase,
         ZMQPublisher,
         ZMQSubscriber,
         ZMQClient,
-        ZMQServer
+        ZMQServer,
+        ZMQPush,
+        ZMQPull
     )
 except ImportError:
     # Fallback implementations for when the package is installed standalone
@@ -328,11 +330,144 @@ except ImportError:
                 
             # Send reply
             self.socket.send(message_data)
+            
+    class ZMQPush(ZMQBase):
+        """ZMQ Push pattern.
+        
+        Implements the push part of the push-pull message distribution pattern.
+        """
+        
+        def __init__(self, context: Optional[zmq.Context] = None):
+            """Initialize push socket.
+            
+            Args:
+                context: ZMQ context to use (creates new one if None)
+            """
+            super().__init__(context)
+            self.socket_type = zmq.PUSH
+            self._ensure_socket()
+            
+        def push(self, message: Union[str, bytes, dict]) -> None:
+            """Push a message to the pull socket(s).
+            
+            Args:
+                message: Message to push
+            """
+            if not self._connected:
+                raise RuntimeError("Push socket not connected to an endpoint")
+                
+            # Prepare message based on its type
+            if isinstance(message, dict):
+                import json
+                message_data = json.dumps(message).encode('utf-8')
+            elif isinstance(message, str):
+                message_data = message.encode('utf-8')
+            else:
+                message_data = message
+                
+            # Send the message
+            self.socket.send(message_data)
+            
+        def push_json(self, message: Dict[str, Any]) -> None:
+            """Push a JSON message.
+            
+            Args:
+                message: JSON message to push
+            """
+            if not self._connected:
+                raise RuntimeError("Push socket not connected to an endpoint")
+                
+            # Send JSON directly
+            self.socket.send_json(message)
+    
+    class ZMQPull(ZMQBase):
+        """ZMQ Pull pattern.
+        
+        Implements the pull part of the push-pull message distribution pattern.
+        """
+        
+        def __init__(self, context: Optional[zmq.Context] = None):
+            """Initialize pull socket.
+            
+            Args:
+                context: ZMQ context to use (creates new one if None)
+            """
+            super().__init__(context)
+            self.socket_type = zmq.PULL
+            self._ensure_socket()
+            
+        def pull(self, timeout: int = -1) -> Union[str, bytes]:
+            """Pull a message.
+            
+            Args:
+                timeout: Receive timeout in milliseconds (-1 for indefinite)
+                
+            Returns:
+                Union[str, bytes]: Pulled message
+                
+            Raises:
+                zmq.Again: If no message is available within timeout
+            """
+            if not self._connected:
+                raise RuntimeError("Pull socket not connected to an endpoint")
+                
+            # Set timeout if specified
+            if timeout >= 0:
+                old_timeout = self.socket.RCVTIMEO
+                self.socket.setsockopt(zmq.RCVTIMEO, timeout)
+                
+            try:
+                # Receive message
+                message_data = self.socket.recv()
+                
+                # Try to decode as string, but fall back to bytes if not UTF-8
+                try:
+                    message = message_data.decode('utf-8')
+                except UnicodeDecodeError:
+                    message = message_data
+                    
+                return message
+                
+            finally:
+                if timeout >= 0:
+                    # Restore original timeout
+                    self.socket.setsockopt(zmq.RCVTIMEO, old_timeout)
+                    
+        def pull_json(self, timeout: int = -1) -> Dict[str, Any]:
+            """Pull a JSON message.
+            
+            Args:
+                timeout: Receive timeout in milliseconds (-1 for indefinite)
+                
+            Returns:
+                Dict[str, Any]: JSON message
+                
+            Raises:
+                zmq.Again: If no message is available within timeout
+            """
+            if not self._connected:
+                raise RuntimeError("Pull socket not connected to an endpoint")
+                
+            # Set timeout if specified
+            if timeout >= 0:
+                old_timeout = self.socket.RCVTIMEO
+                self.socket.setsockopt(zmq.RCVTIMEO, timeout)
+                
+            try:
+                # Receive JSON message
+                return self.socket.recv_json()
+                
+            finally:
+                if timeout >= 0:
+                    # Restore original timeout
+                    self.socket.setsockopt(zmq.RCVTIMEO, old_timeout)
 
 __all__ = [
     "ZMQBase",
     "ZMQPublisher",
     "ZMQSubscriber",
     "ZMQClient",
-    "ZMQServer"
+    "ZMQServer",
+    "ZMQPush",
+    "ZMQPull"
 ]

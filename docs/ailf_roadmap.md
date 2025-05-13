@@ -120,21 +120,21 @@ This document outlines the development roadmap for the `ailf` (Agentic AI Librar
 
 ### A. Agent2Agent (A2A) Protocol Integration
 
--   [ ] **A2A-Compliant Schemas:**
-    -   [ ] Ensure `ailf.schemas.agent.AgentDescription` can serialize to A2A Agent Card JSON.
-    -   [ ] Develop Pydantic models in `ailf.schemas.acp` (or new `ailf.schemas.a2a`) mapping to A2A Task, Message, Part.
--   [ ] **`ailf.communication.A2AClient`:**
-    -   [ ] Develop a dedicated client for A2A HTTP interactions (fetching Agent Cards, sending tasks, managing responses, processing SSE).
--   [ ] **FastAPI Wrapper Base Classes for A2A Servers:**
-    -   [ ] Provide base classes/utilities for FastAPI to simplify exposing `ailf` agents as A2A servers.
-        -   [ ] Automate common A2A route setup.
-        -   [ ] Serve `AgentDescription` as A2A Agent Card.
-        -   [ ] Offer hooks for translating A2A requests to internal `ailf` messages and vice-versa.
-        -   [ ] Assist in mapping `ailf` task states to A2A task states.
-        -   [ ] Provide helpers for emitting A2A-compliant SSE based on `ailf` events.
-        -   [ ] Facilitate A2A request context propagation.
--   [ ] **UX Negotiation Alignment:**
-    -   [ ] Align `ailf`'s planned `UXNegotiationMessage` with A2A's dynamic UX negotiation concepts.
--   [ ] **Documentation and Examples:**
-    -   [ ] Provide guides for building A2A-compliant `ailf` agents.
+-   [x] **A2A-Compliant Schemas:**
+    -   [x] Ensure `ailf.schemas.agent.AgentDescription` can serialize to A2A Agent Card JSON.
+    -   [x] Develop Pydantic models in `ailf.schemas.a2a` mapping to A2A Task, Message, Part.
+-   [x] **`ailf.communication.A2AClient`:**
+    -   [x] Develop a dedicated client for A2A HTTP interactions (fetching Agent Cards, sending tasks, managing responses, processing SSE).
+-   [x] **FastAPI Wrapper Base Classes for A2A Servers:**
+    -   [x] Provide base classes/utilities for FastAPI to simplify exposing `ailf` agents as A2A servers.
+        -   [x] Automate common A2A route setup.
+        -   [x] Serve `AgentDescription` as A2A Agent Card.
+        -   [x] Offer hooks for translating A2A requests to internal `ailf` messages and vice-versa.
+        -   [x] Assist in mapping `ailf` task states to A2A task states.
+        -   [x] Provide helpers for emitting A2A-compliant SSE based on `ailf` events.
+        -   [x] Facilitate A2A request context propagation.
+-   [x] **UX Negotiation Alignment:**
+    -   [x] Align `ailf`'s planned `UXNegotiationMessage` with A2A's dynamic UX negotiation concepts.
+-   [x] **Documentation and Examples:**
+    -   [x] Provide guides for building A2A-compliant `ailf` agents.
 

@@ -17,9 +17,9 @@ import zmq
 from ailf.schemas.zmq_devices import AuthConfig, DeviceConfig, DeviceType
 from .zmq_devices import ZMQDevice, ZMQForwarder, ZMQStreamer, ZMQProxy
 
-# Try to import from utils if available for more advanced functionality
+# Import logging and monitoring functionality
 try:
-    from utils.logging import setup_logging
+    from ailf.core.logging import setup_logging
     logger = setup_logging(__name__)
 except ImportError:
     # Fallback to standard logging
@@ -34,7 +34,7 @@ except ImportError:
         logger.addHandler(handler)
 
 try:
-    from utils.monitoring import setup_monitoring
+    from ailf.core.monitoring import setup_monitoring
     metrics = setup_monitoring(__name__)
 except ImportError:
     # No-op metrics as fallback
