@@ -1,18 +1,23 @@
-"""Secure secrets management using Google Secret Manager.
+"""Secure secrets management with support for multiple providers.
 
-This module uses Application Default Credentials (ADC) for authentication.
-ADC automatically detects credentials in the following order:
-1. GOOGLE_APPLICATION_CREDENTIALS environment variable
-2. User credentials from gcloud SDK
-3. Compute Engine service account
-4. Cloud Run or App Engine service account
+This module provides a unified interface for secret management across different
+backend providers including Google Secret Manager, AWS Secrets Manager, Azure Key Vault,
+HashiCorp Vault, and .env files.
+
+Key Features:
+- Pluggable provider architecture
+- Consistent API across providers
+- Secure access to application secrets
+- Default provider selection based on environment
 """
 import os
-from typing import Optional
+import importlib
+from typing import Optional, Dict, Any, Union, Type
 
-import google.auth
-from google.cloud import secretmanager
+# Base provider imports
+from ailf.cloud.secrets_providers.base import BaseSecretsProvider
 
+# Core logging
 from ailf.core.logging import setup_logging
 
 logger = setup_logging('secrets')

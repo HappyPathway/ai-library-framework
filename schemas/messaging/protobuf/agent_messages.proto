@@ -1,0 +1,226 @@
+syntax = "proto3";
+
+package agent_messages;
+
+// Import Google's timestamp type for proper timestamp handling
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// Message common to all agent communications
+message AgentMessageBase {
+  // Unique message identifier
+  string message_id = 1;
+  
+  // Timestamp when the message was created
+  google.protobuf.Timestamp timestamp = 2;
+  
+  // Sender identifier
+  string sender_id = 3;
+  
+  // Optional recipient identifier
+  string recipient_id = 4;
+  
+  // Conversation identifier
+  string conversation_id = 5;
+  
+  // Message type for routing
+  string message_type = 6;
+  
+  // Optional trace context for distributed tracing
+  string trace_id = 7;
+}
+
+// Request to agent for processing
+message AgentRequest {
+  // Base message fields
+  AgentMessageBase base = 1;
+  
+  // Content of the request
+  string content = 2;
+  
+  // Optional structured input
+  google.protobuf.Struct input_data = 3;
+  
+  // Controls for agent behavior
+  AgentControls controls = 4;
+  
+  // Optional - Context ID for continuing a previous interaction
+  string context_id = 5;
+}
+
+// Response from agent after processing
+message AgentResponse {
+  // Base message fields
+  AgentMessageBase base = 1;
+  
+  // Main response content
+  string content = 2;
+  
+  // Optional structured output
+  google.protobuf.Struct output_data = 3;
+  
+  // List of thought steps taken by the agent
+  repeated ThoughtStep thought_steps = 4;
+  
+  // List of tool calls made during processing
+  repeated ToolCall tool_calls = 5;
+  
+  // Errors that occurred during processing
+  repeated AgentError errors = 6;
+  
+  // Context ID for future interactions
+  string context_id = 7;
+}
+
+// Streaming message during agent processing
+message AgentStreamEvent {
+  // Base message fields
+  AgentMessageBase base = 1;
+  
+  // Event type (e.g., "start", "thinking", "tool_call", "response_chunk", "complete", "error")
+  string event_type = 2;
+  
+  // Content chunk
+  string content = 3;
+  
+  // Optional data payload
+  google.protobuf.Struct data = 4;
+  
+  // For "tool_call" events
+  ToolCall tool_call = 5;
+  
+  // For "error" events
+  AgentError error = 6;
+  
+  // For "thinking" events
+  ThoughtStep thought_step = 7;
+  
+  // Whether this is the final chunk in the stream
+  bool is_final = 8;
+}
+
+// Tool invocation by the agent
+message ToolCall {
+  // Tool identifier
+  string tool_id = 1;
+  
+  // Unique identifier for this call
+  string call_id = 2;
+  
+  // Input parameters
+  google.protobuf.Struct parameters = 3;
+  
+  // Output returned by tool
+  google.protobuf.Struct result = 4;
+  
+  // Timestamp when the call was made
+  google.protobuf.Timestamp call_time = 5;
+  
+  // Timestamp when the result was received
+  google.protobuf.Timestamp result_time = 6;
+  
+  // Error message if tool call failed
+  string error = 7;
+}
+
+// Error encountered during agent processing
+message AgentError {
+  // Error code
+  string code = 1;
+  
+  // Human-readable error message
+  string message = 2;
+  
+  // Additional error details
+  google.protobuf.Struct details = 3;
+}
+
+// Controls for agent behavior
+message AgentControls {
+  // Max tokens to generate
+  int32 max_tokens = 1;
+  
+  // Temperature for generation (0.0 - 1.0)
+  float temperature = 2;
+  
+  // Stop sequences
+  repeated string stop = 3;
+  
+  // Time limit in seconds
+  float time_limit = 4;
+  
+  // Whether to enable tool use
+  bool enable_tools = 5;
+  
+  // Maximum tool call count
+  int32 max_tool_calls = 6;
+}
+
+// A step in the agent's thought process
+message ThoughtStep {
+  // Unique identifier for this thought
+  string thought_id = 1;
+  
+  // Thought content
+  string content = 2;
+  
+  // Thought type (e.g., "reasoning", "plan", "critique")
+  string thought_type = 3;
+  
+  // Timestamp when thought occurred
+  google.protobuf.Timestamp timestamp = 4;
+}
+
+// Tool description for agent
+message ToolSpec {
+  // Tool identifier
+  string tool_id = 1;
+  
+  // Human-readable name
+  string name = 2;
+  
+  // Tool description
+  string description = 3;
+  
+  // Input schema in JSON Schema format
+  string input_schema = 4;
+  
+  // Output schema in JSON Schema format
+  string output_schema = 5;
+}
+
+// Agent capability advertisement
+message AgentCapabilities {
+  // Agent identifier
+  string agent_id = 1;
+  
+  // Human-readable name
+  string name = 2;
+  
+  // Agent description
+  string description = 3;
+  
+  // Agent version
+  string version = 4;
+  
+  // Available tools
+  repeated ToolSpec tools = 5;
+  
+  // Supported controls
+  AgentControls supported_controls = 6;
+  
+  // Maximum context length
+  int32 max_context_length = 7;
+}
+
+// Service definition for agent interactions
+service AgentService {
+  // Process a request synchronously
+  rpc Process(AgentRequest) returns (AgentResponse);
+  
+  // Process a request and stream the response
+  rpc ProcessStream(AgentRequest) returns (stream AgentStreamEvent);
+  
+  // Get agent capabilities
+  rpc GetCapabilities(google.protobuf.Struct) returns (AgentCapabilities);
+}

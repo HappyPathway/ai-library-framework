@@ -17,6 +17,15 @@ from .core.monitoring import setup_monitoring
 from .core.storage import LocalStorage, CloudStorage
 from .core.secrets import get_secret
 
+# Agent framework components
+try:
+    from .agent.base import Agent, AgentConfig, AgentStatus
+    from .agent.patterns import ReactivePlan, DeliberativePlan, TreeOfThoughtsPlan
+    from .agent.tools import tool, ToolRegistry, execute_tool
+except ImportError:
+    # Agent module may not be installed or available yet
+    pass
+
 # Core components
 from .core.logging import setup_logging
 from .core.monitoring import setup_monitoring
