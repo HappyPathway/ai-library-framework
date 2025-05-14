@@ -1,4 +1,4 @@
-"""Generic web scraping utilities with rate limiting and caching.
+"""Web scraping utilities with rate limiting and caching.
 
 This module provides a unified interface for web scraping operations with built-in:
 - Rate limiting to prevent overwhelming target sites
@@ -9,7 +9,7 @@ This module provides a unified interface for web scraping operations with built-
 - Cookie and session management
 
 Example:
-    >>> from core.web_scraper import WebScraper
+    >>> from ailf.communication.web_scraper import WebScraper
     >>> scraper = WebScraper(rate_limit=2.0)  # 2 seconds between requests
     >>> 
     >>> # Get parsed HTML
@@ -37,7 +37,7 @@ from requests.packages.urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from cachetools import TTLCache
 
-from .logging import setup_logging
+from ailf.core.logging import setup_logging
 
 logger = setup_logging('web_scraper')
 
@@ -238,3 +238,55 @@ class WebScraper:
     def clear_cache(self):
         """Clear the response cache."""
         self.cache.clear()
+
+
+class ScraperConfig:
+    """Configuration for the WebScraper."""
+    
+    def __init__(
+        self,
+        rate_limit: float = 1.0,
+        max_retries: int = 3,
+        cache_ttl: int = 3600,
+        cache_size: int = 1000,
+        timeout: int = 30
+    ):
+        """Initialize configuration.
+        
+        Args:
+            rate_limit: Seconds between requests
+            max_retries: Max retry attempts for failed requests
+            cache_ttl: Cache time-to-live in seconds
+            cache_size: Maximum size of response cache
+            timeout: Request timeout in seconds
+        """
+        self.rate_limit = rate_limit
+        self.max_retries = max_retries
+        self.cache_ttl = cache_ttl
+        self.cache_size = cache_size
+        self.timeout = timeout
+
+
+class ScraperResult:
+    """Result of a scraping operation."""
+    
+    def __init__(
+        self,
+        success: bool,
+        content: Any = None,
+        error: Optional[str] = None,
+        url: Optional[str] = None
+    ):
+        """Initialize result.
+        
+        Args:
+            success: Whether the scraping was successful
+            content: The scraped content (if successful)
+            error: Error message (if unsuccessful)
+            url: The URL that was scraped
+        """
+        self.success = success
+        self.content = content
+        self.error = error
+        self.url = url
+        self.timestamp = time.time()

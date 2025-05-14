@@ -1,5 +1,8 @@
 """AsyncIO Task Management.
 
+DEPRECATED: This module has been moved to ailf.async_tasks.
+Please update your imports to: from ailf.async_tasks import TaskManager
+
 This module provides utilities for managing asynchronous tasks within a Python process.
 It allows for scheduling, monitoring, and coordinating multiple asynchronous tasks.
 
@@ -37,6 +40,18 @@ Example:
     asyncio.run(main())
     ```
 """
+
+import warnings
+
+# Add deprecation warning
+warnings.warn(
+    "The utils.async_tasks module is deprecated. Use ailf.async_tasks instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+# Re-export all symbols from the new module location
+from ailf.async_tasks import *
 
 import asyncio
 import logging

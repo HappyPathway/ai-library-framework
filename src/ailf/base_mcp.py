@@ -1,9 +1,23 @@
-# filepath: /workspaces/template-python-dev/ailf/base_mcp.py
 """MCP Server foundation for building AI agents with tools and resources.
+
+DEPRECATED: This module has been moved to ailf.mcp.base.
+Please update your imports to: from ailf.mcp.base import BaseMCP, Tool, Resource
 
 This module provides the base MCP (Model Context Protocol) server implementation
 for creating AI assistants with tools, resources, and prompts.
 """
+
+import warnings
+
+# Add deprecation warning
+warnings.warn(
+    "The ailf.base_mcp module is deprecated. Use ailf.mcp.base instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+# Re-export all symbols from the new module location
+from ailf.mcp.base import *
 
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union, Set, AsyncGenerator

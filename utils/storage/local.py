@@ -1,5 +1,8 @@
 """Local File Storage Manager for Development
 
+DEPRECATED: This module has been moved to ailf.storage.local.
+Please update your imports to: from ailf.storage.local import LocalStorage
+
 This module provides a simple interface for managing local file storage during
 development. It includes utilities for creating directories, saving and loading
 JSON files, and managing file paths.
@@ -15,8 +18,17 @@ from typing import Any, Dict, List, Optional, Union
 import aiofiles # type: ignore
 import aiofiles.os as aios # type: ignore
 from pydantic import BaseModel
+import warnings
 
-from utils.core.logging import setup_logging # Corrected import
+# Add deprecation warning
+warnings.warn(
+    "The utils.storage.local module is deprecated. Use ailf.storage.local instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+# Re-export from the new module location
+from ailf.storage.local import *
 
 # Initialize logger
 logger = setup_logging('storage')

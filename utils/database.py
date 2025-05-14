@@ -1,5 +1,8 @@
 """Database Configuration and Session Management
 
+DEPRECATED: This module has been moved to ailf.storage.database.
+Please update your imports to: from ailf.storage.database import get_session, Base, engine
+
 This module provides essential database functionality built on SQLAlchemy.
 It offers:
 - Configuration: Centralized database setup and connection management
@@ -26,11 +29,22 @@ import os
 from pathlib import Path
 from contextlib import contextmanager
 from typing import Generator, Optional
+import warnings
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 from .core.logging import setup_logging  # Corrected import
+
+# Add deprecation warning
+warnings.warn(
+    "The utils.database module is deprecated. Use ailf.storage.database instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+# Re-export all symbols from the new module location
+from ailf.storage.database import *
 
 # Initialize logger
 logger = setup_logging('database')

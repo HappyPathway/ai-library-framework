@@ -1,9 +1,19 @@
 """Unified secrets management system.
 
+DEPRECATED: This module has been moved to ailf.cloud.secrets.
+Please update your imports to: from ailf.cloud.secrets import get_secret, SecretManager
+
 This module provides a unified interface to access secrets from various providers.
 """
 import os
+import warnings
 from typing import Optional, Dict, Any, List, Type
+
+warnings.warn(
+    "The utils.cloud.secrets module is deprecated. Use ailf.cloud.secrets instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from .logging import setup_logging
 from .secrets_providers import BaseSecretsProvider, DotEnvSecretsProvider
@@ -210,3 +220,6 @@ class SecretManager:
 
 # Global instance
 secret_manager = SecretManager()
+
+# Re-export from the new module location at the end of the file
+from ailf.cloud.secrets import *

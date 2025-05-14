@@ -1,10 +1,21 @@
-"""GitHub client module for template automation."""
+"""GitHub client module for template automation.
 
+DEPRECATED: This module has been moved to ailf.github_client.
+Please update your imports to: from ailf.github_client import GitHubClient
+"""
+
+import warnings
 import base64
 import logging
 import os
 import time
 from typing import List, Optional, Dict, Any, Union
+
+warnings.warn(
+    "The utils.github_client module is deprecated. Use ailf.github_client instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from github import Github, GithubException, Auth
 from github.Repository import Repository
@@ -338,13 +349,14 @@ class GitHubClient:
         Args:
             repo_name: Name of the repository
             topics: List of topics to set
-            
-        Raises:
-            GithubException: If the operation fails
         """
         try:
-            repo = self.get_repository(repo_name)
+            repo = self._get_repository(repo_name)
             repo.replace_topics(topics)
-        except Exception as e:
-            logger.error(f"Error updating topics for {repo_name}: {str(e)}")
+        except GithubException as e:
+            logger.error(f"Failed to update topics for {repo_name}: {str(e)}")
             raise
+
+
+# Re-export from the new module location
+from ailf.github_client import GitHubClient

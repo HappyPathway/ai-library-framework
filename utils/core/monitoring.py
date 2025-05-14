@@ -1,5 +1,8 @@
 """Performance Monitoring and Metrics Collection
 
+DEPRECATED: This module has been moved to ailf.core.monitoring.
+Please update your imports to: from ailf.core.monitoring import setup_monitoring, AIStats, Feature  
+
 This module provides centralized monitoring configuration with built-in support for:
 - Metrics collection
 - Performance tracking
@@ -122,4 +125,17 @@ def setup_monitoring(
     """
     if enable_debug:
         logger.setLevel('DEBUG')
-    return MetricsCollector(name=component_name)
+    
+    # Original implementation continues...
+
+# Add deprecation warning
+import warnings
+
+warnings.warn(
+    "The utils.core.monitoring module is deprecated. Use ailf.core.monitoring instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+# Re-export from the new module location
+from ailf.core.monitoring import *
