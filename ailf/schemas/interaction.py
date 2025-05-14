@@ -51,6 +51,12 @@ class StructuredDataMessage(BaseModel):
     header: StandardMessageHeader = Field(..., default_factory=lambda: StandardMessageHeader(modality=MessageModality.STRUCTURED_DATA))
     payload: StructuredDataMessagePayload
 
+class StandardMessage(BaseModel):
+    """A standard message for agent interaction."""
+    header: StandardMessageHeader
+    payload: Union[TextMessagePayload, StructuredDataMessagePayload]
+    payload: StructuredDataMessagePayload
+
 class BinaryMessagePayload(BaseModel):
     """Payload for a message carrying binary data."""
     content_type: str = Field(..., description="MIME type of the binary data (e.g., application/octet-stream, image/jpeg).")

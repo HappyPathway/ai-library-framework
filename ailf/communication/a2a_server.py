@@ -247,13 +247,13 @@ class AILFASA2AServer:
         async def create_task() -> Dict[str, Any]:
             """Create a new task."""
             task = await self.task_store.create_task()
-            return {"task": task.dict()}
+            return {"task": task.model_dump()}
             
         @app.get("/tasks")
         async def list_tasks(limit: int = 10, skip: int = 0) -> Dict[str, Any]:
             """List tasks."""
             tasks = await self.task_store.list_tasks(limit, skip)
-            return {"tasks": [task.dict() for task in tasks]}
+            return {"tasks": [task.model_dump() for task in tasks]}
             
         @app.get("/tasks/{task_id}")
         async def get_task(task_id: str) -> Dict[str, Any]:
@@ -261,14 +261,14 @@ class AILFASA2AServer:
             task = await self.task_store.get_task(task_id)
             if not task:
                 raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
-            return {"task": task.dict()}
+            return {"task": task.model_dump()}
             
         @app.post("/tasks/{task_id}/cancel")
         async def cancel_task(task_id: str) -> Dict[str, Any]:
             """Cancel a task."""
             try:
                 task = await self.task_store.cancel_task(task_id)
-                return {"task": task.dict()}
+                return {"task": task.model_dump()}
             except A2AServerError as e:
                 raise HTTPException(status_code=404, detail=str(e))
                 
@@ -292,7 +292,7 @@ class AILFASA2AServer:
                 if isinstance(result, Task):
                     # Update task with result
                     await self.task_store.update_task(result)
-                    return {"task": result.dict()}
+                    return {"task": result.model_dump()}
                 else:
                     # Should not happen for non-streaming endpoint
                     raise HTTPException(status_code=500, detail="Unexpected streaming result")
@@ -330,7 +330,7 @@ class AILFASA2AServer:
                         )
                         yield {
                             "event": "delta",
-                            "data": json.dumps({"task": task_delta.dict()})
+                            "data": json.dumps({"task": task_delta.model_dump()})
                         }
                         # Update task with result
                         await self.task_store.update_task(result)
@@ -339,7 +339,7 @@ class AILFASA2AServer:
                         async for delta in result:
                             yield {
                                 "event": "delta",
-                                "data": json.dumps({"task": delta.dict()})
+                                "data": json.dumps({"task": delta.model_dump()})
                             }
                             
                             if delta.done:

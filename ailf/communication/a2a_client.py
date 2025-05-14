@@ -126,7 +126,7 @@ class A2AClient:
         """
         try:
             response = await self._make_request("GET", "/")
-            return AgentCard.parse_obj(response)
+            return AgentCard.model_validate(response)
         except ValidationError as e:
             raise A2AClientError(f"Failed to parse agent card: {e}")
             
@@ -141,7 +141,7 @@ class A2AClient:
         """
         try:
             response = await self._make_request("POST", "/tasks")
-            return Task.parse_obj(response.get("task"))
+            return Task.model_validate(response.get("task"))
         except ValidationError as e:
             raise A2AClientError(f"Failed to parse task: {e}")
             
@@ -159,7 +159,7 @@ class A2AClient:
         """
         try:
             response = await self._make_request("GET", f"/tasks/{task_id}")
-            return Task.parse_obj(response.get("task"))
+            return Task.model_validate(response.get("task"))
         except ValidationError as e:
             raise A2AClientError(f"Failed to parse task: {e}")
             
@@ -177,8 +177,8 @@ class A2AClient:
         """
         try:
             request = CancelTaskRequest()
-            response = await self._make_request("POST", f"/tasks/{task_id}/cancel", request.dict())
-            return Task.parse_obj(response.get("task"))
+            response = await self._make_request("POST", f"/tasks/{task_id}/cancel", request.model_dump())
+            return Task.model_validate(response.get("task"))
         except ValidationError as e:
             raise A2AClientError(f"Failed to parse task: {e}")
             
@@ -202,9 +202,9 @@ class A2AClient:
             response = await self._make_request(
                 "POST", 
                 f"/tasks/{task_id}/messages", 
-                request.dict(exclude_none=True)
+                request.model_dump(exclude_none=True)
             )
-            return Task.parse_obj(response.get("task"))
+            return Task.model_validate(response.get("task"))
         except ValidationError as e:
             raise A2AClientError(f"Failed to parse task: {e}")
             
@@ -232,7 +232,7 @@ class A2AClient:
                     method="POST",
                     url=url,
                     headers={**self.headers, "Accept": "text/event-stream"},
-                    json=request.dict(exclude_none=True),
+                    json=request.model_dump(exclude_none=True),
                     timeout=self.timeout
                 ) as response:
                     response.raise_for_status()
@@ -252,7 +252,7 @@ class A2AClient:
                                 data_json = data_line[6:]  # Remove "data: " prefix
                                 try:
                                     data = json.loads(data_json)
-                                    task_delta = TaskDelta.parse_obj(data.get("task"))
+                                    task_delta = TaskDelta.model_validate(data.get("task"))
                                     yield task_delta
                                     
                                     if task_delta.done:
@@ -287,6 +287,6 @@ class A2AClient:
         """
         try:
             response = await self._make_request("GET", f"/tasks?limit={limit}&skip={skip}")
-            return [Task.parse_obj(task) for task in response.get("tasks", [])]
+            return [Task.model_validate(task) for task in response.get("tasks", [])]
         except ValidationError as e:
             raise A2AClientError(f"Failed to parse tasks: {e}")

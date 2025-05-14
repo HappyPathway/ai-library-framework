@@ -5,7 +5,7 @@ from typing import Callable, Dict, Optional, Type, Union, Any, Awaitable
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from ailf.messaging.base import BaseMessageClient
+from ailf.messaging.base import MessagingBackendBase as BaseMessageClient
 from ailf.schemas.acp import (
     ACPMessage, 
     AnyACPMessage, 

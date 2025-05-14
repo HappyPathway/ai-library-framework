@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Optional, Union, Literal
 from enum import Enum
 from pydantic import BaseModel, Field, RootModel
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class AgentAuthentication(BaseModel):
@@ -145,7 +145,7 @@ class Message(BaseModel):
         description="Additional metadata for the message"
     )
     createdAt: datetime = Field(
-        default_factory=datetime.utcnow, 
+        default_factory=lambda: datetime.now(UTC), 
         description="When the message was created"
     )
 
@@ -193,11 +193,11 @@ class Task(BaseModel):
         description="Additional metadata for this task"
     )
     createdAt: datetime = Field(
-        default_factory=datetime.utcnow, 
+        default_factory=lambda: datetime.now(UTC), 
         description="When the task was created"
     )
     updatedAt: datetime = Field(
-        default_factory=datetime.utcnow, 
+        default_factory=lambda: datetime.now(UTC), 
         description="When the task was last updated"
     )
 
