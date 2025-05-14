@@ -1,4 +1,4 @@
-name: Integration Tests
+name: Dev Container CI
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+
     - name: Cache Dev Container data
       uses: actions/cache@v4
       with:
@@ -22,28 +22,25 @@ jobs:
         key: ${{ runner.os }}-devcontainer-${{ hashFiles('.devcontainer/**') }}
         restore-keys: |
           ${{ runner.os }}-devcontainer-
-    
-    - name: Build and run tests in dev container
+
+    - name: Build and run dev container
       uses: devcontainers/ci@v0.3
       with:
-        # Use the dev container configuration from the repo
         configFile: .devcontainer/devcontainer.json
-        # Cache the dev container to speed up builds
         userDataFolder: ".devcontainer-cache"
-        # Use pre-built container images when available
         imageName: ghcr.io/${{ github.repository }}/devcontainer
         imageTag: ${{ github.ref_name }}
-        # Try to use the latest image as cache source
-        cacheFrom: |
-          ghcr.io/${{ github.repository }}/devcontainer:${{ github.ref_name }}
-          ghcr.io/${{ github.repository }}/devcontainer:latest
-        # Specify the command to run inside the container
+        push: filter
+        refFilterForPush: refs/heads/main,refs/heads/develop
+        eventFilterForPush: push
         runCmd: |
+          # Install dependencies
           pip install -e .
           pip install pytest pytest-cov
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          
+          # Run tests with coverage
           pytest tests/ --cov=utils --cov=schemas --cov-report=xml
-    
+          
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:

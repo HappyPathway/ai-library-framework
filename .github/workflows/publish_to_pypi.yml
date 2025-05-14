@@ -19,24 +19,30 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Cache Dev Container data
+      uses: actions/cache@v4
       with:
-        python-version: '3.12'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build twine pytest wheel setuptools
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    
-    - name: Run tests
-      run: |
-        pytest tests/
+        path: .devcontainer-cache
+        key: ${{ runner.os }}-devcontainer-${{ hashFiles('.devcontainer/**') }}
+        restore-keys: |
+          ${{ runner.os }}-devcontainer-
+
+    - name: Build and test in dev container
+      uses: devcontainers/ci@v0.3
+      with:
+        configFile: .devcontainer/devcontainer.json
+        userDataFolder: ".devcontainer-cache"
+        imageName: ghcr.io/${{ github.repository }}/devcontainer
+        imageTag: ${{ github.ref_name }}
+        runCmd: |
+          pip install build twine pytest wheel setuptools
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pytest tests/
     
     - name: Build and package
       run: |
