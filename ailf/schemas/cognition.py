@@ -66,3 +66,15 @@ class PromptTemplateV1(BaseModel):
     template_string: str = Field(..., description="The actual template string with placeholders (e.g., using {{variable_name}} syntax).")
     input_variables: List[str] = Field(default_factory=list, description="List of variable names expected by the template.")
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Arbitrary metadata associated with the template.")
+
+class TaskContext(BaseModel):
+    """Schema for task context in cognitive processing."""
+    task_id: str = Field(..., description="Unique identifier for the task.")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parameters for the task.")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata for the task.")
+
+class ProcessingResult(BaseModel):
+    """Schema for processing results in cognitive tasks."""
+    success: bool = Field(..., description="Indicates whether the processing was successful.")
+    output: Optional[Dict[str, Any]] = Field(default=None, description="The output of the processing task.")
+    errors: Optional[List[str]] = Field(default=None, description="List of errors encountered during processing.")

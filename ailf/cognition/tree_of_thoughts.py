@@ -13,7 +13,11 @@ except ImportError:
             print(f"Warning: Using placeholder AIEngine. Analyze called with prompt: {content}")
             return {"content": "This is a placeholder thought"}
         
-from ailf.cognition.base import BaseProcessor
+# Placeholder for BaseProcessor
+class BaseProcessor:  # type: ignore
+    """Placeholder for BaseProcessor until properly defined."""
+    pass
+
 from ailf.schemas.tree_of_thought import (
     ThoughtNode, 
     ToTConfiguration, 

@@ -65,6 +65,94 @@ result = await tot_processor.process(context)
 
 For more details, see the [Tree of Thoughts documentation](docs/tree-of-thought.md).
 
+## Security Features
+
+### Comprehensive Secret Management
+
+AILF provides a flexible and secure secrets management system that supports multiple providers:
+
+- **Google Secret Manager**: For GCP environments
+- **AWS Secrets Manager**: For AWS environments
+- **Azure Key Vault**: For Azure environments
+- **HashiCorp Vault**: For cross-cloud and enterprise environments
+- **Environment Variables / .env Files**: For local development
+
+The unified API makes it easy to switch between providers without changing application code:
+
+```python
+from ailf.cloud.secrets import secret_manager
+
+# Configure providers
+secret_manager.configure_provider('google', project_id='my-project')
+secret_manager.configure_provider('aws', region_name='us-west-2')
+secret_manager.configure_provider('vault', url='https://vault.example.com', token='my-token')
+
+# Access secrets (auto-selects configured default provider)
+db_password = secret_manager.get_secret('DB_PASSWORD')
+
+# Explicitly specify provider
+api_key = secret_manager.get_secret('API_KEY', provider='aws')
+```
+
+Security best practices are built-in:
+- No secrets exposed in logs or exceptions
+- In-memory caching with configurable TTL
+- Support for automatic rotation where available
+- Environment-specific secrets
+
+## AILF in the Agentic AI Ecosystem
+
+AILF is a robust framework designed to accelerate the development of AI agents by providing modular, type-safe, and distributed computing capabilities. It stands out in the Agentic AI ecosystem due to its multi-protocol support, comprehensive logging, and secure secret management.
+
+### Competitors
+
+AILF competes with several frameworks in the Agentic AI ecosystem, each offering unique features:
+
+1. **LangChain**:
+   - Focus: Building applications with LLMs through composable chains.
+   - Strengths: Extensive integrations, prompt templates, and memory management.
+   - Weakness: Limited support for distributed computing and multi-protocol interoperability.
+
+2. **AutoGen**:
+   - Focus: Multi-agent systems with autonomous task delegation.
+   - Strengths: Agent-to-agent communication and task orchestration.
+   - Weakness: Less modular compared to AILF.
+
+3. **Semantic Kernel**:
+   - Focus: Semantic memory and skill orchestration.
+   - Strengths: Tight integration with Microsoft services.
+   - Weakness: Limited flexibility for non-Microsoft ecosystems.
+
+4. **DSPy**:
+   - Focus: Declarative agent programming.
+   - Strengths: Simplicity and declarative syntax.
+   - Weakness: Lacks advanced features like distributed computing.
+
+5. **Vertex AI Agents**:
+   - Focus: Deploying scalable AI agents on Google Cloud.
+   - Strengths: Scalability and integration with Google Cloud services.
+   - Weakness: Cloud-dependent and less customizable.
+
+6. **IBM watsonx.ai**:
+   - Focus: Enterprise AI with agent capabilities.
+   - Strengths: Enterprise-grade security and compliance.
+   - Weakness: High cost and complexity.
+
+7. **AgentGPT**:
+   - Focus: Rapid prototyping of autonomous agents.
+   - Strengths: User-friendly interface.
+   - Weakness: Limited scalability and customization.
+
+### Why Choose AILF?
+
+AILF's unique strengths include:
+- **Multi-Protocol Support**: Seamlessly integrates with MCP, A2A, and ACP protocols.
+- **Distributed Computing**: Built-in support for ZeroMQ enables scalable agent deployments.
+- **Type Safety**: Pydantic models ensure structured and validated interactions.
+- **Modularity**: Highly extensible design for domain-specific customizations.
+
+AILF is ideal for developers seeking a flexible, scalable, and secure framework for building sophisticated AI agents.
+
 ## Documentation
 
 For full documentation, visit [ailf.readthedocs.io](https://ailf.readthedocs.io/)

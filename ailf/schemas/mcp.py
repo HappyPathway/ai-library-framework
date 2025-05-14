@@ -1,11 +1,12 @@
 """Pydantic schemas for Model Context Protocol (MCP)."""
 
-# This file is initially empty. Schemas will be added as MCP integration develops.
-# Example of what might be here later:
-# from pydantic import BaseModel, Field
-# from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any
 
-# class MCPMessage(BaseModel):
-#     version: str = Field(default="1.0")
-#     message_id: str
-#     # ... other common MCP fields
+class MCPMessage(BaseModel):
+    """Schema for MCP messages."""
+    protocol: str = Field(default="MCP", description="Protocol name.")
+    version: str = Field(default="1.0.0", description="Protocol version.")
+    message_id: str = Field(..., description="Unique identifier for the message.")
+    capabilities: List[str] = Field(..., description="List of supported capabilities.")
+    payload: Dict[str, Any] = Field(default_factory=dict, description="Message payload.")

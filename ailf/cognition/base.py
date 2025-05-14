@@ -5,7 +5,7 @@ and cognitive processes within the AILF framework.
 """
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Generic, TypeVar
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Forward declaration for type hinting if BaseAgent uses BaseAgentState
 # and BaseAgentState might reference BaseAgent (though less common for state)
