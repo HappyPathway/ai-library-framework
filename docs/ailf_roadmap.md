@@ -138,3 +138,34 @@ This document outlines the development roadmap for the `ailf` (Agentic AI Librar
 -   [x] **Documentation and Examples:**
     -   [x] Provide guides for building A2A-compliant `ailf` agents.
 
+### B. Advanced A2A Protocol Features
+
+-   [x] **A2A Push Notification Support:**
+    -   [x] Implement push notification manager for sending task updates to clients
+    -   [x] Create client-side notification handling for receiving webhook events
+    -   [x] Develop serialization tools to handle datetime objects in notifications
+-   [x] **A2A Registry Integration:**
+    -   [x] Implement registry manager for discovering A2A-compatible agents
+    -   [x] Support registration of AILF agents with A2A registries
+    -   [x] Enable capability-based agent discovery
+-   [x] **A2A Multi-Agent Orchestration:**
+    -   [x] Develop orchestration framework for routing between multiple A2A agents
+    -   [x] Implement conditional routing based on message content
+    -   [x] Support sequential agent chains for multi-step workflows
+    -   [x] Create parallel task groups for concurrent agent execution
+
+### C. A2A Future Development
+
+-   [ ] **Performance Optimization:**
+    -   [ ] Benchmark A2A client/server operations
+    -   [ ] Implement connection pooling for high-throughput scenarios
+    -   [ ] Optimize streaming response handling
+-   [ ] **Interoperability Testing:**
+    -   [ ] Test with external A2A implementations (LangGraph, CrewAI, AG2)
+    -   [ ] Create compatibility validation suite
+    -   [ ] Develop adapter layers for edge cases
+-   [ ] **Real-world Applications:**
+    -   [ ] Build production-ready A2A agent networks
+    -   [ ] Create domain-specific A2A agent templates
+    -   [ ] Develop monitoring tools for A2A agent networks
+
