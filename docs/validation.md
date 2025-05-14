@@ -108,6 +108,7 @@ This section details testing for components outlined in "I. Core Functional Pill
     *   `ReActProcessor` (using `ReActState` schemas)
     *   `TaskPlanner` (using `Plan`, `PlanStep` schemas)
     *   `IntentRefiner`
+    *   `TreeOfThoughtsProcessor` (using `ThoughtNode`, `ToTState`, `ToTConfiguration` schemas)
     *   Prompt Templating: `PromptLibrary`, `PromptTemplateV1` schemas
     *   Prompt Versioning & Tracking
 *   **Automated Tests**:
@@ -124,20 +125,29 @@ This section details testing for components outlined in "I. Core Functional Pill
         *   `test_intent_refiner.py`:
             *   Test Chain-of-Thought implementation and generation of clarifying questions. Mock LLM calls.
             *   Verify that refined intents are more specific or actionable.
+        *   `test_tree_of_thoughts.py`:
+            *   Test thought node generation and tree expansion. Mock LLM calls for thought generation.
+            *   Test evaluation of thoughts and selection of best paths (beam search).
+            *   Verify extraction of solution paths and calculation of confidence scores.
+            *   Test handling of varying depths, branching factors, and evaluation strategies.
         *   `test_prompt_library.py`:
             *   Test loading prompt templates from files/DB.
             *   Test retrieval of specific prompt versions.
             *   Test rendering of prompts with placeholder values.
         *   `test_prompt_versioning.py`:
             *   Verify that prompt versions are correctly tracked and logged (e.g., in `LoggedInteraction`). Mock `InteractionLogger`.
+    *   **Unit Tests (`tests/unit/schemas/`)**:
+        *   `test_tree_of_thought_schemas.py`: Validate `ThoughtNode`, `ToTConfiguration`, `ToTState`, `ToTResult`, etc.
 *   **Integration Tests (`tests/integration/cognition/`)**:
     *   `test_react_flow.py`: Test `ReActProcessor` with a mock LLM that returns predictable sequences of thoughts/actions, and simple mock tools.
     *   `test_planning_flow.py`: Test `TaskPlanner` with a mock LLM that generates plausible plans for given goals.
+    *   `test_tree_of_thoughts.py`: Test `TreeOfThoughtsProcessor` with a mock LLM that generates and evaluates thoughts for complex problems.
 *   **Manual Verification**:
     1.  **ReAct**: Give an agent a task requiring multiple steps and tool use. Observe (via logs or verbose output) the thought-action-observation loop. Verify if the agent correctly reasons and selects actions.
     2.  **Task Planning**: Provide a high-level goal. Observe the generated plan. Assess if the plan is logical and its steps are executable.
     3.  **Intent Refinement**: Interact with an agent using ambiguous queries. Observe if it asks clarifying questions or refines the intent internally before proceeding.
-    4.  **Prompt Templating**: Modify a prompt template used by an agent. Observe the change in the agent's behavior or response style, confirming the new template is used.
+    4.  **Tree of Thoughts**: Provide a complex problem requiring exploration of multiple solution paths. Observe the generated thought tree and final solution path. Verify if the agent explores diverse approaches and selects the most promising ones.
+    5.  **Prompt Templating**: Modify a prompt template used by an agent. Observe the change in the agent's behavior or response style, confirming the new template is used.
 
 ### 4. Tool Integration & Utilization (`ailf.tooling`)
 

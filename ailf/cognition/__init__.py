@@ -6,6 +6,7 @@ from .prompt_library import PromptLibrary # noqa: F401
 from .react_processor import ReActProcessor # noqa: F401
 from .task_planner import TaskPlanner # noqa: F401
 from .intent_refiner import IntentRefiner # noqa: F401
+from .tree_of_thoughts import TreeOfThoughtsProcessor # noqa: F401
 
 __all__ = [
     "ReActProcessor",
@@ -14,4 +15,5 @@ __all__ = [
     "PromptManager",
     "PromptLibrary", # Added PromptLibrary
     "PromptTemplateV1", # Added PromptTemplateV1
+    "TreeOfThoughtsProcessor",
 ]

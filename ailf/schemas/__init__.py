@@ -15,6 +15,7 @@ from .mcp import * # noqa: F403, F401 (MCP Schemas)
 from .routing import * # noqa: F403, F401 (Routing schemas)
 from .tooling import * # noqa: F403, F401 (Tooling schemas)
 from .agent import *   # noqa: F403, F401 (Agent description schemas)
+from .tree_of_thought import *  # noqa: F403, F401 (Tree of Thoughts schemas)
 
 # It's good practice to define __all__ to specify what gets imported with a wildcard
 # However, for a central schema package like this, often all defined schemas in submodules are desired.

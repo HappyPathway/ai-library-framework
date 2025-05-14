@@ -1,6 +1,4 @@
-# AI Liberation Front (AILF)
-
-AI Liberation Front: Freedom tools for AI agent development
+# AI Library Framework (AILF)
 
 ## About
 
@@ -26,6 +24,46 @@ pip install ailf[ai]
 # With all features
 pip install ailf[all]
 ```
+
+## Core Agent Patterns
+
+AILF provides implementations of advanced LLM agent patterns:
+
+- **ReAct**: Reasoning and Acting in an iterative loop
+- **Tree of Thoughts**: Exploring multiple reasoning paths in a tree structure
+- **Task Planning**: Decomposing complex tasks into actionable steps
+- **Reflection**: Self-monitoring and improvement through reflection
+
+### Tree of Thoughts
+
+Tree of Thoughts (ToT) is an advanced reasoning technique that extends beyond simple prompt-response patterns by exploring multiple reasoning paths in parallel. The pattern allows AI agents to:
+
+- Generate multiple possible thoughts at each step
+- Evaluate the potential of each thought path
+- Explore the most promising paths first (beam search)
+- Backtrack when necessary to find optimal solutions
+
+**Example usage:**
+
+```python
+from ailf.cognition.tree_of_thoughts import TreeOfThoughtsProcessor
+from ailf.schemas.tree_of_thought import ToTConfiguration
+
+# Configure Tree of Thoughts
+config = ToTConfiguration(
+    max_depth=3,        # Maximum tree depth
+    branching_factor=3, # Branches per node
+    beam_width=2        # Number of paths to explore
+)
+
+# Create processor
+tot_processor = TreeOfThoughtsProcessor(ai_engine, config=config)
+
+# Process a complex problem
+result = await tot_processor.process(context)
+```
+
+For more details, see the [Tree of Thoughts documentation](docs/tree-of-thought.md).
 
 ## Documentation
 
