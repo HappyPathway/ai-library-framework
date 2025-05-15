@@ -26,14 +26,17 @@ MOCK_MODULES = [
     # Database and storage
     'sqlalchemy', 'sqlalchemy.orm', 'sqlalchemy.ext',
     
-    # Project modules that might not exist yet
+    # External/utility modules
     'ai', 'cloud', 'utils', 'utils.ai', 'utils.core', 'utils.cloud', 
     'utils.messaging', 'utils.storage', 'messaging', 'storage', 'workers',
     'agent', 'documentation', 'test', 'schemas',
+    'cognition',
     
-    # Transitional package structure 
-    'ailf.ai', 'ailf.core', 'ailf.cloud', 'ailf.messaging', 'ailf.storage',
-    'ailf.mcp', 'ailf.workers', 'ailf.agent', 'ailf.schemas', 'ailf.communication',
+    # Redis-related modules that cause import errors
+    'redis.asyncio',
+    
+    # NOTE: We're no longer mocking the internal ailf modules below, so they can be properly documented
+    # If you get import errors during doc builds, add specific problematic modules
 ]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
@@ -42,15 +45,15 @@ os.environ['GOOGLE_CLOUD_PROJECT'] = 'mock-project-id'
 os.environ['AILF_CONFIG_PATH'] = '/tmp/mock-config'
 
 # Add project directories to path for autodoc
-# Add src directory for src-based imports (primary)
-sys.path.insert(0, os.path.abspath('../../src'))
-# Add project root for legacy module imports
-sys.path.insert(0, os.path.abspath('../..'))
 # Add examples directory to path for autodoc
 sys.path.insert(0, os.path.abspath('../../examples'))
+# Add src directory for src-based imports (primary)
+sys.path.insert(0, os.path.abspath('../../src'))
+# Comment out the legacy path to avoid conflicts
+# sys.path.insert(0, os.path.abspath('../..'))
 
 # Project information
-project = 'Python Template Dev'
+project = 'AI Library Framework (AILF)'
 copyright = '2025, David Arnold'
 author = 'David Arnold'
 version = '1.0'
@@ -92,3 +95,20 @@ napoleon_use_rtype = True
 # Other settings
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'venv']
+
+# HTML output settings
+html_theme = 'groundwork'
+html_theme_options = {
+    'github_user': 'HappyPathway',  # Your GitHub username
+    'github_repo': 'ai-library-framework',  # Your repository name
+    'github_banner': True,  # Show GitHub banner
+    'show_related': True,  # Show related links
+    'sidebar_width': '240px',  # Width of the sidebar
+    'sidebar_collapse': False,  # Collapse the sidebar by default
+    'stickysidebar': True,  # Make the sidebar sticky
+    'logo': "logo.png",  # Path to your logo, relative to _static
+    'logo_name': False,  # Display the project name under the logo
+    'description': 'AI Agent Development Framework',  # Project description
+}
+html_static_path = ['_static']
+html_css_files = ['custom.css']

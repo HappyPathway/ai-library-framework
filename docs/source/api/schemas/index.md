@@ -6,6 +6,8 @@ This section documents the data models and schema definitions used in the AILF l
 :maxdepth: 2
 
 ai
+cognition
+mcp
 redis
 storage
 test
@@ -18,6 +20,8 @@ The schemas module provides Pydantic models for structured data validation acros
 ## Key Components
 
 - **AI Models**: Schemas for AI configuration and responses
+- **Cognition Models**: Schemas for reasoning, prompting, and cognitive processes
+- **MCP Models**: Model Context Protocol schemas
 - **Storage Models**: Data structures for storage operations
 - **Messaging Models**: ZMQ and Redis message structures
 - **Test Models**: Schema definitions used in testing

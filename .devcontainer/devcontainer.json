@@ -53,7 +53,7 @@
         "ghcr.io/devcontainers/features/git:1": {},
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "./features/repository-cloner": {
-            "repositories": "kagent/kagent,a2a-dev/a2a",
+            "repositories": "ag-ui-protocol/ag-ui,a2a-dev/a2a,anthropics/anthropic-sdk-python,openai/openai-python,i-am-bee/acp,googleapis/python-genai",
             "targetDir": "/workspaces/repositories"
         },
         "./features/python-dev-setup": {

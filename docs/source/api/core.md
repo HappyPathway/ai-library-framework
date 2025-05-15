@@ -3,6 +3,9 @@
 ```{toctree}
 :maxdepth: 2
 
-logging
-monitoring
+core/logger
+core/logging
+core/monitoring
+core/storage
+core/index
 ```

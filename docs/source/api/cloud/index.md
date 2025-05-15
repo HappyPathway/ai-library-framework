@@ -5,11 +5,12 @@ This section documents the cloud integration components of the AILF library.
 ```{toctree}
 :maxdepth: 2
 
-cloud/gcs
-cloud/gcs_storage
-cloud/gcs_config_stash
-cloud/secrets
-cloud/secrets_providers/index
+gcs
+gcs_storage
+gcs_config_stash
+secrets
+secrets_providers
+secrets_providers/index
 ```
 
 The cloud module provides integrations with various cloud platforms and services.

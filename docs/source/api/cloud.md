@@ -3,7 +3,9 @@
 ```{toctree}
 :maxdepth: 2
 
-gcs
-secrets_providers
-secrets
+cloud/gcs_config_stash
+cloud/gcs_storage
+cloud/secrets
+cloud/secrets_providers
+cloud/index
 ```

@@ -19,8 +19,12 @@ except ImportError:
         "Install them with: pip install pydantic"
     )
 
-from ailf.core.ai_engine_base import AIEngineBase
-from ailf.ai.engine_factory import AIEngineFactory
+# Use the new src-based imports
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+
+from ailf.ai.engine import AIEngine, AIEngineError
+from ailf.schemas.tooling import ToolDescription
 
 
 class CustomAIEngine(AIEngineBase):

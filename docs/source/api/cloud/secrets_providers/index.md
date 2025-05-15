@@ -5,12 +5,12 @@ This section documents the various secret provider implementations in the AILF l
 ```{toctree}
 :maxdepth: 2
 
-cloud/secrets_providers/base
-cloud/secrets_providers/aws
-cloud/secrets_providers/azure
-cloud/secrets_providers/google
-cloud/secrets_providers/dotenv
-cloud/secrets_providers/vault
+base
+aws
+azure
+google
+dotenv
+vault
 ```
 
 Secret providers offer a consistent interface for retrieving sensitive configuration across different environments.

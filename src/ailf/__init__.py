@@ -11,6 +11,12 @@ from .ai_engine import AIEngine, AIEngineError
 from .async_tasks import TaskManager, TaskStatus
 from .base_mcp import BaseMCP, Context
 
+# Cognition components
+from .cognition import (
+    ReActProcessor, TaskPlanner, IntentRefiner, 
+    PromptTemplateV1, PromptLibrary
+)
+
 # Core utilities
 from .core.logging import setup_logging
 from .core.monitoring import setup_monitoring
@@ -48,6 +54,13 @@ __all__ = [
     "AIEngineError",
     "BaseMCP",
     "Context",
+    
+    # Cognition components
+    "ReActProcessor",
+    "TaskPlanner",
+    "IntentRefiner",
+    "PromptTemplateV1",
+    "PromptLibrary",
     
     # Core utilities
     "setup_logging",

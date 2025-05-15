@@ -4,17 +4,28 @@
 			"path": "."
 		},
 		{
-			"path": "../A2A"
+			"path": "../A2A",
+			"name": "protocols/a2a"
 		},
 		{
-			"path": "../kagent/python/src",
-			"name": "kagent"
+			"path": "../ag-ui",
+			"name": "protocols/ag-ui"
 		},
 		{
-			"path": "../ag-ui"
+			"path": "../acp",
+			"name": "protocols/acp"
 		},
 		{
-			"path": "../acp"
+			"path": "../anthropic-sdk-python",
+			"name": "models/claude"
+		},
+		{
+			"path": "../python-genai",
+			"name": "models/gemini"
+		},
+		{
+			"path": "../openai-python",
+			"name": "models/gpt"
 		}
 	],
 	"settings": {

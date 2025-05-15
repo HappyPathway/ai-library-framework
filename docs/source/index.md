@@ -34,6 +34,8 @@ migration_plan
 ai_module_example
 implementation_plan
 migration_guide
+capabilities_map
+component_relationships
 ```
 
 ## Examples
@@ -55,10 +57,12 @@ guides/development_setup
 guides/src_structure
 guides/documentation_structure
 guides/import_patterns
+guides/handling_unused_imports
 guides/contributing_docs
 guides/ci_integration
 guides/testing
 guides/logging
+guides/redis_messaging
 guides/messaging
 guides/redis
 guides/async_tasks
@@ -73,6 +77,22 @@ guides/celery
 
 api_organization
 api/index
+```
+
+## Legacy Category Pages
+
+```{toctree}
+:maxdepth: 1
+:caption: Legacy Category Pages
+
+api/ai
+api/cloud
+api/core
+api/mcp
+api/mcp/servers
+api/messaging
+api/storage
+api/workers
 ```
 
 ## Indices and Tables

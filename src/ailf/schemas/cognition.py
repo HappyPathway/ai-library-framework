@@ -67,6 +67,36 @@ class PromptTemplateV1(BaseModel):
     input_variables: List[str] = Field(default_factory=list, description="List of variable names expected by the template.")
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Arbitrary metadata associated with the template.")
 
+class PromptLibrary(BaseModel):
+    """A collection of prompt templates."""
+    templates: Dict[str, PromptTemplateV1] = Field(default_factory=dict, description="Dictionary of prompt templates.")
+    
+    def get_template(self, template_id: str) -> PromptTemplateV1:
+        """
+        Get a prompt template by ID.
+        
+        Args:
+            template_id: The ID of the template to retrieve
+            
+        Returns:
+            The prompt template
+            
+        Raises:
+            KeyError: If the template is not found
+        """
+        if template_id not in self.templates:
+            raise KeyError(f"Template with ID {template_id} not found in the prompt library")
+        return self.templates[template_id]
+    
+    def add_template(self, template: PromptTemplateV1) -> None:
+        """
+        Add a template to the library.
+        
+        Args:
+            template: The template to add
+        """
+        self.templates[template.template_id] = template
+
 class TaskContext(BaseModel):
     """Schema for task context in cognitive processing."""
     task_id: str = Field(..., description="Unique identifier for the task.")

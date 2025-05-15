@@ -10,7 +10,6 @@ agent_protocol_client
 async_redis
 devices
 mock_redis
-protobuf/index
 redis
 websocket_client
 websocket_server
@@ -27,5 +26,4 @@ The messaging module provides components for inter-agent and system-to-system co
 - **ZeroMQ**: Low-latency messaging between components
 - **Redis**: Pub/sub and data storage
 - **Websockets**: Real-time web communication
-- **Protocol Buffers**: Efficient binary serialization
 - **Agent Protocol**: A2A and ACP compatible client implementations
