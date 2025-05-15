@@ -34,6 +34,15 @@ implementation_plan
 migration_guide
 ```
 
+## Examples
+
+```{toctree}
+:maxdepth: 2
+:caption: Examples
+
+examples/direct_agent_example
+```
+
 ## User Guides
 
 ```{toctree}

@@ -21,6 +21,8 @@ os.environ['GOOGLE_CLOUD_PROJECT'] = 'mock-project-id'
 
 # Add project root to path
 sys.path.insert(0, os.path.abspath('../..'))
+# Add examples directory to path for autodoc
+sys.path.insert(0, os.path.abspath('../../examples'))
 
 # Project information
 project = 'Python Template Dev'
