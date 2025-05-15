@@ -1,5 +1,7 @@
-"""Worker utilities for distributed task execution.
+"""Worker utilities package.
 
-This package provides tools for distributing tasks across multiple workers,
-including Celery integration and task management.
+This package contains utilities for distributed task processing using Celery.
 """
+
+# Version
+__version__ = "0.1.0"

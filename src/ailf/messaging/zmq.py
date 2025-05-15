@@ -1,473 +1,410 @@
-"""ZeroMQ messaging utilities.
+"""ZeroMQ Utilities Module.
 
-This module provides ZeroMQ-based messaging patterns for distributed systems.
+This module provides a unified interface for ZMQ operations with proper resource
+management, error handling, and common messaging patterns.
+
+Key Components:
+    ZMQBase: Base class for all ZMQ communication classes
+    ZMQPublisher: Implementation of the publisher pattern
+    ZMQSubscriber: Implementation of the subscriber pattern
+    ZMQClient: Implementation of the request-reply client pattern
+    ZMQServer: Implementation of the request-reply server pattern
+
+Example:
+    >>> from ailf.messaging.zmq import ZMQPublisher, ZMQSubscriber
+    >>> 
+    >>> # Publisher example
+    >>> pub = ZMQPublisher()
+    >>> pub.connect("tcp://*:5555")
+    >>> pub.publish("topic", "Hello World")
+    >>> 
+    >>> # Subscriber example
+    >>> sub = ZMQSubscriber(["topic"])
+    >>> sub.connect("tcp://localhost:5555")
+    >>> topic, message = sub.receive()
+    >>> print(message)
+    >>> 'Hello World'
+
+Note:
+    All sockets should be properly closed after use with the close() method.
 """
 
-try:
-    from ailf.messaging.zmq import (
-        ZMQBase,
-        ZMQPublisher,
-        ZMQSubscriber,
-        ZMQClient,
-        ZMQServer,
-        ZMQPush,
-        ZMQPull
-    )
-except ImportError:
-    # Fallback implementations for when the package is installed standalone
-    import zmq
-    from typing import Any, Dict, List, Optional, Tuple, Union
+import atexit
+import json
+import threading
+import time
+from contextlib import contextmanager
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import zmq
+
+from ailf.core.logging import setup_logging
+
+# Initialize logging
+logger = setup_logging(__name__)
+
+
+class ZMQBase:
+    """Base class for all ZMQ communication classes."""
     
-    class ZMQBase:
-        """Base class for ZMQ patterns."""
+    def __init__(self):
+        """Initialize the base ZMQ class."""
+        self.context = zmq.Context.instance()
+        self.socket = None
+        self.socket_type = None
+        self._connected = False
         
-        def __init__(self, context: Optional[zmq.Context] = None):
-            """Initialize with ZeroMQ context.
+    def connect(self, address: str) -> None:
+        """Connect the socket to an address.
+        
+        Args:
+            address: Address to connect to
+        """
+        if self.socket is None:
+            raise RuntimeError("Socket not initialized")
             
-            Args:
-                context: ZMQ context (creates new one if None)
-            """
-            self.context = context or zmq.Context.instance()
+        try:
+            if address.startswith("tcp://*"):
+                # For TCP addresses with wildcard, we need to bind
+                self.socket.bind(address)
+            else:
+                # For all other addresses, we connect
+                self.socket.connect(address)
+            self._connected = True
+            logger.debug(f"Connected to {address}")
+        except zmq.ZMQError as e:
+            logger.error(f"Failed to connect to {address}: {str(e)}")
+            raise
+        
+    def close(self) -> None:
+        """Close the socket and clean up resources."""
+        if self.socket:
+            self.socket.close()
             self.socket = None
-            self.socket_type = None
             self._connected = False
             
-        def connect(self, address: str) -> None:
-            """Connect to an endpoint.
-            
-            Args:
-                address: ZMQ socket address to connect to
-            """
-            self._ensure_socket()
-            self.socket.connect(address)
-            self._connected = True
-            
-        def bind(self, address: str) -> None:
-            """Bind to an endpoint.
-            
-            Args:
-                address: ZMQ socket address to bind to
-            """
-            self._ensure_socket()
-            self.socket.bind(address)
-            self._connected = True
-            
-        def close(self) -> None:
-            """Close the socket."""
-            if self.socket:
-                self.socket.close()
-                self.socket = None
-                self._connected = False
-                
-        def _ensure_socket(self) -> None:
-            """Ensure socket is created."""
-            if not self.socket and self.socket_type:
-                self.socket = self.context.socket(self.socket_type)
-                
-        def __del__(self):
-            """Clean up resources."""
-            self.close()
+    def __del__(self):
+        """Clean up resources when the object is garbage collected."""
+        self.close()
+        
+        
+class ZMQPublisher(ZMQBase):
+    """Publisher implementation for the ZMQ PUB-SUB pattern."""
     
-    class ZMQPublisher(ZMQBase):
-        """ZMQ Publisher pattern.
+    def __init__(self):
+        """Initialize the publisher."""
+        super().__init__()
+        self.socket_type = zmq.PUB
+        self.socket = self.context.socket(self.socket_type)
         
-        Implements the publish-subscribe messaging pattern where
-        a publisher sends messages to multiple subscribers.
+    def publish(self, topic: str, message: Union[str, bytes, dict]) -> None:
+        """Publish a message with the given topic.
+        
+        Args:
+            topic: Message topic
+            message: Message payload (string, bytes, or dict)
         """
+        if not self._connected:
+            raise RuntimeError("Not connected to an address")
+            
+        # Encode the topic as bytes
+        topic_bytes = topic.encode('utf-8') if isinstance(topic, str) else topic
         
-        def __init__(self, context: Optional[zmq.Context] = None):
-            """Initialize publisher.
+        # Encode the message based on its type
+        if isinstance(message, dict):
+            message_bytes = json.dumps(message).encode('utf-8')
+        elif isinstance(message, str):
+            message_bytes = message.encode('utf-8')
+        else:
+            # Assume it's already bytes
+            message_bytes = message
             
-            Args:
-                context: ZMQ context to use (creates new one if None)
-            """
-            super().__init__(context)
-            self.socket_type = zmq.PUB
-            self._ensure_socket()
-            
-        def publish(self, topic: str, message: Union[str, bytes, dict]) -> None:
-            """Publish a message with the given topic.
-            
-            Args:
-                topic: Message topic (used for filtering by subscribers)
-                message: Message content (string, bytes, or dict)
-            """
-            if not self._connected:
-                raise RuntimeError("Publisher not connected to an endpoint")
-                
-            # Prepare message based on its type
-            if isinstance(message, dict):
-                import json
-                message_data = json.dumps(message).encode('utf-8')
-            elif isinstance(message, str):
-                message_data = message.encode('utf-8')
-            else:
-                message_data = message
-                
-            # Send the message with topic prefix
-            topic_bytes = topic.encode('utf-8') if isinstance(topic, str) else topic
-            self.socket.send_multipart([topic_bytes, message_data])
-    
-    class ZMQSubscriber(ZMQBase):
-        """ZMQ Subscriber pattern.
-        
-        Implements the subscribe part of the publish-subscribe messaging pattern,
-        receiving messages published by publishers based on topic filters.
-        """
-        
-        def __init__(self, context: Optional[zmq.Context] = None):
-            """Initialize subscriber.
-            
-            Args:
-                context: ZMQ context to use (creates new one if None)
-            """
-            super().__init__(context)
-            self.socket_type = zmq.SUB
-            self._ensure_socket()
-            
-        def subscribe(self, topic: str) -> None:
-            """Subscribe to a topic.
-            
-            Args:
-                topic: Topic to subscribe to
-            """
-            if not self.socket:
-                raise RuntimeError("Socket not initialized")
-                
-            topic_bytes = topic.encode('utf-8') if isinstance(topic, str) else topic
-            self.socket.setsockopt(zmq.SUBSCRIBE, topic_bytes)
-            
-        def unsubscribe(self, topic: str) -> None:
-            """Unsubscribe from a topic.
-            
-            Args:
-                topic: Topic to unsubscribe from
-            """
-            if not self.socket:
-                raise RuntimeError("Socket not initialized")
-                
-            topic_bytes = topic.encode('utf-8') if isinstance(topic, str) else topic
-            self.socket.setsockopt(zmq.UNSUBSCRIBE, topic_bytes)
-            
-        def receive(self, timeout: int = -1) -> Tuple[str, Union[str, bytes]]:
-            """Receive a message.
-            
-            Args:
-                timeout: Receive timeout in milliseconds (-1 for indefinite)
-                
-            Returns:
-                Tuple[str, Union[str, bytes]]: Topic and message content
-                
-            Raises:
-                zmq.Again: If no message is available within timeout
-            """
-            if not self._connected:
-                raise RuntimeError("Subscriber not connected to an endpoint")
-                
-            if timeout >= 0:
-                # Set timeout only if specified
-                old_timeout = self.socket.RCVTIMEO
-                self.socket.setsockopt(zmq.RCVTIMEO, timeout)
-                
-            try:
-                # Receive topic and message as multipart message
-                topic_bytes, message_bytes = self.socket.recv_multipart()
-                topic = topic_bytes.decode('utf-8')
-                
-                # Try to decode as string, but fall back to bytes if not UTF-8
-                try:
-                    message = message_bytes.decode('utf-8')
-                except UnicodeDecodeError:
-                    message = message_bytes
-                    
-                return topic, message
-                
-            finally:
-                if timeout >= 0:
-                    # Restore original timeout
-                    self.socket.setsockopt(zmq.RCVTIMEO, old_timeout)
-    
-    class ZMQClient(ZMQBase):
-        """ZMQ Client pattern.
-        
-        Implements the request part of the request-reply pattern.
-        """
-        
-        def __init__(self, context: Optional[zmq.Context] = None):
-            """Initialize client.
-            
-            Args:
-                context: ZMQ context to use (creates new one if None)
-            """
-            super().__init__(context)
-            self.socket_type = zmq.REQ
-            self._ensure_socket()
-            
-        def request(
-            self, 
-            message: Union[str, bytes, dict], 
-            timeout: int = -1
-        ) -> Union[str, bytes]:
-            """Send a request and receive the reply.
-            
-            Args:
-                message: Request message
-                timeout: Reply timeout in milliseconds (-1 for indefinite)
-                
-            Returns:
-                Union[str, bytes]: Reply message
-                
-            Raises:
-                zmq.Again: If no reply is received within timeout
-            """
-            if not self._connected:
-                raise RuntimeError("Client not connected to an endpoint")
-                
-            # Prepare message based on its type
-            if isinstance(message, dict):
-                import json
-                message_data = json.dumps(message).encode('utf-8')
-            elif isinstance(message, str):
-                message_data = message.encode('utf-8')
-            else:
-                message_data = message
-                
-            # Set timeout if specified
-            if timeout >= 0:
-                old_timeout = self.socket.RCVTIMEO
-                self.socket.setsockopt(zmq.RCVTIMEO, timeout)
-                
-            try:
-                # Send request
-                self.socket.send(message_data)
-                
-                # Receive reply
-                reply_data = self.socket.recv()
-                
-                # Try to decode as string, but fall back to bytes if not UTF-8
-                try:
-                    reply = reply_data.decode('utf-8')
-                except UnicodeDecodeError:
-                    reply = reply_data
-                    
-                return reply
-                
-            finally:
-                if timeout >= 0:
-                    # Restore original timeout
-                    self.socket.setsockopt(zmq.RCVTIMEO, old_timeout)
-    
-    class ZMQServer(ZMQBase):
-        """ZMQ Server pattern.
-        
-        Implements the reply part of the request-reply pattern.
-        """
-        
-        def __init__(self, context: Optional[zmq.Context] = None):
-            """Initialize server.
-            
-            Args:
-                context: ZMQ context to use (creates new one if None)
-            """
-            super().__init__(context)
-            self.socket_type = zmq.REP
-            self._ensure_socket()
-            
-        def receive(self, timeout: int = -1) -> Union[str, bytes]:
-            """Receive a request.
-            
-            Args:
-                timeout: Receive timeout in milliseconds (-1 for indefinite)
-                
-            Returns:
-                Union[str, bytes]: Request message
-                
-            Raises:
-                zmq.Again: If no request is received within timeout
-            """
-            if not self._connected:
-                raise RuntimeError("Server not connected to an endpoint")
-                
-            # Set timeout if specified
-            if timeout >= 0:
-                old_timeout = self.socket.RCVTIMEO
-                self.socket.setsockopt(zmq.RCVTIMEO, timeout)
-                
-            try:
-                # Receive request
-                request_data = self.socket.recv()
-                
-                # Try to decode as string, but fall back to bytes if not UTF-8
-                try:
-                    request = request_data.decode('utf-8')
-                except UnicodeDecodeError:
-                    request = request_data
-                    
-                return request
-                
-            finally:
-                if timeout >= 0:
-                    # Restore original timeout
-                    self.socket.setsockopt(zmq.RCVTIMEO, old_timeout)
-                    
-        def reply(self, message: Union[str, bytes, dict]) -> None:
-            """Send a reply.
-            
-            Args:
-                message: Reply message
-            """
-            if not self._connected:
-                raise RuntimeError("Server not connected to an endpoint")
-                
-            # Prepare message based on its type
-            if isinstance(message, dict):
-                import json
-                message_data = json.dumps(message).encode('utf-8')
-            elif isinstance(message, str):
-                message_data = message.encode('utf-8')
-            else:
-                message_data = message
-                
-            # Send reply
-            self.socket.send(message_data)
-            
-    class ZMQPush(ZMQBase):
-        """ZMQ Push pattern.
-        
-        Implements the push part of the push-pull message distribution pattern.
-        """
-        
-        def __init__(self, context: Optional[zmq.Context] = None):
-            """Initialize push socket.
-            
-            Args:
-                context: ZMQ context to use (creates new one if None)
-            """
-            super().__init__(context)
-            self.socket_type = zmq.PUSH
-            self._ensure_socket()
-            
-        def push(self, message: Union[str, bytes, dict]) -> None:
-            """Push a message to the pull socket(s).
-            
-            Args:
-                message: Message to push
-            """
-            if not self._connected:
-                raise RuntimeError("Push socket not connected to an endpoint")
-                
-            # Prepare message based on its type
-            if isinstance(message, dict):
-                import json
-                message_data = json.dumps(message).encode('utf-8')
-            elif isinstance(message, str):
-                message_data = message.encode('utf-8')
-            else:
-                message_data = message
-                
-            # Send the message
-            self.socket.send(message_data)
-            
-        def push_json(self, message: Dict[str, Any]) -> None:
-            """Push a JSON message.
-            
-            Args:
-                message: JSON message to push
-            """
-            if not self._connected:
-                raise RuntimeError("Push socket not connected to an endpoint")
-                
-            # Send JSON directly
-            self.socket.send_json(message)
-    
-    class ZMQPull(ZMQBase):
-        """ZMQ Pull pattern.
-        
-        Implements the pull part of the push-pull message distribution pattern.
-        """
-        
-        def __init__(self, context: Optional[zmq.Context] = None):
-            """Initialize pull socket.
-            
-            Args:
-                context: ZMQ context to use (creates new one if None)
-            """
-            super().__init__(context)
-            self.socket_type = zmq.PULL
-            self._ensure_socket()
-            
-        def pull(self, timeout: int = -1) -> Union[str, bytes]:
-            """Pull a message.
-            
-            Args:
-                timeout: Receive timeout in milliseconds (-1 for indefinite)
-                
-            Returns:
-                Union[str, bytes]: Pulled message
-                
-            Raises:
-                zmq.Again: If no message is available within timeout
-            """
-            if not self._connected:
-                raise RuntimeError("Pull socket not connected to an endpoint")
-                
-            # Set timeout if specified
-            if timeout >= 0:
-                old_timeout = self.socket.RCVTIMEO
-                self.socket.setsockopt(zmq.RCVTIMEO, timeout)
-                
-            try:
-                # Receive message
-                message_data = self.socket.recv()
-                
-                # Try to decode as string, but fall back to bytes if not UTF-8
-                try:
-                    message = message_data.decode('utf-8')
-                except UnicodeDecodeError:
-                    message = message_data
-                    
-                return message
-                
-            finally:
-                if timeout >= 0:
-                    # Restore original timeout
-                    self.socket.setsockopt(zmq.RCVTIMEO, old_timeout)
-                    
-        def pull_json(self, timeout: int = -1) -> Dict[str, Any]:
-            """Pull a JSON message.
-            
-            Args:
-                timeout: Receive timeout in milliseconds (-1 for indefinite)
-                
-            Returns:
-                Dict[str, Any]: JSON message
-                
-            Raises:
-                zmq.Again: If no message is available within timeout
-            """
-            if not self._connected:
-                raise RuntimeError("Pull socket not connected to an endpoint")
-                
-            # Set timeout if specified
-            if timeout >= 0:
-                old_timeout = self.socket.RCVTIMEO
-                self.socket.setsockopt(zmq.RCVTIMEO, timeout)
-                
-            try:
-                # Receive JSON message
-                return self.socket.recv_json()
-                
-            finally:
-                if timeout >= 0:
-                    # Restore original timeout
-                    self.socket.setsockopt(zmq.RCVTIMEO, old_timeout)
+        self.socket.send_multipart([topic_bytes, message_bytes])
 
+
+class ZMQSubscriber(ZMQBase):
+    """Subscriber implementation for the ZMQ PUB-SUB pattern."""
+    
+    def __init__(self, topics: Optional[List[str]] = None):
+        """Initialize the subscriber with optional topic filters.
+        
+        Args:
+            topics: List of topics to subscribe to
+        """
+        super().__init__()
+        self.socket_type = zmq.SUB
+        self.socket = self.context.socket(self.socket_type)
+        
+        # Subscribe to topics
+        if topics:
+            for topic in topics:
+                self.subscribe(topic)
+        else:
+            # Subscribe to all messages
+            self.socket.setsockopt(zmq.SUBSCRIBE, b'')
+            
+    def subscribe(self, topic: str) -> None:
+        """Subscribe to a topic.
+        
+        Args:
+            topic: Topic to subscribe to
+        """
+        topic_bytes = topic.encode('utf-8') if isinstance(topic, str) else topic
+        self.socket.setsockopt(zmq.SUBSCRIBE, topic_bytes)
+        
+    def unsubscribe(self, topic: str) -> None:
+        """Unsubscribe from a topic.
+        
+        Args:
+            topic: Topic to unsubscribe from
+        """
+        topic_bytes = topic.encode('utf-8') if isinstance(topic, str) else topic
+        self.socket.setsockopt(zmq.UNSUBSCRIBE, topic_bytes)
+        
+    def receive(self, timeout: int = None) -> Tuple[bytes, bytes]:
+        """Receive a message from the socket.
+        
+        Args:
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Tuple of (topic, message)
+        """
+        if not self._connected:
+            raise RuntimeError("Not connected to an address")
+            
+        if timeout is not None:
+            # Use a poller to implement timeout
+            poller = zmq.Poller()
+            poller.register(self.socket, zmq.POLLIN)
+            if poller.poll(timeout):
+                return self.socket.recv_multipart()
+            else:
+                raise zmq.ZMQError("Timeout waiting for message")
+        else:
+            return self.socket.recv_multipart()
+            
+    def receive_string(self, timeout: int = None) -> Tuple[str, str]:
+        """Receive a message and decode as string.
+        
+        Args:
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Tuple of (topic, message) as strings
+        """
+        topic, message = self.receive(timeout)
+        return topic.decode('utf-8'), message.decode('utf-8')
+        
+    def receive_json(self, timeout: int = None) -> Tuple[str, Dict[str, Any]]:
+        """Receive a message and decode as JSON.
+        
+        Args:
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Tuple of (topic, message) with message decoded from JSON
+        """
+        topic, message = self.receive(timeout)
+        return topic.decode('utf-8'), json.loads(message.decode('utf-8'))
+
+
+class ZMQClient(ZMQBase):
+    """Client implementation for the ZMQ REQ-REP pattern."""
+    
+    def __init__(self):
+        """Initialize the client."""
+        super().__init__()
+        self.socket_type = zmq.REQ
+        self.socket = self.context.socket(self.socket_type)
+        
+    def send_request(self, request: Union[str, bytes, dict], timeout: int = None) -> bytes:
+        """Send a request and wait for a response.
+        
+        Args:
+            request: Request message
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Response message
+        """
+        if not self._connected:
+            raise RuntimeError("Not connected to an address")
+            
+        # Encode the request based on its type
+        if isinstance(request, dict):
+            request_bytes = json.dumps(request).encode('utf-8')
+        elif isinstance(request, str):
+            request_bytes = request.encode('utf-8')
+        else:
+            # Assume it's already bytes
+            request_bytes = request
+            
+        # Send the request
+        self.socket.send(request_bytes)
+        
+        if timeout is not None:
+            # Use a poller to implement timeout
+            poller = zmq.Poller()
+            poller.register(self.socket, zmq.POLLIN)
+            if poller.poll(timeout):
+                return self.socket.recv()
+            else:
+                raise zmq.ZMQError("Timeout waiting for response")
+        else:
+            return self.socket.recv()
+            
+    def send_request_string(self, request: str, timeout: int = None) -> str:
+        """Send a string request and receive a string response.
+        
+        Args:
+            request: Request string
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Response string
+        """
+        response = self.send_request(request, timeout)
+        return response.decode('utf-8')
+        
+    def send_request_json(self, request: Dict[str, Any], timeout: int = None) -> Dict[str, Any]:
+        """Send a JSON request and receive a JSON response.
+        
+        Args:
+            request: Request dictionary
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Response dictionary
+        """
+        response = self.send_request(request, timeout)
+        return json.loads(response.decode('utf-8'))
+
+
+class ZMQServer(ZMQBase):
+    """Server implementation for the ZMQ REQ-REP pattern."""
+    
+    def __init__(self):
+        """Initialize the server."""
+        super().__init__()
+        self.socket_type = zmq.REP
+        self.socket = self.context.socket(self.socket_type)
+        self._running = False
+        self._thread = None
+        
+    def receive(self, timeout: int = None) -> bytes:
+        """Receive a request.
+        
+        Args:
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Request message
+        """
+        if not self._connected:
+            raise RuntimeError("Not connected to an address")
+            
+        if timeout is not None:
+            # Use a poller to implement timeout
+            poller = zmq.Poller()
+            poller.register(self.socket, zmq.POLLIN)
+            if poller.poll(timeout):
+                return self.socket.recv()
+            else:
+                raise zmq.ZMQError("Timeout waiting for request")
+        else:
+            return self.socket.recv()
+            
+    def receive_string(self, timeout: int = None) -> str:
+        """Receive a request and decode as string.
+        
+        Args:
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Request string
+        """
+        request = self.receive(timeout)
+        return request.decode('utf-8')
+        
+    def receive_json(self, timeout: int = None) -> Dict[str, Any]:
+        """Receive a request and decode as JSON.
+        
+        Args:
+            timeout: Timeout in milliseconds
+            
+        Returns:
+            Request dictionary
+        """
+        request = self.receive(timeout)
+        return json.loads(request.decode('utf-8'))
+            
+    def send_response(self, response: Union[str, bytes, dict]) -> None:
+        """Send a response to a client.
+        
+        Args:
+            response: Response message
+        """
+        if not self._connected:
+            raise RuntimeError("Not connected to an address")
+            
+        # Encode the response based on its type
+        if isinstance(response, dict):
+            response_bytes = json.dumps(response).encode('utf-8')
+        elif isinstance(response, str):
+            response_bytes = response.encode('utf-8')
+        else:
+            # Assume it's already bytes
+            response_bytes = response
+            
+        # Send the response
+        self.socket.send(response_bytes)
+        
+    def start(self, handler: callable, daemon: bool = True) -> None:
+        """Start the server in a background thread.
+        
+        Args:
+            handler: Function to handle requests, takes bytes and returns bytes
+            daemon: Whether the thread should be a daemon
+        """
+        if self._running:
+            return
+            
+        def _server_loop():
+            while self._running:
+                try:
+                    request = self.receive(timeout=1000)
+                    response = handler(request)
+                    self.send_response(response)
+                except zmq.ZMQError as e:
+                    if e.errno != zmq.EAGAIN:  # Timeout
+                        logger.error(f"ZMQ error: {str(e)}")
+                except Exception as e:
+                    logger.error(f"Handler error: {str(e)}")
+        
+        self._running = True
+        self._thread = threading.Thread(target=_server_loop, daemon=daemon)
+        self._thread.start()
+        
+    def stop(self, timeout: float = 1.0) -> None:
+        """Stop the server thread.
+        
+        Args:
+            timeout: Join timeout in seconds
+        """
+        if not self._running or self._thread is None:
+            return
+            
+        self._running = False
+        self._thread.join(timeout)
+        self._thread = None
+
+
+# Define exports
 __all__ = [
-    "ZMQBase",
-    "ZMQPublisher",
-    "ZMQSubscriber",
-    "ZMQClient",
-    "ZMQServer",
-    "ZMQPush",
-    "ZMQPull"
+    'ZMQBase',
+    'ZMQPublisher',
+    'ZMQSubscriber',
+    'ZMQClient',
+    'ZMQServer'
 ]

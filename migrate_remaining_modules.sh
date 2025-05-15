@@ -123,11 +123,15 @@ migrate_remaining_modules() {
     echo -e "${BLUE}=== Updating Import Statements ===${NC}"
     fix_imports "$repo_root"
     
+    # Generate a migration report
+    echo -e "${BLUE}=== Generating Migration Report ===${NC}"
+    generate_migration_report "$repo_root"
+    
     echo -e "${BLUE}=== Migration Complete ===${NC}"
     echo -e "${YELLOW}Next steps:${NC}"
     echo "1. Review updated import statements in the migrated files"
     echo "2. Test the migrated modules"
-    echo "3. Update the migration report"
+    echo "3. Review and update the migration report at docs/migration_report_$(date +%Y%m%d).md"
     echo "4. Update src/ailf/__init__.py to expose the right imports"
 }
 
@@ -161,6 +165,75 @@ fix_imports() {
     done
     
     echo -e "${GREEN}Import statements updated${NC}"
+}
+
+# Function to generate a migration report
+generate_migration_report() {
+    local repo_root="$1"
+    local report_file="$repo_root/docs/migration_report_$(date +%Y%m%d).md"
+    
+    echo -e "${YELLOW}Generating migration report at${NC} $report_file"
+    
+    # Create the docs directory if it doesn't exist
+    mkdir -p "$repo_root/docs"
+    
+    # Create the report file
+    cat > "$report_file" << EOF
+# Migration Report: Transition to src-based Project Layout ($(date +%Y-%m-%d))
+
+## Migrated Modules
+
+### From \`ailf/\` to \`src/ailf/\`:
+$(find "$repo_root/src/ailf" -mindepth 1 -maxdepth 1 -type d | sort | while read -r dir; do
+    module_name=$(basename "$dir")
+    echo "- $module_name"
+done)
+
+### From \`utils/\` to \`src/ailf/\`:
+$(for module in "${utils_modules[@]}"; do
+    if [ -d "$repo_root/src/ailf/$module" ]; then
+        echo "- $module ✓"
+    else
+        echo "- $module ❌"
+    fi
+done)
+
+### From \`schemas/\` to \`src/ailf/schemas/\`:
+$(find "$repo_root/src/ailf/schemas" -name "*.py" -type f | sort | while read -r file; do
+    echo "- $(basename "$file")"
+done)
+
+## Potential Issues to Check
+
+### Import statements:
+The script has attempted to update import statements from the old format (\`from utils.x\` or \`from schemas.x\`) to the new format (\`from ailf.x\` or \`from ailf.schemas.x\`), but some manual checking may be needed.
+
+### Circular imports:
+Some modules may have circular import dependencies that need to be resolved manually.
+
+### Missing dependencies:
+Some modules may depend on external packages that need to be installed.
+
+## Next Steps
+
+1. Test all migrated modules to ensure they function correctly
+2. Update the \`src/ailf/__init__.py\` file to expose the right imports
+3. Update the documentation to reflect the new directory structure
+4. Update any example code to use the new import paths
+
+## Migration Details
+
+- Migration date: $(date +%Y-%m-%d)
+- Migration script: migrate_remaining_modules.sh
+- Original directories:
+  - \`ailf/\`
+  - \`utils/\`
+  - \`schemas/\`
+- New directory:
+  - \`src/ailf/\`
+EOF
+
+    echo -e "${GREEN}Migration report generated at${NC} $report_file"
 }
 
 # Execute the migration

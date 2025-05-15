@@ -5,12 +5,14 @@ It offers:
 - Configuration: Centralized database setup and connection management
 - Session Management: Context manager for handling database sessions
 - Base Model: Declarative base for defining database models
+- DatabaseStorage: A storage implementation using a database backend
 
 Key Components:
 - `engine`: SQLAlchemy engine for database connections
 - `SessionLocal`: Factory for creating database sessions
 - `Base`: Declarative base for ORM models
 - `get_session`: Context manager for database sessions
+- `DatabaseStorage`: Class for storing and retrieving data from a database
 
 Example Usage:
     >>> from ailf.storage.database import get_session, Base
@@ -44,6 +46,48 @@ Base = declarative_base()
 
 # Type variable for session context manager
 T = TypeVar('T')
+
+class DatabaseStorage:
+    """Database storage implementation."""
+
+    def __init__(self, session_factory=None):
+        """Initialize with a session factory."""
+        self.session_factory = session_factory or sessionmaker(bind=engine)
+        
+    @contextmanager
+    def session(self):
+        """Get a database session as a context manager."""
+        session = self.session_factory()
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+            
+    def store(self, model_obj):
+        """Store a SQLAlchemy model in the database."""
+        with self.session() as session:
+            session.add(model_obj)
+            session.commit()
+            # Refresh to get any database-generated values
+            session.refresh(model_obj)
+            return model_obj
+            
+    def get(self, model_class, id_value):
+        """Get a model by its ID."""
+        with self.session() as session:
+            return session.query(model_class).get(id_value)
+            
+    def query(self, model_class, **filters):
+        """Query models with filters."""
+        with self.session() as session:
+            query = session.query(model_class)
+            for attr, value in filters.items():
+                query = query.filter(getattr(model_class, attr) == value)
+            return query.all()
 
 # Default settings - can be overridden with environment variables
 DATABASE_CONFIG = {

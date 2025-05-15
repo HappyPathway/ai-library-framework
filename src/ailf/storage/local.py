@@ -1,29 +1,13 @@
-"""Local File Storage Manager for Development.
+"""Local File Storage Manager for Development
+
+DEPRECATED: This module has been moved to ailf.storage.local.
+Please update your imports to: from ailf.storage.local import LocalStorage
 
 This module provides a simple interface for managing local file storage during
 development. It includes utilities for creating directories, saving and loading
 JSON files, and managing file paths.
 
-Key Features:
-- Directory management with automatic creation
-- JSON file serialization and deserialization
-- Path normalization and validation
-- Async and sync operations
-- Type-safe file operations
-
-Example:
-    >>> from ailf.storage.local import LocalStorage
-    >>> 
-    >>> # Create a storage manager with a custom base directory
-    >>> storage = LocalStorage(base_dir="/tmp/my_app_data")
-    >>> 
-    >>> # Save some data
-    >>> data = {"name": "Example", "value": 42}
-    >>> storage.save_json(data, "configs/example.json")
-    >>> 
-    >>> # Load it back
-    >>> loaded = storage.load_json("configs/example.json")
-    >>> assert loaded["name"] == "Example"
+Use this module to handle file storage needs in a local development environment.
 """
 import asyncio
 import json
@@ -31,399 +15,450 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-import aiofiles
-import aiofiles.os as aios
+import aiofiles # type: ignore
+import aiofiles.os as aios # type: ignore
 from pydantic import BaseModel
+import warnings
 
-from ailf.core.logging import setup_logging
+# Add deprecation warning
+warnings.warn(
+    "The utils.storage.local module is deprecated. Use ailf.storage.local instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+# Re-export from the new module location
+from ailf.storage.local import *
 
 # Initialize logger
-logger = setup_logging("storage.local")
+from ailf.core.logging import setup_logging
+logger = setup_logging('storage')
 
-class StorageError(Exception):
-    """Base exception for storage operations."""
-    pass
-
-
-class FileConfig(BaseModel):
-    """Configuration for file operations."""
-    
-    create_dirs: bool = True
-    """Automatically create directories if they don't exist."""
-    
-    overwrite: bool = True
-    """Overwrite existing files (if False, raise error when file exists)."""
+# Initialize module-level variables
+_DEFAULT_STORAGE = None
+_get_path = None
+_get_json = None
+_save_json = None
 
 
-class LocalStorage:
-    """Local file system storage manager."""
-    
-    def __init__(
-        self,
-        base_dir: Optional[Union[str, Path]] = None,
-        config: Optional[FileConfig] = None
-    ):
-        """Initialize the storage manager.
-        
-        Args:
-            base_dir: Base directory for storage operations (default: ./data)
-            config: Configuration for file operations
-        """
-        self.base_dir = Path(base_dir) if base_dir else Path.cwd() / "data"
-        self.config = config or FileConfig()
-        
-        # Create base directory if it doesn't exist
-        if not self.base_dir.exists():
-            logger.info(f"Creating base directory: {self.base_dir}")
-            self.base_dir.mkdir(parents=True, exist_ok=True)
-            
-        logger.debug(f"Initialized LocalStorage with base_dir: {self.base_dir}")
-    
-    def _get_full_path(self, rel_path: Union[str, Path]) -> Path:
-        """Get absolute path from relative path.
-        
-        Args:
-            rel_path: Path relative to base_dir
-            
-        Returns:
-            Absolute path
-        """
-        if isinstance(rel_path, str):
-            rel_path = Path(rel_path)
-            
-        # If path is already absolute, return it directly
-        if rel_path.is_absolute():
-            return rel_path
-            
-        return self.base_dir / rel_path
-        
-    def _ensure_dir_exists(self, path: Path) -> None:
-        """Ensure directory exists, creating it if necessary.
-        
-        Args:
-            path: Directory path
-            
-        Raises:
-            StorageError: If directory couldn't be created
-        """
-        if not self.config.create_dirs:
-            if not path.parent.exists():
-                raise StorageError(f"Directory does not exist: {path.parent}")
-            return
-            
-        try:
-            path.parent.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            logger.error(f"Failed to create directory {path.parent}: {str(e)}")
-            raise StorageError(f"Failed to create directory: {str(e)}") from e
-        
-    def save_json(
-        self,
-        data: Any,
-        rel_path: Union[str, Path],
-        **kwargs
-    ) -> Path:
-        """Save data as JSON to file.
-        
-        Args:
-            data: Data to save (must be JSON-serializable)
-            rel_path: Path relative to base_dir
-            **kwargs: Additional options passed to json.dumps()
-            
-        Returns:
-            Absolute path to saved file
-            
-        Raises:
-            StorageError: If file couldn't be saved
-        """
-        path = self._get_full_path(rel_path)
-        self._ensure_dir_exists(path)
-        
-        # Check if file exists and overwrite setting
-        if path.exists() and not self.config.overwrite:
-            raise StorageError(f"File already exists: {path}")
-        
-        try:
-            # Include indentation by default for human-readable JSON
-            if "indent" not in kwargs:
-                kwargs["indent"] = 2
-                
-            with open(path, "w") as f:
-                json.dump(data, f, **kwargs)
-                
-            logger.debug(f"Saved JSON to {path}")
-            return path
-        except Exception as e:
-            logger.error(f"Failed to save JSON to {path}: {str(e)}")
-            raise StorageError(f"Failed to save JSON: {str(e)}") from e
-        
-    def load_json(
-        self,
-        rel_path: Union[str, Path],
-        default: Any = None,
-        **kwargs
-    ) -> Any:
-        """Load JSON data from file.
-        
-        Args:
-            rel_path: Path relative to base_dir
-            default: Value to return if file doesn't exist
-            **kwargs: Additional options passed to json.loads()
-            
-        Returns:
-            Loaded data or default value
-            
-        Raises:
-            StorageError: If file couldn't be loaded
-        """
-        path = self._get_full_path(rel_path)
-        
+def get_default_storage_path() -> Path:
+    """Get the default storage path.
+
+    Tries to use ~/.template-python-dev, falls back to tempdir if needed.
+    """
+    try:
+        path = Path.home() / '.template-python-dev'
+        # Test if we can create/write to this directory
         if not path.exists():
-            logger.debug(f"File not found, returning default: {path}")
-            return default
-        
-        try:
-            with open(path, "r") as f:
-                data = json.load(f, **kwargs)
-                
-            logger.debug(f"Loaded JSON from {path}")
-            return data
-        except Exception as e:
-            logger.error(f"Failed to load JSON from {path}: {str(e)}")
-            raise StorageError(f"Failed to load JSON: {str(e)}") from e
-    
-    def file_exists(self, rel_path: Union[str, Path]) -> bool:
-        """Check if file exists.
-        
+            path.mkdir(parents=True, exist_ok=True)
+            # Try writing a test file
+            test_file = path / '.test'
+            test_file.write_text('')
+            test_file.unlink()
+        return path
+    except (OSError, PermissionError):
+        # Fall back to a temporary directory
+        temp_dir = Path(tempfile.gettempdir()) / 'template-python-dev'
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        return temp_dir
+
+
+class StorageBase:
+    """Base class for storage implementations.
+
+    This abstract base class defines the interface for all storage implementations.
+    Subclasses should implement the required methods to provide concrete storage functionality.
+
+    Example:
+        ```python
+        class CustomStorage(StorageBase):
+            def __init__(self, config=None):
+                super().__init__(config)
+                # Custom initialization
+
+            def save_json(self, data, path):
+                # Custom implementation
+                pass
+
+            def get_json(self, path, default=None):
+                # Custom implementation
+                pass
+        ```
+    """
+
+    def __init__(self, config=None):
+        """Initialize storage with optional configuration.
+
         Args:
-            rel_path: Path relative to base_dir
-            
-        Returns:
-            True if file exists, False otherwise
+            config: Optional configuration dictionary
         """
-        path = self._get_full_path(rel_path)
-        return path.exists() and path.is_file()
-        
-    def save_text(
-        self,
-        text: str,
-        rel_path: Union[str, Path],
-        encoding: str = "utf-8"
-    ) -> Path:
-        """Save text to file.
-        
+        self.config = config or {}
+
+    def save_json(self, data: Dict, path: str) -> str:
+        """Save data as JSON to the specified path.
+
         Args:
-            text: Text content to save
-            rel_path: Path relative to base_dir
-            encoding: Text encoding to use
-            
+            data: Data to save
+            path: Path where data should be saved
+
         Returns:
-            Absolute path to saved file
-            
+            str: Path where the data was saved
+
         Raises:
-            StorageError: If file couldn't be saved
+            NotImplementedError: If not implemented by subclass
         """
-        path = self._get_full_path(rel_path)
-        self._ensure_dir_exists(path)
-        
-        # Check if file exists and overwrite setting
-        if path.exists() and not self.config.overwrite:
-            raise StorageError(f"File already exists: {path}")
-        
-        try:
-            with open(path, "w", encoding=encoding) as f:
-                f.write(text)
-                
-            logger.debug(f"Saved text to {path}")
-            return path
-        except Exception as e:
-            logger.error(f"Failed to save text to {path}: {str(e)}")
-            raise StorageError(f"Failed to save text: {str(e)}") from e
-        
-    def load_text(
-        self,
-        rel_path: Union[str, Path],
-        default: Optional[str] = None,
-        encoding: str = "utf-8"
-    ) -> Optional[str]:
-        """Load text from file.
-        
+        raise NotImplementedError("Subclasses must implement save_json")
+
+    def get_json(self, path: str, default: Optional[Dict] = None) -> Optional[Dict]:
+        """Get JSON data from the specified path.
+
         Args:
-            rel_path: Path relative to base_dir
-            default: Value to return if file doesn't exist
-            encoding: Text encoding to use
-            
+            path: Path to get data from
+            default: Default value to return if data not found
+
         Returns:
-            Loaded text or default value
-            
+            Optional[Dict]: Loaded JSON data or default value
+
         Raises:
-            StorageError: If file couldn't be loaded
+            NotImplementedError: If not implemented by subclass
         """
-        path = self._get_full_path(rel_path)
-        
-        if not path.exists():
-            logger.debug(f"File not found, returning default: {path}")
-            return default
-        
-        try:
-            with open(path, "r", encoding=encoding) as f:
-                text = f.read()
-                
-            logger.debug(f"Loaded text from {path}")
-            return text
-        except Exception as e:
-            logger.error(f"Failed to load text from {path}: {str(e)}")
-            raise StorageError(f"Failed to load text: {str(e)}") from e
-    
-    def list_files(
-        self,
-        rel_dir: Union[str, Path] = "",
-        pattern: str = "*",
-        recursive: bool = False
-    ) -> List[Path]:
-        """List files in directory.
-        
+        raise NotImplementedError("Subclasses must implement get_json")
+
+    def get_path(self, path: str) -> Path:
+        """Get full path for the given relative path.
+
         Args:
-            rel_dir: Directory path relative to base_dir
-            pattern: Glob pattern for filtering files
-            recursive: Whether to search recursively
-            
+            path: Relative path to resolve
+
         Returns:
-            List of file paths (relative to base_dir)
-            
+            Path: Full resolved path
+
         Raises:
-            StorageError: If directory couldn't be read
+            NotImplementedError: If not implemented by subclass
         """
-        dir_path = self._get_full_path(rel_dir)
-        
-        if not dir_path.exists():
-            logger.debug(f"Directory not found: {dir_path}")
-            return []
-        
-        try:
-            if recursive:
-                files = list(dir_path.glob(f"**/{pattern}"))
-            else:
-                files = list(dir_path.glob(pattern))
-                
-            # Filter out directories and make paths relative to base_dir
-            rel_files = [
-                p.relative_to(self.base_dir) for p in files if p.is_file()
-            ]
-            
-            logger.debug(f"Listed {len(rel_files)} files in {dir_path}")
-            return rel_files
-        except Exception as e:
-            logger.error(f"Failed to list files in {dir_path}: {str(e)}")
-            raise StorageError(f"Failed to list files: {str(e)}") from e
-    
-    def delete_file(self, rel_path: Union[str, Path]) -> bool:
-        """Delete a file.
-        
+        raise NotImplementedError("Subclasses must implement get_path")
+
+
+class LocalStorage(StorageBase):
+    """Local File Storage Manager
+
+The `LocalStorage` class simplifies file storage operations in a local
+development environment. It provides methods for:
+
+- Ensuring necessary directories exist.
+- Saving and loading JSON files.
+- Managing file paths.
+
+This class is designed to be inherited from for custom storage implementations.
+Override the appropriate methods to customize behavior.
+
+Example:
+    ```python
+    class MyCustomStorage(LocalStorage):
+        def __init__(self, custom_config):
+            super().__init__(custom_config.path)
+            self.custom_setting = custom_config.setting
+
+        def _get_default_dirs(self):
+            # Add custom directories
+            dirs = super()._get_default_dirs()
+            dirs.extend(['custom_dir', 'another_dir'])
+            return dirs
+    ```
+"""
+
+    def __init__(self, base_path: Optional[Union[str, Path]] = None):
+        """Initialize local storage paths.
+
         Args:
-            rel_path: Path relative to base_dir
-            
-        Returns:
-            True if file was deleted, False if it didn't exist
-            
-        Raises:
-            StorageError: If file couldn't be deleted
+            base_path: Optional base path for storage. If not provided,
+                      tries user's home directory, falls back to temp dir.
         """
-        path = self._get_full_path(rel_path)
-        
-        if not path.exists():
-            logger.debug(f"File not found, nothing to delete: {path}")
-            return False
-        
+        if base_path is None:
+            base_path = self._get_default_base_path()
+        self.base_path = Path(base_path)
+        self.ensure_directories()
+
+    def _get_default_base_path(self) -> Path:
+        """Get the default base path for storage.
+
+        Override this method in subclasses to customize the default base path.
+
+        Returns:
+            Path: Default base path
+        """
+        return get_default_storage_path()
+
+    def _get_default_dirs(self) -> List[str]:
+        """Get the list of default directories to create.
+
+        Override this method in subclasses to customize directory structure.
+
+        Returns:
+            List[str]: List of directory names to create
+        """
+        return ['data', 'documents', 'config', 'cache']
+
+    def ensure_directories(self):
+        """Initialize and ensure existence of required storage directories.
+
+        Creates a standardized directory structure for storing different types
+        of data based on the directories returned by _get_default_dirs().
+
+        This method is called automatically during initialization but can
+        be called again to repair the directory structure if needed.
+
+        Example:
+            ```python
+            storage = LocalStorage()
+            storage.ensure_directories()  # Recreate any missing directories
+            ```
+
+        Note:
+            All directories are created with exist_ok=True to prevent race conditions
+
+        Override _get_default_dirs() instead of this method to customize directories.
+        """
+        dirs = self._get_default_dirs()
+        for d in dirs:
+            path = self.base_path / d
+            path.mkdir(exist_ok=True)
+
+    def get_path(self, filename: str) -> Path:
+        """Get full path for a file in the storage directory.
+
+        Args:
+            filename: Name of the file to get path for
+
+        Returns:
+            Path: The full absolute path to the file
+
+        Example:
+            ```python
+            storage = LocalStorage()
+            path = storage.get_path("config.json")
+            print(path)  # /path/to/base/config.json
+            ```
+
+        Note:
+            The path is always relative to the base storage directory
+        """
+        return self.base_path / filename
+
+    def save_json(self, data: Union[Dict, List], filename: str) -> bool:
+        """Save Data as JSON File
+
+        This method saves a dictionary as a JSON file in the specified location.
+
+        Args:
+            data (Dict): The data to save.
+            filename (str): The name of the JSON file.
+
+        Returns:
+            bool: True if the file was saved successfully, False otherwise.
+
+        Example:
+            ```python
+            storage = LocalStorage()
+            success = storage.save_json({"key": "value"}, "data.json")
+            print(success)  # Outputs: True
+            ```
+        """
         try:
-            path.unlink()
-            logger.debug(f"Deleted file: {path}")
+            path = self.get_path(filename)
+            with open(path, 'w') as f:
+                json.dump(data, f, indent=2)
+            logger.info("Saved JSON to %s", filename)
             return True
         except Exception as e:
-            logger.error(f"Failed to delete file {path}: {str(e)}")
-            raise StorageError(f"Failed to delete file: {str(e)}") from e
-    
-    # Async versions of the core methods
-    
-    async def async_save_json(
-        self,
-        data: Any,
-        rel_path: Union[str, Path],
-        **kwargs
-    ) -> Path:
-        """Asynchronously save data as JSON to file.
-        
-        Args:
-            data: Data to save (must be JSON-serializable)
-            rel_path: Path relative to base_dir
-            **kwargs: Additional options passed to json.dumps()
-            
-        Returns:
-            Absolute path to saved file
-            
-        Raises:
-            StorageError: If file couldn't be saved
-        """
-        path = self._get_full_path(rel_path)
-        
-        # Ensure directory exists
-        if not await aios.path.exists(path.parent):
-            if not self.config.create_dirs:
-                raise StorageError(f"Directory does not exist: {path.parent}")
-            await aios.makedirs(path.parent, exist_ok=True)
-        
-        # Check if file exists
-        if await aios.path.exists(path) and not self.config.overwrite:
-            raise StorageError(f"File already exists: {path}")
-        
+            logger.error("Error saving JSON %s: %s", filename, str(e))
+            return False
+
+    def load_json(self, filename: str) -> Optional[Dict]:
+        """Load JSON Data from File
+
+This method loads data from a JSON file if it exists.
+
+Args:
+    filename (str): The name of the JSON file.
+
+Returns:
+    Optional[Dict]: The loaded data as a dictionary, or None if the file does not exist.
+
+Example:
+    ```python
+    storage = LocalStorage()
+    data = storage.load_json("data.json")
+    print(data)  # Outputs: {"key": "value"}
+    ```
+"""
+        return self.get_json(filename)
+
+    def save_text(self, content: str, filename: str) -> bool:
+        """Save text content to file."""
         try:
-            # Include indentation by default for human-readable JSON
-            if "indent" not in kwargs:
-                kwargs["indent"] = 2
-                
-            json_data = json.dumps(data, **kwargs)
-            
-            async with aiofiles.open(path, "w") as f:
-                await f.write(json_data)
-                
-            logger.debug(f"Asynchronously saved JSON to {path}")
-            return path
+            path = self.get_path(filename)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            logger.info("Saved text to %s", filename)
+            return True
         except Exception as e:
-            logger.error(f"Failed to save JSON to {path}: {str(e)}")
-            raise StorageError(f"Failed to save JSON: {str(e)}") from e
+            logger.error("Error saving text %s: %s", filename, str(e))
+            return False
+
+    def get_json(self, filename: str) -> Optional[dict]:
+        """Load JSON data from file.
+
+        Args:
+            filename: Name of the file to load
+
+        Returns:
+            Optional[dict]: The loaded JSON data, or None if loading fails
+        """
+        try:
+            path = self.get_path(filename)
+            if not path.exists():
+                logger.warning("File not found: %s", filename)
+                return None
+
+            with open(path, encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error("Error loading JSON %s: %s", filename, str(e))
+            return None
+
+# Initialize default storage after class definition
+
+
+def get_default_storage() -> 'LocalStorage':
+    """Get or create the default storage instance."""
+    global _DEFAULT_STORAGE, _get_path, _get_json, _save_json
+    if _DEFAULT_STORAGE is None:
+        _DEFAULT_STORAGE = LocalStorage()
+        _get_path = _DEFAULT_STORAGE.get_path
+        _get_json = _DEFAULT_STORAGE.get_json
+        _save_json = _DEFAULT_STORAGE.save_json
+    return _DEFAULT_STORAGE
+
+
+# Create the default storage instance
+_DEFAULT_STORAGE = get_default_storage()
+
+# Make helper functions available at module level
+get_path = _get_path
+get_json = _get_json
+save_json = _save_json
+
+
+class CloudStorage(StorageBase):
+    """Google Cloud Storage implementation.
     
-    async def async_load_json(
-        self,
-        rel_path: Union[str, Path],
-        default: Any = None,
-        **kwargs
-    ) -> Any:
-        """Asynchronously load JSON data from file.
+    This class provides an interface to Google Cloud Storage for storing and retrieving data.
+    It implements the StorageBase interface and uses Application Default Credentials for authentication.
+    
+    Example:
+        ```python
+        storage = CloudStorage(bucket_name="my-bucket")
+        storage.save_json({"key": "value"}, "data/config.json")
+        data = storage.get_json("data/config.json")
+        ```
+        
+    Note:
+        This implementation requires the Google Cloud Storage client library and
+        properly configured Application Default Credentials (ADC).
+        Run `gcloud auth application-default login` to set up credentials.
+    """
+    
+    def __init__(self, bucket_name: str, prefix: str = ""):
+        """Initialize cloud storage with bucket name and optional prefix.
         
         Args:
-            rel_path: Path relative to base_dir
-            default: Value to return if file doesn't exist
-            **kwargs: Additional options passed to json.loads()
+            bucket_name: Name of the Google Cloud Storage bucket
+            prefix: Optional prefix to prepend to all paths (default: "")
+        """
+        super().__init__({"bucket": bucket_name, "prefix": prefix})
+        self.bucket_name = bucket_name
+        self.prefix = prefix
+        self._init_client()
+        
+    def _init_client(self):
+        """Initialize the GCS client.
+        
+        Raises:
+            ImportError: If the Google Cloud Storage library is not installed
+        """
+        try:
+            from google.cloud import storage
+            self.client = storage.Client()
+            self.bucket = self.client.bucket(self.bucket_name)
+            logger.info(f"Initialized Cloud Storage client for bucket {self.bucket_name}")
+        except ImportError:
+            logger.error("Google Cloud Storage library not installed. Install with: pip install google-cloud-storage")
+            raise ImportError("Required package not found: google-cloud-storage")
+        
+    def get_path(self, path: str) -> str:
+        """Get full path for the given path in the bucket.
+        
+        Args:
+            path: Path to resolve
             
         Returns:
-            Loaded data or default value
+            str: Full blob path including prefix
+        """
+        if self.prefix:
+            return f"{self.prefix}/{path}"
+        return path
+        
+    def save_json(self, data: Dict, path: str) -> str:
+        """Save data as JSON to the specified path in GCS.
+        
+        Args:
+            data: Data to save
+            path: Path where data should be saved
+            
+        Returns:
+            str: Cloud Storage path where the data was saved
             
         Raises:
-            StorageError: If file couldn't be loaded
+            Exception: If the save operation fails
         """
-        path = self._get_full_path(rel_path)
+        try:
+            blob_path = self.get_path(path)
+            blob = self.bucket.blob(blob_path)
+            
+            # Convert data to JSON string
+            content = json.dumps(data, indent=2)
+            
+            # Save to GCS
+            blob.upload_from_string(content, content_type='application/json')
+            logger.info(f"Saved JSON data to gs://{self.bucket_name}/{blob_path}")
+            
+            return blob_path
+        except Exception as e:
+            logger.error(f"Error saving JSON to GCS path {path}: {str(e)}")
+            raise
+            
+    def get_json(self, path: str, default: Optional[Dict] = None) -> Optional[Dict]:
+        """Get JSON data from the specified path in GCS.
         
-        if not await aios.path.exists(path):
-            logger.debug(f"File not found, returning default: {path}")
+        Args:
+            path: Path to get data from
+            default: Default value to return if data not found
+            
+        Returns:
+            Optional[Dict]: Loaded JSON data or default value
+        """
+        try:
+            blob_path = self.get_path(path)
+            blob = self.bucket.blob(blob_path)
+            
+            if not blob.exists():
+                logger.warning(f"File not found in GCS: {blob_path}")
+                return default
+                
+            # Download and parse JSON
+            content = blob.download_as_text()
+            return json.loads(content)
+        except Exception as e:
+            logger.error(f"Error loading JSON from GCS path {path}: {str(e)}")
             return default
-        
-        try:
-            async with aiofiles.open(path, "r") as f:
-                content = await f.read()
-                
-            data = json.loads(content, **kwargs)
-            logger.debug(f"Asynchronously loaded JSON from {path}")
-            return data
-        except Exception as e:
-            logger.error(f"Failed to load JSON from {path}: {str(e)}")
-            raise StorageError(f"Failed to load JSON: {str(e)}") from e

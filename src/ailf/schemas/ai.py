@@ -22,6 +22,42 @@ class UsageLimits(BaseModel):
     max_requests_per_minute: int = 60
     max_parallel_requests: int = 5
 
+class AIRequest(BaseModel):
+    """Request to AI models.
+    
+    Attributes:
+        prompt: The input prompt or message
+        system: Optional system message/instruction
+        temperature: The sampling temperature
+        max_tokens: The maximum number of tokens to generate
+        stream: Whether to stream the response
+        tools: Optional list of tools available to the model
+    """
+    prompt: str
+    system: Optional[str] = None
+    temperature: float = 0.7
+    max_tokens: Optional[int] = None
+    stream: bool = False
+    tools: Optional[List[Dict[str, Any]]] = None
+
+class AIEngineConfig(BaseModel):
+    """Configuration for AIEngine.
+    
+    Attributes:
+        model_name: The name of the model to use
+        feature_name: Name of the feature using the engine (for monitoring)
+        api_key: Optional API key (defaults to environment variable)
+        base_url: Optional base URL for API
+        timeout: Request timeout in seconds
+        usage_limits: Optional usage limits
+    """
+    model_name: str
+    feature_name: str
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+    timeout: int = 60
+    usage_limits: Optional[UsageLimits] = None
+
 class GeminiSafetySettings(BaseModel):
     """Safety settings for Gemini models.
     
@@ -93,11 +129,12 @@ class AIResponse(BaseModel):
     finish_reason: Optional[str] = None
 
 __all__ = [
+    "AIRequest",
     "AIResponse",
+    "AIEngineConfig",
     "GeminiSettings",
     "GeminiSafetySettings",
     "OpenAISettings",
     "AnthropicSettings",
     "UsageLimits"
-]
 ]

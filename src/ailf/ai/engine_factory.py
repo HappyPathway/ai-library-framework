@@ -10,6 +10,74 @@ from ailf.core.ai_engine_base import AIEngineBase
 from ailf.core.logging import setup_logging
 
 
+# Singleton factory instance
+_factory = None
+
+
+def create_ai_engine(
+    provider: str,
+    api_key: Optional[str] = None,
+    model: Optional[str] = None,
+    **kwargs
+) -> AIEngineBase:
+    """Create an AI engine instance.
+    
+    This is a convenience function that uses the singleton AIEngineFactory
+    to create an engine instance with the specified configuration.
+    
+    Args:
+        provider: The provider name (e.g., "openai", "anthropic", "gemini")
+        api_key: Optional API key (defaults to environment variable)
+        model: Optional model name (defaults to provider's default)
+        **kwargs: Additional configuration options
+    
+    Returns:
+        An AI engine instance
+        
+    Raises:
+        ValueError: If the provider is not registered
+        
+    Example:
+        ```python
+        from ailf.ai.engine_factory import create_ai_engine
+        
+        # Create an OpenAI engine
+        engine = create_ai_engine("openai", model="gpt-4o")
+        
+        # Create an Anthropic engine with custom settings
+        engine = create_ai_engine(
+            "anthropic", 
+            model="claude-3-opus-20240229",
+            temperature=0.3
+        )
+        ```
+    """
+    global _factory
+    if _factory is None:
+        _factory = AIEngineFactory()
+        
+        # Register built-in engines
+        try:
+            from ailf.ai.openai_engine import OpenAIEngine
+            _factory.register("openai", OpenAIEngine)
+        except ImportError:
+            pass
+            
+        try:
+            from ailf.ai.anthropic_engine import AnthropicEngine
+            _factory.register("anthropic", AnthropicEngine)
+        except ImportError:
+            pass
+            
+        try:
+            from ailf.ai.gemini_engine import GeminiEngine
+            _factory.register("gemini", GeminiEngine)
+        except ImportError:
+            pass
+    
+    return _factory.create(provider, api_key, model, **kwargs)
+
+
 class AIEngineFactory:
     """Factory for creating AI engine instances.
     

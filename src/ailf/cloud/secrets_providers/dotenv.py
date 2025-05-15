@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 
 from .base import BaseSecretsProvider
-from ..logging import setup_logging
+from ailf.core.logging import setup_logging
 
 logger = setup_logging('dotenv_secrets')
 

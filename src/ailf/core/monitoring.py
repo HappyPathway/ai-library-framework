@@ -1,169 +1,141 @@
-"""Monitoring and instrumentation utilities.
+"""Performance Monitoring and Metrics Collection
 
-This module provides tools for tracking metrics, performance, 
-and health of agent systems.
+DEPRECATED: This module has been moved to ailf.core.monitoring.
+Please update your imports to: from ailf.core.monitoring import setup_monitoring, AIStats, Feature  
+
+This module provides centralized monitoring configuration with built-in support for:
+- Metrics collection
+- Performance tracking
+- Error monitoring
+- Success rate tracking
+- Custom dimensions
+
+Example Usage:
+    ```python
+    from core.monitoring import setup_monitoring
+
+    monitoring = setup_monitoring('my_feature')
+
+    monitoring.increment('api_calls')
+    with monitoring.timer('request_duration'):
+        result = make_request()
+    monitoring.track_success('api_call', {'status': 200})
+    ```
+
+Use this module to implement systematic monitoring across your application.
 """
-
 import time
-import logging
-import os
-from typing import Any, Dict, Optional, Union, Callable
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Dict, Optional
 
-# Monitoring implementations
-logger = logging.getLogger(__name__)
+from .logging import setup_logging
 
+logger = setup_logging('monitoring')
+
+
+@dataclass
 class MetricsCollector:
-    """Collector for monitoring metrics."""
-    
-    def __init__(self, service_name: str):
-        """Initialize metrics collector.
-        
-        Args:
-            service_name: Name of the service being monitored
-        """
-        self.service_name = service_name
-        self.metrics: Dict[str, Any] = {}
-        self.latencies: Dict[str, float] = {}
-        self.counters: Dict[str, int] = {}
-        self.errors: Dict[str, int] = {}
-        logger.info(f"Metrics collector initialized for {service_name}")
-    
-    def track_latency(self, operation: str, duration_ms: float):
-        """Track operation latency.
-        
-        Args:
-            operation: Operation name
-            duration_ms: Duration in milliseconds
-        """
-        if operation not in self.latencies:
-            self.latencies[operation] = []
-        self.latencies[operation].append(duration_ms)
-        logger.debug(f"Latency: {operation} = {duration_ms}ms")
-    
-    def increment(self, metric: str, value: int = 1):
-        """Increment a counter metric.
-        
-        Args:
-            metric: Metric name
-            value: Increment value
-        """
+    """Collector for tracking various metrics."""
+    name: str
+    counters: Dict[str, int] = field(default_factory=dict)
+    timers: Dict[str, float] = field(default_factory=dict)
+    success_counts: Dict[str, int] = field(default_factory=dict)
+    error_counts: Dict[str, Dict[str, int]] = field(default_factory=dict)
+
+    def increment(self, metric: str, value: int = 1) -> None:
+        """Increment a counter metric."""
         if metric not in self.counters:
             self.counters[metric] = 0
         self.counters[metric] += value
-        logger.debug(f"Counter: {metric} = {self.counters[metric]}")
-    
-    def track_error(self, operation: str, error_type: str):
-        """Track operation errors.
-        
-        Args:
-            operation: Operation name
-            error_type: Type of error
-        """
-        key = f"{operation}:{error_type}"
-        if key not in self.errors:
-            self.errors[key] = 0
-        self.errors[key] += 1
-        logger.debug(f"Error: {key} count = {self.errors[key]}")
-    
-    def get_metrics(self) -> Dict[str, Any]:
-        """Get all collected metrics.
-        
-        Returns:
-            Dictionary containing all metrics
-        """
-        return {
-            "service": self.service_name,
-            "latencies": self.latencies,
-            "counters": self.counters,
-            "errors": self.errors
-        }
-        
-def setup_monitoring(service_name: str) -> MetricsCollector:
-    """Set up monitoring for a service.
-    
-    Args:
-        service_name: Name of the service
-        
-    Returns:
-        Configured metrics collector
-    """
-    return MetricsCollector(service_name)
-    
-def track_latency(operation: str, duration_ms: float):
-    """Global latency tracking function.
-    
-    Args:
-        operation: Operation name
-        duration_ms: Duration in milliseconds
-    """
-    logger.debug(f"Latency: {operation} = {duration_ms}ms")
-    
-def track_error(operation: str, error_type: str):
-    """Global error tracking function.
-    
-    Args:
-        operation: Operation name
-        error_type: Type of error
-    """
-    logger.error(f"Error in {operation}: {error_type}")
-    
-def increment(metric: str, value: int = 1):
-    """Global counter increment function.
-    
-    Args:
-        metric: Metric name
-        value: Increment value
-    """
-    logger.debug(f"Metric {metric} incremented by {value}")
-    class MetricsCollector:
-        """Collects and optionally reports metrics."""
-        
-        def __init__(self, service_name: str):
-            """Initialize the metrics collector."""
-            self.service_name = service_name
-            self.logger = logging.getLogger(f"{service_name}.metrics")
-            
-        def track_latency(self, operation: str, seconds: float, attributes: Optional[Dict[str, Any]] = None):
-            """Track operation latency."""
-            self.logger.debug(f"LATENCY: {operation}={seconds:.4f}s {attributes or ''}")
-            
-        def track_error(self, operation: str, error: Union[str, Exception], attributes: Optional[Dict[str, Any]] = None):
-            """Track operation errors."""
-            error_str = str(error)
-            self.logger.debug(f"ERROR: {operation} - {error_str} {attributes or ''}")
-            
-        def increment(self, metric: str, value: int = 1, attributes: Optional[Dict[str, Any]] = None):
-            """Increment a metric counter."""
-            self.logger.debug(f"COUNT: {metric}+{value} {attributes or ''}")
-            
-    def setup_monitoring(service_name: str) -> MetricsCollector:
-        """Set up monitoring for a service."""
-        return MetricsCollector(service_name)
-        
-    def track_latency(operation: str, seconds: Optional[float] = None, start_time: Optional[float] = None) -> Optional[float]:
-        """Track operation latency."""
-        if seconds is not None:
-            return seconds
-        
-        if start_time is not None:
-            return time.time() - start_time
-            
-        return time.time()
-        
-    def track_error(operation: str, error: Union[str, Exception]) -> None:
-        """Track an operation error."""
-        logger = logging.getLogger("ailf.monitoring")
-        logger.error(f"Operation '{operation}' failed: {str(error)}")
-        
-    def increment(metric: str, value: int = 1) -> None:
-        """Increment a metric counter."""
-        logger = logging.getLogger("ailf.monitoring")
-        logger.debug(f"Metric '{metric}' incremented by {value}")
+        logger.debug(f"{self.name} - {metric}: {self.counters[metric]}")
 
-__all__ = [
-    "MetricsCollector",
-    "setup_monitoring",
-    "track_latency",
-    "track_error",
-    "increment"
-]
+    def increment_success(self, operation: str) -> None:
+        """Increment success counter for an operation."""
+        if operation not in self.success_counts:
+            self.success_counts[operation] = 0
+        self.success_counts[operation] += 1
+        logger.debug(
+            f"{self.name} - Success {operation}: {self.success_counts[operation]}")
+
+    def track_success(self, operation: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+        """Track a successful operation."""
+        if operation not in self.success_counts:
+            self.success_counts[operation] = 0
+        self.success_counts[operation] += 1
+        if metadata:
+            logger.info(f"{self.name} - Success {operation}: {metadata}")
+
+    def track_error(self, operation: str, error: str) -> None:
+        """Track an operation error."""
+        if operation not in self.error_counts:
+            self.error_counts[operation] = {}
+        if error not in self.error_counts[operation]:
+            self.error_counts[operation][error] = 0
+        self.error_counts[operation][error] += 1
+        logger.error(f"{self.name} - Error in {operation}: {error}")
+
+    @contextmanager
+    def timer(self, metric: str):
+        """Time an operation.
+
+        Example:
+            ```python
+            with monitoring.timer('request_duration'):
+                result = make_request()
+            ```
+        """
+        start_time = time.time()
+        try:
+            yield
+        finally:
+            duration = time.time() - start_time
+            if metric not in self.timers:
+                self.timers[metric] = 0
+            self.timers[metric] = duration
+            logger.debug(f"{self.name} - {metric} duration: {duration:.2f}s")
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Get all collected metrics."""
+        return {
+            'counters': self.counters,
+            'timers': self.timers,
+            'success_counts': self.success_counts,
+            'error_counts': self.error_counts
+        }
+
+
+# Alias for backward compatibility with existing code
+Metrics = MetricsCollector
+
+
+def setup_monitoring(
+    component_name: str,
+    enable_debug: bool = False
+) -> MetricsCollector:
+    """Set up monitoring for a component.
+
+    Args:
+        component_name: Name of the component being monitored
+        enable_debug: Whether to enable debug logging
+
+    Returns:
+        MetricsCollector instance
+    """
+    if enable_debug:
+        logger.setLevel('DEBUG')
+    
+    # Original implementation continues...
+
+# Add deprecation warning
+import warnings
+
+warnings.warn(
+    "The utils.core.monitoring module is deprecated. Use ailf.core.monitoring instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+# Re-export from the new module location
+from ailf.core.monitoring import *

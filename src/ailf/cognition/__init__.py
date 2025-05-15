@@ -1,33 +1,19 @@
-"""
-AILF Cognition Module.
-
-This module provides cognitive capabilities for AI agents, including:
-- ReAct reasoning (Reason-Action-Observation loops)
-- Task planning and decomposition
-- Intent refinement and clarification
-- Prompt templating and management
-"""
-
-from ailf.schemas.cognition import (
-    # Schema classes
-    ReActStep, ReActState, ReActStepType,
-    PlanStep, Plan,
-    IntentRefinementRequest, IntentRefinementResponse,
-    PromptTemplateV1, PromptLibrary,
-    TaskContext, ProcessingResult,
-    
-    # Implementation classes
-    ReActProcessor, TaskPlanner, IntentRefiner
-)
+# This file marks ailf.cognition as a package
+from ailf.schemas.cognition import PromptTemplateV1 # Added import
+from .processors import ReActProcessor, TaskPlanner, IntentRefiner
+from .prompts import PromptManager
+from .prompt_library import PromptLibrary # noqa: F401
+from .react_processor import ReActProcessor # noqa: F401
+from .task_planner import TaskPlanner # noqa: F401
+from .intent_refiner import IntentRefiner # noqa: F401
+from .tree_of_thoughts import TreeOfThoughtsProcessor # noqa: F401
 
 __all__ = [
-    # Schema classes
-    'ReActStep', 'ReActState', 'ReActStepType',
-    'PlanStep', 'Plan',
-    'IntentRefinementRequest', 'IntentRefinementResponse', 
-    'PromptTemplateV1', 'PromptLibrary',
-    'TaskContext', 'ProcessingResult',
-    
-    # Implementation classes
-    'ReActProcessor', 'TaskPlanner', 'IntentRefiner'
+    "ReActProcessor",
+    "TaskPlanner",
+    "IntentRefiner",
+    "PromptManager",
+    "PromptLibrary", # Added PromptLibrary
+    "PromptTemplateV1", # Added PromptTemplateV1
+    "TreeOfThoughtsProcessor",
 ]

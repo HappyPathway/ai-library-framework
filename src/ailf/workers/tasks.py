@@ -21,7 +21,7 @@ import time
 import traceback
 from typing import Any, Dict, List, Optional
 
-from ailf.logging import setup_logging
+from utils.logging import setup_logging
 from ailf.workers.celery_app import app
 
 logger = setup_logging("celery.tasks")

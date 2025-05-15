@@ -50,7 +50,7 @@ from google.cloud import storage
 from google.cloud.exceptions import NotFound
 from google.api_core import retry
 
-from .logging import setup_logging
+from ailf.core.logging import setup_logging
 
 logger = setup_logging(__name__)
 

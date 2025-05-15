@@ -22,7 +22,7 @@ Features:
 
 Example:
     Basic usage with structured output:
-        >>> from ailf.ai.engine import AIEngine
+        >>> from ailf.ai_engine import AIEngine
         >>> from my_schemas import JobAnalysis
         >>> 
         >>> engine = AIEngine(
@@ -30,77 +30,70 @@ Example:
         ...     output_type=JobAnalysis,
         ...     model_name='openai:gpt-4-turbo'
         ... )
-        >>> result = await engine.analyze(
-        ...     "Analyze this job description: Software Engineer with 5+ years experience..."
+        >>> 
+        >>> # Generate structured output
+        >>> result = await engine.generate(
+        ...     prompt="Analyze this job description...",
+        ...     output_schema=JobAnalysis
         ... )
-        >>> print(f"Required skills: {result.required_skills}")
-        >>> print(f"Experience level: {result.experience_level}")
 
-    Using tools with the AI:
-        >>> from ailf.ai.engine import AIEngine, AITool
+    Using as an agent with tools:
+        >>> @engine.add_tool
+        ... async def search_jobs(query: str) -> List[dict]:
+        ...     # Tool implementation
+        ...     return [{"id": "123", "title": "Python Developer"}]
         >>> 
-        >>> engine = AIEngine(model_name='anthropic:claude-3-opus')
-        >>> 
-        >>> @engine.register_tool
-        ... async def search_database(query: str, limit: int = 5) -> list:
-        ...     # Tool implementation...
-        ...     return [...]
-        >>> 
-        >>> response = await engine.chat([
-        ...     {"role": "user", "content": "Find information about quantum computing"}
-        ... ])
+        >>> result = await engine.generate(
+        ...     prompt="Find Python jobs in Seattle",
+        ...     system="You are a job search assistant"
+        ... )
+
+Note:
+    Always use environment variables for API keys.
+    Follow provider-specific guidelines for rate limits and token usage.
 """
 
 import asyncio
 import os
-import json
-import logging
-import re
-import sys
-import time
-import traceback
-import uuid
-import inspect
-from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncIterator, Callable, Dict, Generic, List, Literal, Optional, Type, TypeVar, Union, cast
+from typing import Any, AsyncIterator, Generic, List, Literal, Optional, Type, TypeVar, Union
+import inspect  # Added import
 
-import anthropic
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelRetry, UnexpectedModelBehavior
 
-# Internal imports using new module structure
-from ailf.core.logging import setup_logging
-from ailf.core.monitoring import MetricsCollector, setup_monitoring
-from ailf.cloud.secrets import get_secret
-from ailf.schemas.ai import (
+from ailf.core.logging import setup_logging  # Corrected import
+from ailf.core.monitoring import MetricsCollector, setup_monitoring  # Corrected import
+from ailf.schemas.ai import (  # Corrected import: Referencing the top-level schemas module
     AnthropicSettings,
     GeminiSafetySettings,
     GeminiSettings,
     OpenAISettings,
     UsageLimits,
 )
-from ailf.tooling import ToolManager, ToolSelector
-from ailf.schemas.tooling import ToolDescription
+from ailf.tooling import ToolManager, ToolSelector  # Added import
+from ailf.schemas.tooling import ToolDescription  # Added import
+import uuid  # Added import for ToolDescription default ID
 
-# Optionally import dependent packages
+logger = setup_logging(__name__)
+
+# Initialize logging and monitoring
+logger = setup_logging('ai_engine')
+monitoring = setup_monitoring('ai_engine')
+
+# Optional Logfire class (will be None if not available)
 try:
-    import google.generativeai as genai
-    import openai
-    from pydantic_ai import Agent
-    from pydantic_ai.schema import ChatMessage
-    OPTIONAL_IMPORTS_AVAILABLE = True
+    from logfire import LogfireMonitoring
 except ImportError:
-    OPTIONAL_IMPORTS_AVAILABLE = False
-
-logger = setup_logging("ai_engine")
-monitoring = setup_monitoring("ai_engine")
+    LogfireMonitoring = None
 
 # Type variable for output types
 T = TypeVar('T')
 
 # Safety settings for Gemini
+
+
 class GeminiHarmCategory(str, Enum):
     """Categories for Gemini model safety settings."""
     HARASSMENT = "HARM_CATEGORY_HARASSMENT"
@@ -133,7 +126,7 @@ class AIEngine(Generic[T]):
         - Comprehensive monitoring and error handling
 
     Example:
-        >>> from ailf.ai.engine import AIEngine
+        >>> from ailf.ai_engine import AIEngine
         >>> engine = AIEngine(
         ...     feature_name='summarizer',
         ...     model_name='openai:gpt-4-turbo'
@@ -203,20 +196,19 @@ class AIEngine(Generic[T]):
 
         # Set up logfire config
         self.logfire_config = {
-            "project_id": "ailf-ai",
+            "project_id": "jobsearch-ai",
             "environment": os.getenv("ENVIRONMENT", "development"),
             "api_key": os.getenv("LOGFIRE_API_KEY")
         }
 
         # Configure monitoring with Logfire if available
-        try:
-            from logfire import LogfireMonitoring
+        if LogfireMonitoring:
             self.logfire = LogfireMonitoring(
                 project_id=self.logfire_config["project_id"],
                 environment=self.logfire_config["environment"],
                 service_name=feature_name
             )
-        except ImportError:
+        else:
             self.logfire = None
 
         # Initialize the agent
@@ -224,7 +216,7 @@ class AIEngine(Generic[T]):
 
         # Initialize AILF Tooling components
         self.tool_manager = ToolManager()
-        self.tool_selector = ToolSelector(tools_data=self.tool_manager.tools_data)
+        self.tool_selector = ToolSelector(tools_data=self.tool_manager.tools)
 
     @property
     def metrics(self) -> MetricsCollector:
@@ -348,7 +340,17 @@ class AIEngine(Generic[T]):
         return api_key
 
     def _setup_agent(self) -> Agent:
-        """Set up the Agent with proper configuration."""
+        """Set up the Agent with proper configuration.
+
+        This is a key extension point for subclasses, which can override this method
+        to customize how the agent is configured and initialized.
+
+        Returns:
+            Agent: Configured agent object
+
+        Raises:
+            ValueError: If the provider is not supported or API key is missing
+        """
         api_key = self._get_api_key()
 
         # Configure monitoring if Logfire is enabled
@@ -379,21 +381,48 @@ class AIEngine(Generic[T]):
         return self.agent
 
     def _setup_instrumentation(self):
-        """Set up instrumentation for the agent."""
+        """Set up instrumentation for the agent.
+
+        Override this method in subclasses to customize instrumentation.
+
+        Returns:
+            Object or None: Instrumentation object if configured, None otherwise
+        """
         instrument = None
-        if self.logfire_config and hasattr(self, 'logfire') and self.logfire:
-            instrument = self.logfire
+        if self.logfire_config and LogfireMonitoring:
+            instrument = LogfireMonitoring(
+                project_id=self.logfire_config["project_id"],
+                api_key=self.logfire_config["api_key"]
+            )
         return instrument
 
     def _get_provider_settings(self):
-        """Get the default settings for the current provider."""
+        """Get the default settings for the current provider.
+
+        Override this method in subclasses to customize provider settings.
+
+        Returns:
+            BaseModel: Provider-specific settings
+
+        Raises:
+            ValueError: If the provider is not supported
+        """
         default_settings = self.settings_map.get(self.provider)
         if not default_settings:
             raise ValueError(f"Unsupported provider: {self.provider}")
         return default_settings
 
     def _create_settings_instance(self, default_settings):
-        """Create a new instance of settings."""
+        """Create a new instance of settings.
+
+        Override this method in subclasses to customize settings creation.
+
+        Args:
+            default_settings: Default settings for the provider
+
+        Returns:
+            BaseModel: Settings instance
+        """
         settings = type(default_settings)()
         settings.temperature = default_settings.temperature
         settings.max_tokens = default_settings.max_tokens
@@ -450,6 +479,28 @@ class AIEngine(Generic[T]):
         :raises AIEngineError: If generation fails
         :raises ContentFilterError: If content is filtered by safety settings
         :raises ModelError: If model behaves unexpectedly
+
+        Example:
+            Simple text generation:
+                >>> text = await engine.generate(
+                ...     prompt="Write a story about...",
+                ...     temperature=0.7
+                ... )
+
+            Structured output:
+                >>> from my_schemas import Article
+                >>> article = await engine.generate(
+                ...     prompt="Write an article about Python...",
+                ...     output_schema=Article,
+                ...     system="You are a technical writer"
+                ... )
+
+            Streaming response:
+                >>> async for chunk in engine.generate(
+                ...     prompt="Tell me a long story...",
+                ...     stream=True
+                ... ):
+                ...     print(chunk, end="")
         """
         try:
             with self.monitoring.timer("generate_latency"):
@@ -526,7 +577,31 @@ class AIEngine(Generic[T]):
         multi_label: bool = False,
         system: Optional[str] = None
     ) -> Union[str, List[str]]:
-        """Classify content into predefined categories."""
+        """Classify content into predefined categories.
+
+        This is an extension point that demonstrates how to build specialized methods
+        on top of the base generation functionality.
+
+        :param content: Content to classify
+        :type content: str
+        :param categories: List of possible classification categories
+        :type categories: List[str]
+        :param multi_label: Whether multiple labels can be assigned
+        :type multi_label: bool
+        :param system: Optional system prompt
+        :type system: Optional[str]
+        :return: Selected category or categories
+        :rtype: Union[str, List[str]]
+        :raises AIEngineError: If classification fails
+
+        Example:
+            >>> category = await engine.classify(
+            ...     content="I love this product!",
+            ...     categories=["positive", "negative", "neutral"]
+            ... )
+            >>> print(category)
+            positive
+        """
         try:
             # Build prompt for classification
             categories_str = ", ".join(categories)
@@ -562,7 +637,33 @@ class AIEngine(Generic[T]):
                                "summary", "entities"] = "summary",
         schema: Optional[Type[BaseModel]] = None
     ) -> Union[str, BaseModel]:
-        """Analyze content using the LLM."""
+        """Analyze content using the LLM.
+
+        :param content: Content to analyze
+        :type content: str
+        :param analysis_type: Type of analysis to perform
+        :type analysis_type: Literal["sentiment", "topics", "summary", "entities"]
+        :param schema: Optional output schema for structured analysis
+        :type schema: Optional[Type[BaseModel]]
+        :return: Analysis result
+        :rtype: Union[str, BaseModel]
+        :raises AIEngineError: If analysis fails
+
+        Example:
+            Text analysis:
+                >>> sentiment = await engine.analyze(
+                ...     content="This product is amazing!",
+                ...     analysis_type="sentiment"
+                ... )
+
+            Structured analysis:
+                >>> from my_schemas import TextAnalysis
+                >>> analysis = await engine.analyze(
+                ...     content="Long article text...",
+                ...     analysis_type="topics",
+                ...     schema=TextAnalysis
+                ... )
+        """
         # Configure analysis prompt based on type
         prompts = {
             "sentiment": "Analyze the sentiment of the following text:",
@@ -589,7 +690,30 @@ class AIEngine(Generic[T]):
         content: str,
         extraction_schema: Type[BaseModel],
     ) -> BaseModel:
-        """Extract structured data from content."""
+        """Extract structured data from content.
+
+        :param content: Content to extract data from
+        :type content: str
+        :param extraction_schema: Pydantic model defining the data structure
+        :type extraction_schema: Type[BaseModel]
+        :return: Extracted data
+        :rtype: BaseModel
+        :raises AIEngineError: If extraction fails
+        :raises ValueError: If content cannot be parsed into the schema
+
+        Example:
+            >>> class JobPosting(BaseModel):
+            ...     title: str
+            ...     company: str
+            ...     requirements: List[str]
+            >>> 
+            >>> job = await engine.extract_data(
+            ...     content="Job posting text...",
+            ...     extraction_schema=JobPosting
+            ... )
+            >>> print(job.title)
+            'Senior Python Developer'
+        """
         system_prompt = """
         You are a precise data extractor.
         Extract the requested information from the provided content.
@@ -609,8 +733,20 @@ class AIEngine(Generic[T]):
         max_length: Optional[int] = None,
         **kwargs
     ) -> Optional[str]:
-        """Generate unstructured text content."""
+        """Generate unstructured text content.
+
+        Args:
+            prompt: Input prompt
+            max_length: Optional maximum length
+            **kwargs: Additional arguments for generate()
+
+        Returns:
+            Generated text or None on failure
+        """
         try:
+            # Use str as output type for unstructured text
+            # Note: max_length is not directly supported in generate()
+            # but can be handled in the prompt or system instructions
             system = kwargs.pop('system', None)
             if max_length:
                 system_prefix = f"Keep your response under {max_length} characters. "
@@ -627,24 +763,91 @@ class AIEngine(Generic[T]):
             logger.error("Error generating text: %s", str(e))
             return None
 
+    def add_system_prompt(self, func: callable) -> callable:
+        """Register a system prompt function.
+
+        Args:
+            func: Function that returns system prompt
+
+        Returns:
+            Decorated function
+        """
+        return self.agent.system_prompt(func)
+
+    def run_sync(
+        self,
+        prompt: str,
+        **kwargs
+    ) -> Any:
+        """Run generation synchronously.
+
+        Args:
+            prompt: Input prompt
+            **kwargs: Additional arguments
+
+        Returns:
+            Generated content
+        """
+        result = self.agent.run_sync(prompt, **kwargs)
+        return result.output
 
 # Custom exceptions
+
+
 class AIEngineError(Exception):
-    """Base exception for AI engine errors."""
+    """Base exception for AI engine errors.
+
+    This is the base exception class for all AI engine related errors.
+    Specific error types inherit from this class.
+
+    :param message: Error message
+    :type message: str
+
+    Example:
+        >>> try:
+        ...     result = await engine.generate("prompt")
+        ... except AIEngineError as e:
+        ...     print(f"AI operation failed: {e}")
+    """
     pass
 
 
 class ModelError(AIEngineError):
-    """Exception for model-specific errors."""
+    """Exception for model-specific errors.
+
+    Raised when the AI model behaves unexpectedly or returns an error.
+
+    :param message: Error message
+    :type message: str
+
+    Example:
+        >>> try:
+        ...     result = await engine.generate("prompt")
+        ... except ModelError as e:
+        ...     print(f"Model error: {e}")
+    """
     pass
 
 
 class ContentFilterError(AIEngineError):
-    """Exception for content that was filtered by safety settings."""
+    """Exception for content that was filtered by safety settings.
+
+    Raised when content is blocked by the model's safety filters.
+
+    :param message: Error message
+    :type message: str
+
+    Example:
+        >>> try:
+        ...     result = await engine.generate("inappropriate content")
+        ... except ContentFilterError as e:
+        ...     print(f"Content filtered: {e}")
+    """
     pass
 
-
 # Utility functions
+
+
 def create_default_safety_settings() -> List[GeminiSafetySettings]:
     """Create default safety settings for Gemini models."""
     return [

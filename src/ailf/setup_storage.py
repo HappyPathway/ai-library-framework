@@ -41,11 +41,11 @@ from typing import Dict, List, Optional
 from google.cloud import storage
 from google.cloud.exceptions import NotFound
 
-from .database import Base, engine
-from .logging import setup_logging
-from .monitoring import setup_monitoring
-from .schemas.storage import StorageConfig
-from .secrets import secret_manager
+from ailf.core.database import Base, engine
+from ailf.core.logging import setup_logging
+from ailf.core.monitoring import setup_monitoring
+from ailf.schemas.storage import StorageConfig
+from ailf.cloud.secrets import secret_manager
 
 # Initialize core components
 logger = setup_logging('setup_storage')

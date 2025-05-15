@@ -1,93 +1,68 @@
-"""Logging Utility Module.
+"""Standardized Logging Configuration
 
-This module provides convenience functions for setting up loggers
-throughout the application using a consistent approach.
-"""
-import os
-from typing import Dict, Any, Optional
+This module provides a unified logging setup that ensures all components use consistent 
+log formatting and behavior, making it easier to monitor and debug the application.
 
-from ailf.core.logger import StandardLogger
+Key Features:
+- Consistency: Uniform log formatting across all modules
+- Ease of Use: Simple function to set up logging for any module
+- Scalability: Supports adding custom handlers if needed
 
-
-# Global configuration that applies to all loggers
-_GLOBAL_CONFIG = {
-    "level": "info",
-    "format": "standard",
-    "add_color": True,
-    "include_context": True
-}
-
-
-def setup_logging(name: str, config: Optional[Dict[str, Any]] = None) -> StandardLogger:
-    """Set up a logger with consistent configuration.
+Example Usage:
+    ```python
+    from ailf.core.logging import setup_logging
     
-    This function creates a StandardLogger with the given name,
-    combining global configuration with any provided config.
+    logger = setup_logging('my_module')
+    logger.info('This is an info message')
+    logger.error('This is an error message')
+    ```
+
+Use this module to ensure reliable and consistent logging throughout your application.
+"""
+import sys
+import os
+import logging
+from typing import Optional, Dict, Any
+
+def setup_logging(
+    name: str, 
+    level: Optional[int] = None,
+    formatter: Optional[logging.Formatter] = None
+) -> logging.Logger:
+    """Set up a logger with consistent formatting.
     
     Args:
-        name: The name for the logger
-        config: Optional configuration to override defaults
+        name: Logger name, typically the module name
+        level: Optional logging level (defaults to INFO or environment variable)
+        formatter: Optional custom formatter
         
     Returns:
-        StandardLogger: Configured logger instance
-    
-    Example:
-        >>> logger = setup_logging("my_module")
-        >>> logger.info("Module initialized")
-        
-        >>> # Override some config
-        >>> debug_logger = setup_logging("debug_module", {"level": "debug"})
+        Configured Logger instance
     """
-    # Start with global config
-    effective_config = _GLOBAL_CONFIG.copy()
+    # Get level from env var if not provided
+    if level is None:
+        level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
     
-    # Override with environment variables if present
-    log_level_env = os.environ.get("AILF_LOG_LEVEL")
-    if log_level_env:
-        effective_config["level"] = log_level_env
+    # Create logger
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    
+    # Check if logger already has handlers to avoid duplicates
+    if not logger.handlers:
+        # Create console handler
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(level)
         
-    log_format_env = os.environ.get("AILF_LOG_FORMAT")
-    if log_format_env and log_format_env.lower() in ["standard", "json"]:
-        effective_config["format"] = log_format_env.lower()
+        # Create formatter if not provided
+        if formatter is None:
+            formatter = logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            )
         
-    # Override with provided config
-    if config:
-        effective_config.update(config)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
     
-    # Create and return the logger
-    return StandardLogger.get_logger(name, effective_config)
+    return logger
 
-
-def configure_global_logging(config: Dict[str, Any]) -> None:
-    """Configure global logging settings that apply to all new loggers.
-    
-    Args:
-        config: Configuration dictionary to apply globally
-    
-    Example:
-        >>> configure_global_logging({
-        ...     "level": "debug",
-        ...     "format": "json",
-        ...     "include_hostname": True
-        ... })
-        >>> # All loggers created after this will use these settings
-    """
-    global _GLOBAL_CONFIG
-    _GLOBAL_CONFIG.update(config)
-    
-    # Also apply to existing loggers
-    StandardLogger.configure_all(config)
-
-
-def set_global_log_level(level: str) -> None:
-    """Set the log level for all existing loggers.
-    
-    Args:
-        level: Log level to set ("debug", "info", "warning", "error", "critical")
-    
-    Example:
-        >>> set_global_log_level("debug")  # Enable debug logging everywhere
-        >>> set_global_log_level("warning")  # Reduce noise in production
-    """
-    _GLOBAL_CONFIG["level"] = level
-    StandardLogger.set_global_level(level)
+# Make sure the root logger has a handler to avoid "no handler found" warnings
+logging.getLogger().addHandler(logging.NullHandler())
