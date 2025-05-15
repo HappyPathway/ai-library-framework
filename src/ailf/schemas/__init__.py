@@ -8,6 +8,7 @@ the AILF toolkit, ensuring type safety and data validation.
 from .ai import AIResponse
 from .redis import RedisConfig
 from .zmq_devices import DeviceType, DeviceConfig, AuthConfig
+from .cognition import PromptTemplateV1, ReActStep, ReActState, Plan, PlanStep, IntentRefinementRequest, IntentRefinementResponse
 
 __all__ = [
     # AI schemas
@@ -20,4 +21,13 @@ __all__ = [
     "DeviceType",
     "DeviceConfig",
     "AuthConfig",
+    
+    # Cognition schemas
+    "PromptTemplateV1",
+    "ReActStep",
+    "ReActState",
+    "Plan",
+    "PlanStep",
+    "IntentRefinementRequest",
+    "IntentRefinementResponse",
 ]

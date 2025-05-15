@@ -1,0 +1,23 @@
+{
+    "name": "Python Development Environment Setup",
+    "id": "python-dev-setup",
+    "version": "1.0.0",
+    "description": "Sets up Python development environment with Redis, virtual environment, and project directories",
+    "options": {
+        "installRedis": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to install and configure Redis"
+        },
+        "pythonVersion": {
+            "type": "string",
+            "default": "3.12",
+            "description": "Minimum required Python version"
+        },
+        "setupVenv": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to create a Python virtual environment"
+        }
+    }
+}

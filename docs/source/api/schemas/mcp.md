@@ -1,7 +1,7 @@
-# Secrets API
+# Mcp
 
 ```{eval-rst}
-.. automodule:: utils.secrets
+.. automodule:: ailf.schemas.mcp
    :members:
    :undoc-members:
    :show-inheritance:

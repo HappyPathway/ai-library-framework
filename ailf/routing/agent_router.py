@@ -1,4 +1,36 @@
-"""Enhanced AgentRouter implementation for ailf.routing."""
+"""
+Enhanced AgentRouter implementation for ailf.routing.
+
+This module provides a flexible, rule-based routing system for messages
+in an agent-based architecture. It enables intelligent message routing based on
+message content, type, and other attributes, and can use AI-enhanced decision
+making to determine the most appropriate destination.
+
+Key Components:
+    AgentRouter: Main router class for directing messages
+    RouteRule: Pydantic model for defining routing rules
+    RouteDecision: Return type from routing decisions (defined in schemas)
+    
+Example:
+    >>> from ailf.routing.agent_router import AgentRouter, RouteRule
+    >>> from ailf.schemas.interaction import TextMessage
+    >>>
+    >>> # Create a router
+    >>> router = AgentRouter()
+    >>>
+    >>> # Register a handler
+    >>> @router.handler_decorator(
+    ...     match_type="text", 
+    ...     match_keywords=["help", "support"]
+    ... )
+    ... async def support_handler(message):
+    ...     return "How can I help you?"
+    >>>
+    >>> # Route a message
+    >>> message = TextMessage(content="I need help with my account")
+    >>> result = await router.route_message(message)
+    >>> # Result will contain the response from support_handler
+"""
 import asyncio
 import inspect
 import logging
@@ -15,6 +47,25 @@ logger = logging.getLogger(__name__)
 class RouteRule(BaseModel):
     """
     Definition of a routing rule for the AgentRouter.
+    
+    A RouteRule defines criteria for matching incoming messages and specifies
+    where messages that match these criteria should be routed. Rules are evaluated
+    in order of priority, with higher priority rules being evaluated first.
+    
+    Rules can match based on system, message type, keywords in content,
+    or arbitrary attributes. Messages can be routed to internal handlers
+    or external agents.
+    
+    :ivar name: Unique name of the rule for identification
+    :ivar description: Human-readable description of the rule's purpose
+    :ivar priority: Rule evaluation precedence (higher values = higher priority)
+    :ivar match_system: Target system identifier to match against message header
+    :ivar match_type: Message type to match
+    :ivar match_keywords: List of keywords to match in message content
+    :ivar match_attributes: Dictionary of attributes to match in message
+    :ivar target_handler: Internal handler name to route matched messages to
+    :ivar target_agent_id: External agent ID to route matched messages to
+    :ivar custom_match_handler: Name of function to use for custom matching logic
     """
     name: str
     description: str = ""
@@ -56,9 +107,17 @@ class AgentRouter:
         """
         Initialize the AgentRouter.
         
-        :param ai_engine: Optional AI engine for LLM-driven routing
-        :param internal_handlers: Dictionary of handler functions
-        :param debug_mode: Enable debug logging
+        Creates a new agent router with the specified configuration. The router
+        can be used to direct messages to appropriate handlers based on
+        content, attributes, and other criteria.
+        
+        :param ai_engine: Optional AI engine for LLM-driven routing decisions
+        :type ai_engine: Optional[Any]
+        :param internal_handlers: Dictionary of handler functions, where keys are handler names
+                                 and values are the actual handler functions
+        :type internal_handlers: Optional[Dict[str, Callable]]
+        :param debug_mode: Enable detailed debug logging for routing decisions
+        :type debug_mode: bool
         """
         self.ai_engine = ai_engine
         self.internal_handlers: Dict[str, Callable] = internal_handlers or {}
@@ -69,8 +128,15 @@ class AgentRouter:
         """
         Register an internal handler function.
         
-        :param handler_name: Name of the handler
-        :param handler_function: Function to handle messages
+        Internal handlers are functions that can process messages within the
+        current process, as opposed to delegating to external agents. These handlers
+        can be used as targets in routing rules.
+        
+        :param handler_name: Name of the handler for reference in routing rules
+        :type handler_name: str
+        :param handler_function: Function to handle messages, can be sync or async
+        :type handler_function: Callable
+        :raises Warning: If a handler with the same name is already registered (will be overwritten)
         """
         if handler_name in self.internal_handlers:
             logger.warning(f"Handler '{handler_name}' already registered. Overwriting.")
@@ -79,9 +145,15 @@ class AgentRouter:
     
     def add_routing_rule(self, rule: RouteRule) -> None:
         """
-        Add a routing rule.
+        Add a routing rule to the router.
         
-        :param rule: The rule configuration
+        Rules are evaluated in priority order (higher priority first) when
+        determining where to route a message. If multiple rules match,
+        the highest priority matching rule will be used.
+        
+        :param rule: The rule configuration defining match criteria and targets
+        :type rule: RouteRule
+        :raises ValueError: If the rule targets a non-existent internal handler
         """
         # Check that the target_handler exists if specified
         if rule.target_handler and rule.target_handler not in self.internal_handlers:
@@ -96,8 +168,17 @@ class AgentRouter:
         """
         Decorator to register a handler function and optionally create a rule.
         
-        :param name: Optional custom name for the handler
-        :param rule_kwargs: Optional arguments for creating a RouteRule
+        This decorator provides a convenient way to register a function as an
+        internal handler and optionally create an associated routing rule
+        in a single step.
+        
+        :param name: Optional custom name for the handler, defaults to function name if not specified
+        :type name: Optional[str]
+        :param rule_kwargs: Optional keyword arguments for creating a RouteRule
+                           Any valid RouteRule field can be provided
+        :type rule_kwargs: dict
+        :return: Decorator function
+        :rtype: Callable
         :return: Decorator function
         
         Example:
@@ -128,9 +209,21 @@ class AgentRouter:
         """
         Check if a message matches a routing rule.
         
-        :param rule: Routing rule
-        :param message: Message to test
-        :return: True if the message matches the rule
+        This protected method implements the rule matching logic. It checks:
+        1. Custom match handler (if specified)
+        2. Target system match
+        3. Message type match
+        4. Keyword matches in content
+        5. Attribute matches
+        
+        All specified criteria must match for the rule to apply.
+        
+        :param rule: Routing rule to check against
+        :type rule: RouteRule
+        :param message: Message to test against the rule
+        :type message: AnyInteractionMessage
+        :return: True if the message matches all specified criteria, False otherwise
+        :rtype: bool
         """
         # Check custom match handler first
         if rule.custom_match_handler and rule.custom_match_handler in self.internal_handlers:
@@ -203,9 +296,18 @@ class AgentRouter:
         """
         Decide where to route the incoming message.
         
-        :param message: Incoming message
-        :param context_override: Optional custom context
-        :return: Routing decision
+        This method implements a multi-stage routing decision process:
+        1. Rule-based routing (matching against configured rules)
+        2. Direct routing (based on message header)
+        3. LLM-driven routing (if AI engine is available)
+        4. Fallback to default handlers
+        
+        :param message: Incoming message to be routed
+        :type message: AnyInteractionMessage
+        :param context_override: Optional custom decision context with additional data
+        :type context_override: Optional[RouteDecisionContext]
+        :return: A routing decision indicating where the message should be sent
+        :rtype: RouteDecision
         """
         # Use provided context or create one
         if context_override:
@@ -292,8 +394,18 @@ class AgentRouter:
         """
         Route a message by making a decision and executing the appropriate action.
         
-        :param message: Incoming message
-        :return: Result of handler, RouteDecision for external routing, or None
+        This is the main entry point for message routing. It determines where the
+        message should be routed and then either:
+        1. Executes the appropriate internal handler function
+        2. Returns a RouteDecision for external routing
+        
+        :param message: Incoming message to be routed and processed
+        :type message: AnyInteractionMessage
+        :return: Result of handler execution if routed internally,
+                 RouteDecision if message should be routed externally,
+                 or None if no routing was possible
+        :rtype: Union[Any, RouteDecision, None]
+        :raises: Passes through any exceptions from handler functions
         """
         decision = await self.make_route_decision(message)
         

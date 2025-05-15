@@ -32,10 +32,10 @@ jobs:
         userDataFolder: ".devcontainer-cache"
         # Use pre-built container images when available
         imageName: ghcr.io/${{ github.repository }}/devcontainer
-        imageTag: ${{ github.ref_name }}
+        imageTag: ${{ github.ref_name == '' && 'latest' || github.ref_name | replace('/', '-') }}
         # Try to use the latest image as cache source
         cacheFrom: |
-          ghcr.io/${{ github.repository }}/devcontainer:${{ github.ref_name }}
+          ghcr.io/${{ github.repository }}/devcontainer:${{ github.ref_name == '' && 'latest' || github.ref_name | replace('/', '-') }}
           ghcr.io/${{ github.repository }}/devcontainer:latest
         # Specify the command to run inside the container
         runCmd: |

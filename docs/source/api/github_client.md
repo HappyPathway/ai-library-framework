@@ -1,7 +1,7 @@
-# GitHub Client API
+# Github Client
 
 ```{eval-rst}
-.. automodule:: utils.github_client
+.. automodule:: ailf.github_client
    :members:
    :undoc-members:
    :show-inheritance:

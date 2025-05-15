@@ -1,0 +1,5 @@
+# MCP server dependencies
+mcp>=1.7.1
+fastapi>=0.95.1
+sse-starlette>=1.6.1
+uvicorn>=0.23.1

@@ -1,7 +1,7 @@
 # Storage
 
 ```{eval-rst}
-.. automodule:: utils.storage
+.. automodule:: storage
    :members:
    :undoc-members:
    :show-inheritance:

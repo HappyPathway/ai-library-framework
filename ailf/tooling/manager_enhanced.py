@@ -2,7 +2,36 @@
 Enhanced Tool Manager for registering and executing tools securely.
 
 This module provides a unified ToolManager that handles both registration and execution
-of tools with proper validation, security checks, and metrics.
+of tools with proper validation, security checks, and metrics. It's designed to be used
+in AI agent systems to manage the lifecycle of tool execution.
+
+Key Components:
+    ToolManager: Main class for registering and executing tools
+    ToolExecutionMetrics: Class for tracking tool execution statistics
+    ToolExecutionError: Exception raised when tool execution fails
+    ToolSecurityError: Exception raised when a security check fails
+
+Example:
+    >>> from ailf.tooling.manager_enhanced import ToolManager
+    >>> from ailf.schemas.tooling import ToolDescription
+    >>> 
+    >>> # Create a tool manager
+    >>> tool_manager = ToolManager()
+    >>> 
+    >>> # Register a tool
+    >>> @tool_manager.register_tool_decorator(
+    ...     ToolDescription(
+    ...         name="calculate_sum",
+    ...         description="Calculate the sum of two numbers",
+    ...         input_schema_ref="my_schemas.CalculateInput"
+    ...     )
+    ... )
+    ... def calculate_sum(a: int, b: int) -> int:
+    ...     return a + b
+    >>> 
+    >>> # Execute a tool
+    >>> result = await tool_manager.execute_tool("calculate_sum", {"a": 1, "b": 2})
+    >>> assert result == 3
 """
 import importlib
 import inspect
@@ -19,21 +48,44 @@ from ailf.schemas.tooling import ToolDescription
 logger = logging.getLogger(__name__)
 
 class ToolExecutionError(Exception):
-    """Custom exception for errors during tool execution."""
+    """
+    Custom exception for errors during tool execution.
+    
+    This exception is raised when a tool fails to execute properly due to issues like:
+    - Input validation failures
+    - Output validation failures
+    - Errors during actual tool function execution
+    - Problems with schema loading
+    """
     pass
 
 class ToolSecurityError(Exception):
-    """Custom exception for security-related errors during tool execution."""
+    """
+    Custom exception for security-related errors during tool execution.
+    
+    This exception is raised when a security check fails, such as:
+    - Attempting to execute an unregistered tool
+    - Detecting potentially dangerous input patterns
+    - Violating security constraints defined for a tool
+    """
     pass
 
 def _load_model_from_ref(model_ref: str) -> Optional[Type[BaseModel]]:
     """
     Dynamically loads a Pydantic model class from a string reference.
+    
+    This helper function loads a Pydantic model class at runtime from a string path,
+    enabling dynamic schema validation without requiring direct imports. This is
+    especially useful when schemas are defined in separate modules that might not
+    be known at compile time.
 
-    :param model_ref: The string reference, e.g., "my_package.my_module.MyModel".
+    :param model_ref: The string reference to the model class, in the format
+                     "package.module.ClassName", e.g., "my_package.my_module.MyModel"
     :type model_ref: str
-    :return: The loaded Pydantic model class, or None if loading fails.
+    :return: The loaded Pydantic model class, or None if loading fails
     :rtype: Optional[Type[BaseModel]]
+    :raises ImportError: If the module cannot be imported (logged, not propagated)
+    :raises AttributeError: If the class cannot be found in the module (logged, not propagated)
     """
     if not model_ref:
         return None
@@ -50,10 +102,20 @@ def _load_model_from_ref(model_ref: str) -> Optional[Type[BaseModel]]:
         return None
 
 class ToolExecutionMetrics:
-    """Metrics for tool execution."""
+    """
+    Metrics for tool execution.
+    
+    This class collects and maintains execution metrics for tools,
+    including execution times, success/failure counts, and a limited
+    execution history.
+    """
     
     def __init__(self):
-        """Initialize metrics collection."""
+        """
+        Initialize metrics collection.
+        
+        Sets up counters and data structures for tracking tool execution metrics.
+        """
         self.execution_count = 0
         self.total_execution_time = 0.0
         self.success_count = 0
@@ -67,12 +129,20 @@ class ToolExecutionMetrics:
                          success: bool, 
                          error_message: Optional[str] = None):
         """
-        Record a tool execution.
+        Record a tool execution in the metrics history.
+        
+        This method logs execution details and maintains metrics counters.
+        It also manages the execution history, keeping a limited number
+        of recent executions for analysis purposes.
         
         :param tool_name: Name of the executed tool
+        :type tool_name: str
         :param execution_time: Execution time in seconds
+        :type execution_time: float
         :param success: Whether the execution was successful
+        :type success: bool
         :param error_message: Error message if execution failed
+        :type error_message: Optional[str]
         """
         self.execution_count += 1
         self.total_execution_time += execution_time
@@ -99,13 +169,23 @@ class ToolExecutionMetrics:
             self.execution_history = self.execution_history[-self.max_history_items:]
     
     def get_avg_execution_time(self) -> float:
-        """Get the average execution time."""
+        """
+        Get the average execution time.
+        
+        :return: Average execution time in seconds. Returns 0.0 if no executions have occurred.
+        :rtype: float
+        """
         if self.execution_count == 0:
             return 0.0
         return self.total_execution_time / self.execution_count
     
     def get_success_rate(self) -> float:
-        """Get the success rate as a decimal (0.0 to 1.0)."""
+        """
+        Get the success rate as a decimal.
+        
+        :return: Success rate from 0.0 to 1.0. Returns 1.0 if no executions have occurred.
+        :rtype: float
+        """
         if self.execution_count == 0:
             return 1.0
         return self.success_count / self.execution_count
@@ -127,8 +207,13 @@ class ToolManager:
         """
         Initialize the ToolManager.
         
-        :param ai_engine: Optional AI engine for enhanced processing
-        :param enable_metrics: Whether to collect execution metrics
+        Creates a new tool manager instance with optional AI engine integration
+        and metrics collection capabilities.
+        
+        :param ai_engine: Optional AI engine for enhanced pre/post-processing of tool inputs/outputs
+        :type ai_engine: Optional[Any]
+        :param enable_metrics: Whether to collect and track execution metrics
+        :type enable_metrics: bool
         """
         self.ai_engine = ai_engine
         self._tool_functions: Dict[str, Callable] = {}
@@ -169,8 +254,15 @@ class ToolManager:
         """
         Decorator for registering tool functions.
         
-        :param description: The ToolDescription object for the tool.
-        :return: Decorator function
+        This is a convenient method for registering tools using a decorator pattern.
+        It automatically detects whether the function is asynchronous and updates
+        the tool description accordingly.
+        
+        :param description: The ToolDescription object for the tool
+        :type description: ToolDescription
+        :return: Decorator function that registers the decorated function as a tool
+        :rtype: Callable
+        :raises ValueError: If a tool with the same name is already registered
         
         Example:
         ```python
@@ -196,8 +288,10 @@ class ToolManager:
         """
         Get the description of a registered tool.
         
-        :param tool_name: Name of the tool
+        :param tool_name: Name of the tool to retrieve description for
+        :type tool_name: str
         :return: ToolDescription if found, None otherwise
+        :rtype: Optional[ToolDescription]
         """
         return self._tool_descriptions.get(tool_name)
     
@@ -205,7 +299,8 @@ class ToolManager:
         """
         List descriptions of all registered tools.
         
-        :return: List of tool descriptions
+        :return: List of tool descriptions for all registered tools
+        :rtype: List[ToolDescription]
         """
         return list(self._tool_descriptions.values())
     
@@ -213,8 +308,13 @@ class ToolManager:
         """
         Perform security checks on tool inputs.
         
+        This method implements security validations before tool execution.
+        It can be extended in subclasses to implement more sophisticated checks.
+        
         :param tool_name: Name of the tool being executed
+        :type tool_name: str
         :param tool_input: Input parameters for the tool
+        :type tool_input: Dict[str, Any]
         :raises ToolSecurityError: If a security issue is detected
         """
         # Basic example security checks - these should be tailored to your specific needs
@@ -227,15 +327,31 @@ class ToolManager:
     async def execute_tool(self, tool_name: str, tool_input: Dict[str, Any]) -> Any:
         """
         Execute a registered tool by its name.
+        
+        This is the main entry point for tool execution. It handles the complete
+        tool execution lifecycle:
+        1. Tool lookup and security check
+        2. Input validation against schema (if defined)
+        3. Execution of the tool function
+        4. Output validation against schema (if defined)
+        5. Optional post-processing via AI engine
+        6. Metrics collection
 
-        :param tool_name: The name of the tool to execute.
+        :param tool_name: The name of the tool to execute
         :type tool_name: str
-        :param tool_input: A dictionary of parameters for the tool.
+        :param tool_input: A dictionary of parameters for the tool
         :type tool_input: Dict[str, Any]
-        :return: The result of the tool execution, potentially a Pydantic model instance if output schema is defined.
+        :return: The result of the tool execution, potentially a Pydantic model instance if output schema is defined
         :rtype: Any
-        :raises ToolExecutionError: If the tool is not found, input/output validation fails, or execution fails.
-        :raises ToolSecurityError: If a security check fails.
+        :raises ToolExecutionError: If the tool is not found, input/output validation fails, or execution fails
+        :raises ToolSecurityError: If a security check fails
+        
+        Example:
+            >>> result = await tool_manager.execute_tool(
+            ...     "calculate_sum", 
+            ...     {"a": 10, "b": 5}
+            ... )
+            >>> print(result)  # 15
         """
         if tool_name not in self._tool_functions:
             logger.error(f"Tool '{tool_name}' not found.")
@@ -304,11 +420,19 @@ class ToolManager:
         """
         Validate tool input using the input schema if available.
         
-        :param tool_name: Name of the tool
-        :param tool_input: Input parameters
-        :param tool_desc: Tool description
-        :return: Validated input data
-        :raises ToolExecutionError: If validation fails
+        This method attempts to validate the input parameters against the specified
+        input schema (if any) using Pydantic. If validation succeeds, the validated
+        data is returned. If no schema is provided, the original input is returned.
+        
+        :param tool_name: Name of the tool being validated
+        :type tool_name: str
+        :param tool_input: Input parameters for the tool
+        :type tool_input: Dict[str, Any]
+        :param tool_desc: Tool description containing input schema reference
+        :type tool_desc: ToolDescription
+        :return: Validated input data ready for tool execution
+        :rtype: Dict[str, Any]
+        :raises ToolExecutionError: If validation fails or schema loading fails
         """
         validated_input_data = tool_input
         InputModel = _load_model_from_ref(tool_desc.input_schema_ref) if tool_desc.input_schema_ref else None
@@ -338,10 +462,18 @@ class ToolManager:
         """
         Execute the tool function with the given input data.
         
+        Handles both synchronous and asynchronous tool functions. Synchronous
+        functions are executed in a thread pool to avoid blocking the event loop.
+        
         :param tool_func: The tool function to execute
-        :param is_async: Whether the function is async
-        :param input_data: Input parameters
-        :return: Function result
+        :type tool_func: Callable
+        :param is_async: Whether the function is asynchronous
+        :type is_async: bool
+        :param input_data: Input parameters for the tool function
+        :type input_data: Dict[str, Any]
+        :return: Result from the tool function execution
+        :rtype: Any
+        :raises ToolExecutionError: If any exception occurs during execution
         """
         try:
             if is_async:
@@ -357,11 +489,20 @@ class ToolManager:
         """
         Validate the tool output using the output schema if available.
         
-        :param tool_name: Name of the tool
-        :param result: Raw tool result
-        :param tool_desc: Tool description
-        :return: Validated output
-        :raises ToolExecutionError: If validation fails
+        This method ensures that the tool's output conforms to the expected schema.
+        If a schema is defined but the output doesn't conform, validation will fail.
+        The method handles different output types (raw, Pydantic models, dicts)
+        and attempts to convert between them if necessary.
+        
+        :param tool_name: Name of the tool that produced the output
+        :type tool_name: str
+        :param result: Raw result from the tool execution
+        :type result: Any
+        :param tool_desc: Tool description containing output schema reference
+        :type tool_desc: ToolDescription
+        :return: Validated output, possibly converted to a Pydantic model
+        :rtype: Any
+        :raises ToolExecutionError: If validation fails or schema conversion fails
         """
         OutputModel = _load_model_from_ref(tool_desc.output_schema_ref) if tool_desc.output_schema_ref else None
         

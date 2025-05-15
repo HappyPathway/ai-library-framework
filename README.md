@@ -34,6 +34,26 @@ AILF provides implementations of advanced LLM agent patterns:
 - **Task Planning**: Decomposing complex tasks into actionable steps
 - **Reflection**: Self-monitoring and improvement through reflection
 
+## Documentation
+
+Comprehensive documentation is available in the `docs` directory. The documentation covers:
+
+- API Reference
+- User Guides
+- Examples
+- Development Guidelines
+
+### Building Documentation
+
+To build the documentation locally:
+
+```bash
+cd docs
+./build_docs.sh
+```
+
+The generated HTML documentation will be available in `docs/build/html/`.
+
 ### Tree of Thoughts
 
 Tree of Thoughts (ToT) is an advanced reasoning technique that extends beyond simple prompt-response patterns by exploring multiple reasoning paths in parallel. The pattern allows AI agents to:

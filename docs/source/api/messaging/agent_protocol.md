@@ -1,7 +1,7 @@
-# Database
+# Agent Protocol
 
 ```{eval-rst}
-.. automodule:: utils.database
+.. automodule:: messaging.agent_protocol
    :members:
    :undoc-members:
    :show-inheritance:

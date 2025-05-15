@@ -1,7 +1,7 @@
-# AI Engine
+# Ai Engine
 
 ```{eval-rst}
-.. automodule:: utils.ai_engine
+.. automodule:: ailf.ai_engine
    :members:
    :undoc-members:
    :show-inheritance:

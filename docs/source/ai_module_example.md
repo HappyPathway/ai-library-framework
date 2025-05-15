@@ -1,48 +1,42 @@
-# AI Module Reorganization Example
+# AI Module Structure
 
-This document demonstrates how the AI engine module would be restructured as part of the repository cleanup plan.
+This document demonstrates how the AI engine module is structured in the AILF framework.
 
 ## Current Structure
 
-Currently, the AI-related code is contained primarily in:
-- `/utils/ai_engine.py` - Main AI engine implementation
-- `/utils/schemas/ai.py` - AI-related schemas
-
-## Proposed Structure
+The AI-related code is organized in a logical structure in the src-based layout:
 
 ```
-/utils/ai/
-  ├── __init__.py           # Exports key functionality
-  ├── engine.py             # Core AI engine (refactored from ai_engine.py)
-  ├── providers/            # Provider-specific implementations
-  │   ├── __init__.py
-  │   ├── openai.py         # OpenAI-specific functionality
-  │   ├── gemini.py         # Gemini-specific functionality
-  │   └── anthropic.py      # Anthropic-specific functionality
-  └── tools/                # AI tools implementation
-      ├── __init__.py
-      ├── search.py         # Search tool implementation
-      └── analysis.py       # Analysis tool implementation
-
-/schemas/ai/
-  ├── __init__.py           # Exports key schemas
-  ├── core.py               # Core AI schemas
-  ├── settings.py           # Provider settings schemas
-  ├── responses.py          # Response schemas
-  └── tools.py              # Tool-related schemas
+/src/ailf/
+  ├── ai_engine.py          # Main AI engine implementation (legacy, being migrated)
+  ├── ai/                   # AI module directory
+  │   ├── __init__.py       # Exports key functionality
+  │   ├── engine.py         # Enhanced AI engine for model interactions
+  │   ├── providers/        # Provider-specific implementations
+  │   │   ├── __init__.py
+  │   │   ├── openai.py     # OpenAI-specific functionality
+  │   │   ├── gemini.py     # Google Gemini models integration
+  │   │   └── anthropic.py  # Anthropic Claude models integration
+  │   └── tools/            # AI tools implementation
+  │       ├── __init__.py
+  │       ├── search.py     # Search tool implementation
+  │       └── analysis.py   # Analysis tool implementation
+  └── schemas/              # Schema definitions
+      ├── __init__.py       # Exports key schemas
+      └── ai.py             # AI-related schemas
 ```
 
 ## Implementation Example
 
-### `/schemas/ai/core.py`
+### `/src/ailf/schemas/ai.py`
 
 ```python
-"""Core AI schemas.
+"""AI-related schemas.
 
-This module contains core schemas used by the AI engine.
+This module contains schemas used by the AI engine components.
 """
-from typing import Dict, List, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Dict, List, Optional, Union, Literal
+from pydantic import BaseModel, Field
 
 class UsageLimits(BaseModel):
     """Usage limits for AI models.
@@ -78,49 +72,137 @@ class AIResponse(BaseModel):
     }
 ```
 
-### `/schemas/ai/settings.py`
+### `/src/ailf/ai/engine.py`
 
 ```python
-"""AI provider settings schemas.
+"""Enhanced AI engine for model interactions.
 
-This module contains settings schemas for different AI providers.
+This module provides a unified interface for interacting with various
+AI model providers including OpenAI, Google Gemini and Anthropic.
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
+import asyncio
+import os
+import logging
 from pydantic import BaseModel, Field
 
-from .core import UsageLimits
+from ..schemas.ai import AIResponse, ModelConfig, ModelProvider
 
-class GeminiSafetySettings(BaseModel):
-    """Safety settings for Gemini models."""
-    category: str
-    threshold: str
-
-class GeminiSettings(BaseModel):
-    """Configuration settings for Gemini models."""
-    temperature: float = 0.7
-    max_tokens: int = 1024
-    safety_settings: Optional[List[GeminiSafetySettings]] = None
-    generation_config: Optional[Dict[str, Any]] = None
-
-class OpenAISettings(BaseModel):
-    """Configuration settings for OpenAI models."""
-    temperature: float = 0.7
-    max_tokens: int = 1024
-    top_p: Optional[float] = None
-    frequency_penalty: Optional[float] = None
-    presence_penalty: Optional[float] = None
-    logit_bias: Optional[Dict[str, float]] = None
-    stop: Optional[List[str]] = None
-
-class AnthropicSettings(BaseModel):
-    """Configuration settings for Anthropic models."""
-    temperature: float = 0.7
-    max_tokens: int = 1024
-    top_k: Optional[int] = None
-    top_p: Optional[float] = None
+class AIEngine:
+    """Main AI engine for interacting with language models.
+    
+    This class provides a unified interface for working with different AI providers
+    and handles common operations like rate limiting, fallbacks, and error handling.
+    
+    Attributes:
+        provider: The model provider to use
+        model: The specific model to use
+        api_key: API key for the provider
+    """
+    
+    def __init__(self, 
+                 provider: ModelProvider = ModelProvider.OPENAI,
+                 model: Optional[str] = None,
+                 api_key: Optional[str] = None):
+        """Initialize the AI engine.
+        
+        Args:
+            provider: The AI provider to use
+            model: The model to use (defaults to provider's default model)
+            api_key: API key (defaults to environment variable based on provider)
+        """
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.provider = provider
+        self.api_key = api_key or self._get_api_key_for_provider(provider)
+        self.model = model or self._get_default_model(provider)
+        self.adapter = self._get_adapter(provider)
+        
+    def _get_api_key_for_provider(self, provider: ModelProvider) -> str:
+        """Get API key from environment variables based on provider.
+        
+        Args:
+            provider: The AI provider
+            
+        Returns:
+            The API key from environment variables
+            
+        Raises:
+            ValueError: If API key is not found in environment variables
+        """
+        env_var_map = {
+            ModelProvider.OPENAI: "OPENAI_API_KEY",
+            ModelProvider.ANTHROPIC: "ANTHROPIC_API_KEY",
+            ModelProvider.GEMINI: "GOOGLE_API_KEY",
+        }
+        env_var = env_var_map.get(provider)
+        if not env_var:
+            raise ValueError(f"Unsupported provider: {provider}")
+            
+        api_key = os.environ.get(env_var)
+        if not api_key:
+            raise ValueError(f"API key not found in environment variable {env_var}")
+            
+        return api_key
+        
+    async def generate(self, prompt: str) -> AIResponse:
+        """Generate a response from the AI model.
+        
+        Args:
+            prompt: The prompt to send to the model
+            
+        Returns:
+            AIResponse: The response from the model
+            
+        Raises:
+            NotImplementedError: If the provider does not implement this method
+        """
+        raise NotImplementedError("Provider must implement generate method")
+class AIEngine:
+    """Unified AI engine for interacting with various provider models."""
+    
+    def __init__(
+        self, 
+        provider: Union[str, ModelProvider] = ModelProvider.OPENAI,
+        model: Optional[str] = None,
+        api_key: Optional[str] = None,
+        fallback_providers: Optional[List[str]] = None
+    ):
+        """Initialize the AI engine.
+        
+        Args:
+            provider: The AI provider to use (openai, gemini, anthropic)
+            model: The specific model to use (defaults to provider's default)
+            api_key: API key (if None, will load from environment)
+            fallback_providers: List of providers to try if primary fails
+        """
+        self.provider = provider if isinstance(provider, ModelProvider) else ModelProvider(provider)
+        self.model = model or self._get_default_model()
+        self.api_key = api_key or self._get_api_key()
+        self.adapter = self._create_adapter()
+        self.fallback_providers = fallback_providers or []
+        
+    async def generate(self, prompt: str) -> AIResponse:
+        """Generate a response from the AI model.
+        
+        Args:
+            prompt: The prompt to send to the model
+            
+        Returns:
+            AIResponse: The generated response
+            
+        Raises:
+            AIEngineError: If the generation fails
+        """
+        try:
+            return await self.adapter.generate(prompt)
+        except Exception as e:
+            if self.fallback_providers:
+                # Try fallback providers
+                return await self._try_fallbacks(prompt)
+            raise AIEngineError(f"Generation failed: {str(e)}") from e
 ```
 
-### `/utils/ai/__init__.py`
+### `/src/ailf/ai/__init__.py`
 
 ```python
 """AI module for working with large language models.
@@ -130,65 +212,107 @@ AI providers like OpenAI, Google's Gemini, and Anthropic's Claude.
 
 Example:
     >>> from ailf.ai import AIEngine
-    >>> engine = AIEngine(feature_name="text_generator")
-    >>> text = await engine.generate_text("Write a short story about AI")
+    >>> engine = AIEngine(provider="openai", model="gpt-4o")
+    >>> response = await engine.generate("Write a short story about AI")
+    >>> print(response.content)
 """
 
-from .engine import AIEngine, AIEngineError, ModelError, ContentFilterError
+from .engine import AIEngine, AIEngineError, ProviderAdapter
+from .providers import OpenAIAdapter, GeminiAdapter, AnthropicAdapter
 
 __all__ = [
     "AIEngine", 
-    "AIEngineError", 
-    "ModelError", 
-    "ContentFilterError"
+    "AIEngineError",
+    "ProviderAdapter",
+    "OpenAIAdapter",
+    "GeminiAdapter",
+    "AnthropicAdapter"
 ]
 ```
 
-### `/utils/ai/engine.py`
+### `/src/ailf/ai/providers/openai.py`
 
 ```python
-"""AI Engine Module.
+"""OpenAI-specific adapter implementation.
 
-This module provides a comprehensive interface for AI and LLM interactions,
-combining the capabilities of both AIEngine and BaseLLMAgent approaches.
-It supports structured and unstructured outputs, with robust monitoring,
-error handling, and type safety.
-
-Key Components:
-    AIEngine: Main class providing AI/LLM interaction interface
-    AIEngineError: Base exception class for AI engine errors
-    ModelError: Exception for model-specific errors
-    ContentFilterError: Exception for content filtered by safety settings
-
-Example:
-    >>> from ailf.ai import AIEngine
-    >>> from my_schemas import JobAnalysis
-    >>> 
-    >>> engine = AIEngine(
-    ...     feature_name='job_analysis',
-    ...     model_name='openai:gpt-4-turbo'
-    ... )
-    >>> 
-    >>> result = await engine.generate(
-    ...     prompt="Analyze this job description...",
-    ...     output_schema=JobAnalysis
-    ... )
+This module provides the OpenAI implementation of the provider adapter.
 """
-
-import asyncio
 import os
-from typing import (Any, AsyncIterator, Dict, Generic, List, Literal, Optional,
-                    Type, TypeVar, Union)
+from typing import Dict, Optional, List
+import logging
 
-from pydantic import BaseModel
-from pydantic_ai import Agent
-from pydantic_ai.exceptions import ModelRetry, UnexpectedModelBehavior
+from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletion
 
-from schemas.ai.core import UsageLimits, AIResponse
-from schemas.ai.settings import AnthropicSettings, GeminiSettings, OpenAISettings, GeminiSafetySettings
-from ailf.core.logging import setup_logging
-from ailf.core.monitoring import MetricsCollector, setup_monitoring
-from ailf.cloud.secrets import secret_manager
+from ...schemas.ai import AIResponse
+from ..engine import ProviderAdapter, AIEngineError
+
+logger = logging.getLogger(__name__)
+
+class OpenAIAdapter(ProviderAdapter):
+    """OpenAI adapter for the AI engine."""
+    
+    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4o"):
+        """Initialize the OpenAI adapter.
+        
+        Args:
+            api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+            model: Model name to use (defaults to gpt-4o)
+        """
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise AIEngineError("OpenAI API key not provided")
+        
+        super().__init__(api_key, model)
+        self.client = AsyncOpenAI(api_key=self.api_key)
+        
+    async def generate(self, prompt: str) -> AIResponse:
+        """Generate a response using OpenAI models.
+        
+        Args:
+            prompt: The prompt to send to the model
+            
+        Returns:
+            AIResponse: The generated response
+            
+        Raises:
+            AIEngineError: If the request fails
+        """
+        try:
+            response: ChatCompletion = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            content = response.choices[0].message.content or ""
+            usage = {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens
+            }
+            
+            return AIResponse(
+                content=content,
+                usage=usage,
+                model=self.model,
+                finish_reason=response.choices[0].finish_reason
+            )
+        except Exception as e:
+            logger.error(f"OpenAI request failed: {str(e)}")
+            raise AIEngineError(f"OpenAI request failed: {str(e)}")
+```
+
+## Component Relationships
+
+The AI module components work together to provide a unified interface for AI model interactions:
+
+1. The `AIEngine` class serves as the main entry point, allowing users to interact with AI models
+2. Provider-specific adapters handle the actual API calls to different AI services
+3. Schemas define the data structures for requests and responses
+4. Error handling provides a consistent way to handle failures
+5. Fallback mechanisms allow graceful degradation when primary providers fail
+
+This modular design makes it easy to add new providers or capabilities while maintaining a consistent API for developers.
 
 # Initialize logging and monitoring
 logger = setup_logging('ai_engine')

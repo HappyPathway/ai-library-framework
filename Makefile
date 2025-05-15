@@ -63,5 +63,5 @@ clean:
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 
 docs:
-	$(MAKE) -C $(DOC_DIR) html
+	cd $(DOC_DIR) && ./build_docs.sh
 	@echo "Documentation built in $(DOC_DIR)/build/html/"

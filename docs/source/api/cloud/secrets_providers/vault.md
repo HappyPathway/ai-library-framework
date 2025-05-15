@@ -1,7 +1,7 @@
-# Logging Module
+# Vault
 
 ```{eval-rst}
-.. automodule:: utils.logging
+.. automodule:: cloud.secrets_providers.vault
    :members:
    :undoc-members:
    :show-inheritance:
