@@ -9,13 +9,6 @@ for creating AI assistants with tools, resources, and prompts.
 
 import warnings
 
-# Add deprecation warning
-warnings.warn(
-    "The ailf.base_mcp module is deprecated. Use ailf.mcp.base instead.",
-    DeprecationWarning,
-    stacklevel=2
-)
-
 # Re-export all symbols from the new module location
 from ailf.mcp.base import *
 

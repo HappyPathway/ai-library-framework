@@ -24,7 +24,8 @@ from typing import Any, Callable, Dict, List, Optional, Union, TypeVar, Type, ca
 
 import websockets
 from pydantic import BaseModel
-from websockets.client import WebSocketClientProtocol
+# Use recommended import pattern for websockets
+from websockets.sync.client import ClientConnection as WebSocketClientProtocol
 from websockets.exceptions import (
     ConnectionClosed, ConnectionClosedError, ConnectionClosedOK
 )

@@ -7,7 +7,7 @@ import time
 import pytest
 
 from ailf.memory.in_memory import InMemoryShortTermMemory
-from ailf.schemas.memory import MemoryItem
+from ailf.schemas.memory import MemoryItem, MemoryType
 
 
 class TestInMemoryShortTermMemory:
@@ -23,8 +23,9 @@ class TestInMemoryShortTermMemory:
         """Test adding and retrieving an item from memory."""
         # Create a test item
         test_item = MemoryItem(
-            item_id="test1",
-            data="test data",
+            id="test1",
+            type=MemoryType.OBSERVATION,
+            content="test data",
             metadata={"source": "test"}
         )
         
@@ -36,8 +37,8 @@ class TestInMemoryShortTermMemory:
         
         # Check that retrieved item matches the original
         assert retrieved_item is not None
-        assert retrieved_item.item_id == test_item.item_id
-        assert retrieved_item.data == test_item.data
+        assert retrieved_item.id == test_item.id
+        assert retrieved_item.content == test_item.content
         assert retrieved_item.metadata == test_item.metadata
     
     @pytest.mark.asyncio
@@ -49,85 +50,81 @@ class TestInMemoryShortTermMemory:
     @pytest.mark.asyncio
     async def test_get_recent_items(self, memory_store):
         """Test retrieving recent items in correct order."""
-        # Add several test items with small delays to ensure timestamp differences
-        item1 = MemoryItem(item_id="id1", data="data1")
-        await memory_store.add_item(item1)
-        await asyncio.sleep(0.01)  # Small delay for timestamp difference
+        # Create test items
+        items = [
+            MemoryItem(id=f"test{i}", type=MemoryType.OBSERVATION, content=f"data{i}")
+            for i in range(1, 4)
+        ]
         
-        item2 = MemoryItem(item_id="id2", data="data2")
-        await memory_store.add_item(item2)
-        await asyncio.sleep(0.01)  # Small delay for timestamp difference
+        # Add items to memory with delays to ensure different timestamps
+        for item in items:
+            await memory_store.add_item(item)
+            await asyncio.sleep(0.01)  # Small delay to ensure different timestamps
         
-        item3 = MemoryItem(item_id="id3", data="data3")
-        await memory_store.add_item(item3)
-        
-        # Get recent items - should return in reverse chronological order
+        # Get recent items
         recent_items = await memory_store.get_recent_items(2)
         
-        # Validate that we got 2 most recent items in correct order
+        # Check that we got the expected number of items
         assert len(recent_items) == 2
-        assert recent_items[0].item_id == "id3"
-        assert recent_items[1].item_id == "id2"
+        
+        # Check that items are returned in reverse order (most recent first)
+        assert recent_items[0].id == "test3"
+        assert recent_items[1].id == "test2"
     
     @pytest.mark.asyncio
     async def test_max_size_constraint(self, memory_store):
-        """Test that memory store doesn't exceed max size and evicts oldest items."""
-        # Add items up to the max capacity (3)
-        await memory_store.add_item(MemoryItem(item_id="id1", data="data1"))
-        await asyncio.sleep(0.01)
-        await memory_store.add_item(MemoryItem(item_id="id2", data="data2"))
-        await asyncio.sleep(0.01)
-        await memory_store.add_item(MemoryItem(item_id="id3", data="data3"))
+        """Test that the memory respects the max_size constraint."""
+        # Add more items than the max_size
+        for i in range(5):  # Max size is 3
+            await memory_store.add_item(MemoryItem(
+                id=f"test{i}", 
+                type=MemoryType.OBSERVATION,
+                content=f"data{i}"
+            ))
         
-        # At this point, all three items should be in memory
-        assert await memory_store.get_item("id1") is not None
-        assert await memory_store.get_item("id2") is not None
-        assert await memory_store.get_item("id3") is not None
+        # Check that only the most recent items are retained
+        all_items = await memory_store.get_recent_items(5)
+        assert len(all_items) == 3  # Should only have max_size items
         
-        # Add a fourth item - this should evict the oldest item (id1)
-        await asyncio.sleep(0.01)
-        await memory_store.add_item(MemoryItem(item_id="id4", data="data4"))
-        
-        # The oldest item should have been removed
-        assert await memory_store.get_item("id1") is None
-        assert await memory_store.get_item("id2") is not None
-        assert await memory_store.get_item("id3") is not None
-        assert await memory_store.get_item("id4") is not None
+        # Check that the oldest items were evicted
+        item_ids = [item.id for item in all_items]
+        assert "test0" not in item_ids
+        assert "test1" not in item_ids
+        assert "test2" in item_ids
+        assert "test3" in item_ids
+        assert "test4" in item_ids
     
     @pytest.mark.asyncio
     async def test_get_recent_with_zero_count(self, memory_store):
-        """Test retrieving zero recent items."""
-        await memory_store.add_item(MemoryItem(item_id="id1", data="data1"))
+        """Test retrieving zero recent items returns an empty list."""
+        # Add some items
+        await memory_store.add_item(MemoryItem(id="test1", type=MemoryType.OBSERVATION, content="data1"))
         
+        # Get zero recent items
         recent_items = await memory_store.get_recent_items(0)
-        assert len(recent_items) == 0
+        assert recent_items == []
     
     @pytest.mark.asyncio
     async def test_get_recent_with_negative_count(self, memory_store):
-        """Test retrieving with negative count."""
-        await memory_store.add_item(MemoryItem(item_id="id1", data="data1"))
+        """Test retrieving a negative count of recent items returns an empty list."""
+        # Add some items
+        await memory_store.add_item(MemoryItem(id="test1", type=MemoryType.OBSERVATION, content="data1"))
         
-        recent_items = await memory_store.get_recent_items(-5)
-        assert len(recent_items) == 0
+        # Get negative count of recent items
+        recent_items = await memory_store.get_recent_items(-1)
+        assert recent_items == []
     
     @pytest.mark.asyncio
     async def test_clear(self, memory_store):
-        """Test clearing the memory store."""
-        # Add items
-        await memory_store.add_item(MemoryItem(item_id="id1", data="data1"))
-        await memory_store.add_item(MemoryItem(item_id="id2", data="data2"))
+        """Test clearing all items from memory."""
+        # Add some items
+        await memory_store.add_item(MemoryItem(id="test1", type=MemoryType.OBSERVATION, content="data1"))
+        await memory_store.add_item(MemoryItem(id="test2", type=MemoryType.OBSERVATION, content="data2"))
         
-        # Verify items are in memory
-        assert await memory_store.get_item("id1") is not None
-        assert await memory_store.get_item("id2") is not None
-        
-        # Clear the memory store
+        # Clear memory
         await memory_store.clear()
         
-        # Verify items are gone
-        assert await memory_store.get_item("id1") is None
-        assert await memory_store.get_item("id2") is None
-        
-        # Verify get_recent_items returns empty list
-        recent_items = await memory_store.get_recent_items(10)
-        assert len(recent_items) == 0
+        # Check that all items are gone
+        assert await memory_store.get_item("test1") is None
+        assert await memory_store.get_item("test2") is None
+        assert await memory_store.get_recent_items(10) == []

@@ -12,9 +12,23 @@ from .ai import (
 from .redis import RedisConfig
 from .zmq_devices import DeviceType, DeviceConfig, AuthConfig
 from .cognition import ReActStep, ReActState, Plan, PlanStep, IntentRefinementRequest, IntentRefinementResponse
-from .feedback import LoggedInteraction, PerformanceMetric, PerformanceReport, LearningEvent
 from .tree_of_thought import ThoughtNode, ThoughtState, ToTConfiguration, ToTState, ToTResult, EvaluationStrategy
 from .prompt_engineering import PromptTemplateV1, PromptLibraryConfig, PromptVariable, PromptMetadata
+
+# Import the feedback models. To avoid circular imports, we're using import statements 
+# that will be executed when the symbols are first accessed
+import importlib
+
+# Create dynamic imports to avoid circular references
+def __getattr__(name):
+    """Dynamically import feedback models to avoid circular imports."""
+    if name in ('LoggedInteraction'):
+        module = importlib.import_module('ailf.schemas.feedback.models')
+        return getattr(module, name)
+    elif name in ('PerformanceMetric', 'PerformanceReport', 'LearningEvent'):
+        module = importlib.import_module('ailf.schemas.feedback')
+        return getattr(module, name)
+    raise AttributeError(f"module {__name__} has no attribute {name}")
 
 __all__ = [
     # AI schemas
@@ -36,8 +50,6 @@ __all__ = [
     "AuthConfig",
     
     # Cognition schemas
-    "PromptTemplateV1",
-    "PromptLibrary",
     "ReActStep",
     "ReActState",
     "Plan",

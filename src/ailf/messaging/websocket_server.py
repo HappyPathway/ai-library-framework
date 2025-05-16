@@ -23,7 +23,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, c
 
 import websockets
 from pydantic import BaseModel, ValidationError
-from websockets.server import WebSocketServerProtocol
+from websockets.asyncio.server import ServerConnection as WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 
 from ailf.schemas.websockets import (

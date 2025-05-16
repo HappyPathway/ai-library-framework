@@ -17,6 +17,14 @@ from ailf.base_mcp import (
     Context
 )
 
+class MCPMessage(BaseModel):
+    """Schema for MCP messages."""
+    protocol: str = Field(default="MCP", description="Protocol name.")
+    version: str = Field(default="1.0.0", description="Protocol version.")
+    message_id: str = Field(..., description="Unique identifier for the message.")
+    capabilities: List[str] = Field(..., description="List of supported capabilities.")
+    payload: Dict[str, Any] = Field(default_factory=dict, description="Message payload.")
+    
 class DuplicateHandling(str, Enum):
     """How to handle duplicate component registrations."""
     WARN = "warn"      # Log a warning and replace existing component

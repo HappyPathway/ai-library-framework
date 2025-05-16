@@ -1,14 +1,20 @@
-"""File-based implementation of LongTermMemory."""
+"""File-based implementations of Memory interfaces."""
 import json
 import os
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type # Added Dict
+from typing import Any, Dict, List, Optional, Type, Union, TypeVar # Added TypeVar and Union
 import aiofiles # type: ignore
 import aiofiles.os as aios # type: ignore
 
 from pydantic import BaseModel
 from ailf.memory.base import LongTermMemory
+from ailf.memory.interfaces import AgentMemoryInterface
 from ailf.schemas.memory import KnowledgeFact, UserProfile # Specific examples
+from ailf.schemas.agent_memory import Interaction, AgentFact
+
+# Type variable for generics
+T = TypeVar('T')
 
 # A mapping to help deserialize specific types if needed, can be expanded
 MODEL_TYPE_MAP: Dict[str, Type[BaseModel]] = {
@@ -205,3 +211,281 @@ class FileLongTermMemory(LongTermMemory):
                 elif not model_type_filter: # General case, could be type_id or just id
                      ids.append(file_path.stem) # This might include type prefix
         return ids
+
+class FileAgentMemory(AgentMemoryInterface):
+    """File-based implementation of AgentMemoryInterface.
+    
+    This implementation stores memory components in JSON files, providing
+    persistence across agent restarts. It organizes memory into separate files
+    for interactions, facts, and working memory.
+    """
+    
+    def __init__(
+        self,
+        directory_path: str,
+        max_interactions: int = 1000,
+        max_facts: int = 1000,
+        create_dir: bool = True
+    ):
+        """Initialize the file-based memory store.
+        
+        Args:
+            directory_path: Path to the directory for storing memory files
+            max_interactions: Maximum number of interactions to store
+            max_facts: Maximum number of facts to store
+            create_dir: Whether to create the directory if it doesn't exist
+        """
+        self.directory_path = Path(directory_path)
+        self.interactions_file = self.directory_path / "interactions.json"
+        self.facts_file = self.directory_path / "facts.json"
+        self.working_memory_file = self.directory_path / "working_memory.json"
+        self.max_interactions = max_interactions
+        self.max_facts = max_facts
+        
+        # Create directory if needed
+        if create_dir and not self.directory_path.exists():
+            self.directory_path.mkdir(parents=True)
+            
+        # Initialize files if they don't exist
+        for file_path in [self.interactions_file, self.facts_file, self.working_memory_file]:
+            if not file_path.exists():
+                with open(file_path, 'w') as f:
+                    if file_path == self.interactions_file:
+                        json.dump([], f)
+                    elif file_path == self.facts_file:
+                        json.dump([], f)
+                    else:  # working_memory_file
+                        json.dump({}, f)
+    
+    async def _read_interactions(self) -> List[Dict]:
+        """Read interactions from file."""
+        async with aiofiles.open(self.interactions_file, 'r') as f:
+            content = await f.read()
+            return json.loads(content) if content else []
+    
+    async def _write_interactions(self, interactions: List[Dict]) -> None:
+        """Write interactions to file."""
+        async with aiofiles.open(self.interactions_file, 'w') as f:
+            await f.write(json.dumps(interactions, default=self._json_serializer))
+    
+    async def _read_facts(self) -> List[Dict]:
+        """Read facts from file."""
+        async with aiofiles.open(self.facts_file, 'r') as f:
+            content = await f.read()
+            return json.loads(content) if content else []
+    
+    async def _write_facts(self, facts: List[Dict]) -> None:
+        """Write facts to file."""
+        async with aiofiles.open(self.facts_file, 'w') as f:
+            await f.write(json.dumps(facts, default=self._json_serializer))
+    
+    async def _read_working_memory(self) -> Dict:
+        """Read working memory from file."""
+        async with aiofiles.open(self.working_memory_file, 'r') as f:
+            content = await f.read()
+            return json.loads(content) if content else {}
+    
+    async def _write_working_memory(self, working_memory: Dict) -> None:
+        """Write working memory to file."""
+        async with aiofiles.open(self.working_memory_file, 'w') as f:
+            await f.write(json.dumps(working_memory, default=self._json_serializer))
+    
+    def _json_serializer(self, obj: Any) -> Any:
+        """JSON serializer that handles datetime objects."""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        if isinstance(obj, BaseModel):
+            return obj.model_dump()
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+    
+    async def add_interaction(self, query: str, result: Any, metadata: Optional[Dict[str, Any]] = None) -> str:
+        """Add an interaction to memory.
+        
+        Args:
+            query: User query or instruction
+            result: Result of processing the query
+            metadata: Additional metadata about the interaction
+            
+        Returns:
+            str: ID of the stored interaction
+        """
+        interaction = Interaction(
+            timestamp=datetime.now(),
+            query=query,
+            result=result,
+            metadata=metadata or {}
+        )
+        
+        # Read existing interactions
+        interactions = await self._read_interactions()
+        
+        # Convert to dictionary for storage
+        interaction_dict = interaction.model_dump()
+        interactions.append(interaction_dict)
+        
+        # Enforce max size by removing oldest interactions if needed
+        while len(interactions) > self.max_interactions:
+            interactions.pop(0)
+        
+        # Write back to file
+        await self._write_interactions(interactions)
+        
+        return ""  # No specific ID in this implementation
+    
+    async def add_fact(self, fact: str, source: Optional[str] = None, 
+                      confidence: float = 1.0, metadata: Optional[Dict[str, Any]] = None) -> str:
+        """Add a fact to memory.
+        
+        Args:
+            fact: The fact to remember
+            source: Source of the fact
+            confidence: Confidence level (0.0-1.0)
+            metadata: Additional metadata about the fact
+            
+        Returns:
+            str: ID of the stored fact
+        """
+        # Read existing facts
+        facts = await self._read_facts()
+        
+        # Check for duplicate facts
+        for i, existing_fact in enumerate(facts):
+            if existing_fact.get("content", "").lower() == fact.lower():
+                # Update fact's confidence and metadata if needed
+                if confidence > existing_fact.get("confidence", 0.0):
+                    facts[i]["confidence"] = confidence
+                if source and not existing_fact.get("source"):
+                    facts[i]["source"] = source
+                if metadata:
+                    facts[i]["metadata"] = {**existing_fact.get("metadata", {}), **metadata}
+                
+                # Write back to file
+                await self._write_facts(facts)
+                return ""
+        
+        # Create new fact
+        agent_fact = AgentFact(
+            content=fact,
+            source=source,
+            confidence=confidence,
+            timestamp=datetime.now(),
+            metadata=metadata or {}
+        )
+        
+        # Add to facts list
+        facts.append(agent_fact.model_dump())
+        
+        # Enforce max size by removing lowest confidence facts if needed
+        while len(facts) > self.max_facts:
+            # Find fact with lowest confidence
+            min_confidence_idx = min(range(len(facts)), key=lambda i: facts[i].get("confidence", 0.0))
+            facts.pop(min_confidence_idx)
+        
+        # Write back to file
+        await self._write_facts(facts)
+        
+        return ""  # No specific ID in this implementation
+    
+    async def get_recent_interactions(self, count: int = 5) -> List[Interaction]:
+        """Get recent interactions.
+        
+        Args:
+            count: Number of recent interactions to return
+            
+        Returns:
+            List[Interaction]: Recent interactions
+        """
+        interactions = await self._read_interactions()
+        recent_interactions = interactions[-count:] if count > 0 else []
+        
+        # Convert back to Interaction objects
+        return [Interaction.model_validate(interaction) for interaction in recent_interactions]
+    
+    async def get_relevant_facts(self, query: str, count: int = 5) -> List[AgentFact]:
+        """Get facts relevant to a query.
+        
+        Args:
+            query: The query to find relevant facts for
+            count: Maximum number of facts to return
+            
+        Returns:
+            List[AgentFact]: Relevant facts
+            
+        Note:
+            This implementation uses basic keyword matching.
+            A more sophisticated implementation would use semantic search.
+        """
+        facts = await self._read_facts()
+        
+        # Simple relevance scoring by keyword matching
+        query_words = set(query.lower().split())
+        scored_facts = []
+        
+        for fact_dict in facts:
+            # Count matching words
+            fact_content = fact_dict.get("content", "").lower()
+            fact_words = set(fact_content.split())
+            match_score = len(query_words.intersection(fact_words))
+            # Weight by confidence
+            confidence = fact_dict.get("confidence", 1.0)
+            weighted_score = match_score * confidence
+            
+            if match_score > 0:
+                scored_facts.append((weighted_score, fact_dict))
+        
+        # Sort by score (highest first) and take top 'count'
+        relevant_facts = [fact for _, fact in sorted(scored_facts, reverse=True)[:count]]
+        
+        # Convert to AgentFact objects
+        return [AgentFact.model_validate(fact) for fact in relevant_facts]
+    
+    async def get_all_facts(self) -> List[AgentFact]:
+        """Get all stored facts.
+        
+        Returns:
+            List[AgentFact]: All facts in memory
+        """
+        facts = await self._read_facts()
+        return [AgentFact.model_validate(fact) for fact in facts]
+    
+    async def add_working_memory_item(self, key: str, value: Any) -> None:
+        """Add or update a working memory item.
+        
+        Args:
+            key: The key to store the value under
+            value: The value to store
+        """
+        working_memory = await self._read_working_memory()
+        working_memory[key] = value
+        await self._write_working_memory(working_memory)
+    
+    async def get_working_memory_item(self, key: str, default: Optional[T] = None) -> Union[Any, T]:
+        """Get a working memory item.
+        
+        Args:
+            key: The key of the item to retrieve
+            default: Default value if the key doesn't exist
+            
+        Returns:
+            The stored value or the default
+        """
+        working_memory = await self._read_working_memory()
+        return working_memory.get(key, default)
+    
+    async def get_working_memory(self) -> Dict[str, Any]:
+        """Get all working memory items.
+        
+        Returns:
+            Dict[str, Any]: All working memory items
+        """
+        return await self._read_working_memory()
+    
+    async def clear_working_memory(self) -> None:
+        """Clear all working memory items."""
+        await self._write_working_memory({})
+    
+    async def clear(self) -> None:
+        """Clear all memory (interactions, facts, and working memory)."""
+        await self._write_interactions([])
+        await self._write_facts([])
+        await self._write_working_memory({})

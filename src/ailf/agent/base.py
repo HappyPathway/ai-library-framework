@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Optional, Set, Type, Union, Callable, TypeVa
 from pydantic import BaseModel, Field
 
 from ailf.ai.engine import AIEngine
+from ailf.memory.interfaces import AgentMemoryInterface, MemoryFactory
+from ailf.schemas.agent_memory import AgentMemoryConfig
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,10 @@ class AgentConfig(BaseModel):
     max_iterations: int = Field(default=10, description="Maximum number of execution iterations")
     temperature: float = Field(default=0.1, description="Temperature for agent's reasoning")
     enable_memory: bool = Field(default=True, description="Whether agent has memory")
+    memory_config: Optional[AgentMemoryConfig] = Field(
+        default=None, 
+        description="Configuration for agent memory"
+    )
     timeout_seconds: Optional[float] = Field(default=None, description="Timeout for agent execution")
     verbose: bool = Field(default=False, description="Enable verbose logging")
 
@@ -86,53 +92,7 @@ class PlanningStrategy(ABC):
         pass
 
 
-class AgentMemory:
-    """Memory system for agents."""
-    
-    def __init__(self):
-        """Initialize an empty memory system."""
-        self.interactions: List[Dict[str, Any]] = []
-        self.facts: List[str] = []
-        self.working_memory: Dict[str, Any] = {}
-    
-    def add_interaction(self, query: str, result: Any) -> None:
-        """Add an interaction to memory.
-        
-        Args:
-            query: User query or instruction
-            result: Result of processing the query
-        """
-        self.interactions.append({
-            "timestamp": datetime.now(),
-            "query": query,
-            "result": result
-        })
-    
-    def add_fact(self, fact: str) -> None:
-        """Add a fact to memory.
-        
-        Args:
-            fact: The fact to remember
-        """
-        if fact not in self.facts:
-            self.facts.append(fact)
-    
-    def get_recent_interactions(self, count: int = 5) -> List[Dict[str, Any]]:
-        """Get recent interactions.
-        
-        Args:
-            count: Number of recent interactions to return
-            
-        Returns:
-            List[Dict[str, Any]]: Recent interactions
-        """
-        return self.interactions[-count:]
-    
-    def clear(self) -> None:
-        """Clear all memory."""
-        self.interactions = []
-        self.facts = []
-        self.working_memory = {}
+# Agent memory is now provided by the AgentMemoryInterface implementations
 
 
 class Agent:
@@ -144,7 +104,8 @@ class Agent:
         model_name: str,
         description: Optional[str] = None,
         planning_strategy: Optional[PlanningStrategy] = None,
-        config: Optional[AgentConfig] = None
+        config: Optional[AgentConfig] = None,
+        memory: Optional[AgentMemoryInterface] = None
     ):
         """Initialize a new agent.
         
@@ -154,6 +115,7 @@ class Agent:
             description: Description of the agent's purpose
             planning_strategy: Strategy for planning actions
             config: Additional configuration options
+            memory: Memory implementation for the agent (overrides memory_config)
         """
         self.config = config or AgentConfig(
             name=name,
@@ -166,7 +128,22 @@ class Agent:
         self.agent_id = str(uuid.uuid4())
         self.planning_strategy = planning_strategy
         self.status = AgentStatus.IDLE
-        self.memory = AgentMemory() if self.config.enable_memory else None
+        
+        # Initialize memory
+        if memory:
+            self.memory = memory
+        elif self.config.enable_memory:
+            memory_config = self.config.memory_config or AgentMemoryConfig()
+            self.memory = MemoryFactory.create_memory(
+                memory_type=memory_config.memory_type,
+                max_interactions=memory_config.max_interactions,
+                max_facts=memory_config.max_facts,
+                connection_string=memory_config.connection_string,
+                directory_path=memory_config.file_path or f"./agent_memory/{self.agent_id}"
+            )
+        else:
+            self.memory = None
+            
         self.tools: Dict[str, Callable] = {}
         self._ai_engine: Optional[AIEngine] = None
     
@@ -249,7 +226,7 @@ class Agent:
             
             # Update memory if enabled
             if self.memory:
-                self.memory.add_interaction(query, final_output)
+                await self.memory.add_interaction(query, final_output)
                 
             return final_output if output_schema else result
             
@@ -284,7 +261,7 @@ class Agent:
         Returns:
             Any: Result of execution
         """
-        system_prompt = self._get_system_prompt(query)
+        system_prompt = await self._get_system_prompt(query)
         
         for i, step in enumerate(steps):
             # Only execute steps without observations (unexecuted steps)
@@ -366,7 +343,7 @@ class Agent:
         
         return final_step.observation
     
-    def _get_system_prompt(self, query: str) -> str:
+    async def _get_system_prompt(self, query: str) -> str:
         """Generate a system prompt for the agent.
         
         Args:
@@ -383,10 +360,16 @@ class Agent:
                 tool_descriptions += f"- {name}: {doc}\n"
         
         memory_context = ""
-        if self.memory and self.memory.facts:
-            memory_context = "Relevant information from memory:\n\n"
-            for fact in self.memory.facts:
-                memory_context += f"- {fact}\n"
+        if self.memory:
+            # Get facts relevant to this query
+            relevant_facts = await self.memory.get_relevant_facts(query, count=5)
+            if relevant_facts:
+                memory_context = "Relevant information from memory:\n\n"
+                for fact in relevant_facts:
+                    memory_context += f"- {fact.content}"
+                    if fact.source:
+                        memory_context += f" (Source: {fact.source})"
+                    memory_context += "\n"
         
         return f"""You are {self.name}, {self.description}.
         

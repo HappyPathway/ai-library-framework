@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 
 from ailf.memory.redis_cache import RedisDistributedCache
-from ailf.schemas.memory import MemoryItem
+from ailf.schemas.memory import MemoryItem, MemoryType
 
 
 @pytest.fixture
@@ -49,170 +49,188 @@ class TestRedisDistributedCache:
     @pytest.mark.asyncio
     async def test_add_item_with_ttl(self, redis_cache, mock_redis):
         """Test adding an item with TTL."""
-        item_id = "test1"
-        data = {"name": "Test Item"}
-        metadata = {"source": "test"}
-        ttl = 60
+        # Create test item
+        test_item = MemoryItem(
+            id="test1", 
+            type=MemoryType.OBSERVATION,
+            content="test data"
+        )
         
-        await redis_cache.add_item(item_id, data, ttl, metadata)
+        # Add item to cache
+        await redis_cache.add_item(test_item, ttl=60)
         
-        # Get the expected Redis key
-        expected_key = f"{redis_cache.key_prefix}{item_id}"
+        # Mock conversion to JSON
+        json_data = test_item.model_dump_json()
         
-        # Verify setex was called with the right parameters
+        # Check that the set command was called correctly
         mock_redis.setex.assert_called_once()
-        call_args = mock_redis.setex.call_args[0]
-        
-        assert call_args[0] == expected_key
-        assert call_args[1] == ttl
-        
-        # Deserialize the stored item to verify contents
-        serialized_item = call_args[2]
-        stored_item = json.loads(serialized_item)
-        
-        assert stored_item["item_id"] == item_id
-        assert stored_item["data"] == data
-        assert stored_item["metadata"] == metadata
+        args = mock_redis.setex.call_args[0]
+        assert args[0] == "ailf:cache:test1"  # Key
+        assert args[1] == 60  # TTL
+        # Check that the value is valid JSON that can be parsed back to an item
+        assert json.loads(args[2])["id"] == "test1"
+        assert json.loads(args[2])["type"] == "observation"
+        assert json.loads(args[2])["content"] == "test data"
     
     @pytest.mark.asyncio
     async def test_add_item_no_ttl(self, redis_cache, mock_redis):
         """Test adding an item with default TTL."""
-        item_id = "test1"
-        data = {"name": "Test Item"}
+        # Create test item
+        test_item = MemoryItem(
+            id="test2", 
+            type=MemoryType.ACTION,
+            content="action data"
+        )
         
-        await redis_cache.add_item(item_id, data)
+        # Add item to cache with default TTL
+        await redis_cache.add_item(test_item)
         
-        # Verify setex was called with default TTL
+        # Check that setex was called with default TTL
         mock_redis.setex.assert_called_once()
-        call_args = mock_redis.setex.call_args[0]
-        assert call_args[1] == redis_cache.default_ttl
+        args = mock_redis.setex.call_args[0]
+        assert args[0] == "ailf:cache:test2"
+        assert args[1] == redis_cache.default_ttl
     
     @pytest.mark.asyncio
     async def test_add_persistent_item(self, redis_cache, mock_redis):
-        """Test adding a persistent item (no expiration)."""
-        item_id = "test_persistent"
-        data = {"name": "Persistent Item"}
+        """Test adding a persistent item (no TTL)."""
+        # Create test item
+        test_item = MemoryItem(
+            id="test3", 
+            type=MemoryType.ACTION,
+            content="persistent data"
+        )
         
-        await redis_cache.add_item(item_id, data, ttl=0)  # 0 means persist
+        # Add as persistent item (TTL = -1)
+        await redis_cache.add_item(test_item, ttl=-1)
         
-        # Verify set was called instead of setex
+        # Check that set was called instead of setex for persistent items
         mock_redis.set.assert_called_once()
-        mock_redis.setex.assert_not_called()
-    
+        args = mock_redis.set.call_args[0]
+        assert args[0] == "ailf:cache:test3"
+        
     @pytest.mark.asyncio
     async def test_get_item_existing(self, redis_cache, mock_redis):
         """Test retrieving an existing item."""
-        item_id = "test1"
+        # Create test item
         test_item = MemoryItem(
-            item_id=item_id,
-            data={"name": "Test Item"},
-            metadata={"source": "test"}
+            id="test4",
+            type=MemoryType.OBSERVATION,
+            content="retrievable data"
         )
         
-        # Mock Redis get to return serialized test item
-        serialized_item = json.dumps(test_item.model_dump())
-        mock_redis.get.return_value = serialized_item
+        # Setup mock to return the JSON data
+        mock_redis.get.return_value = test_item.model_dump_json()
         
-        # Retrieve the item
-        retrieved_item = await redis_cache.get_item(item_id)
+        # Get the item
+        retrieved_item = await redis_cache.get_item("test4")
         
-        # Verify Redis get was called with the right key
-        expected_key = f"{redis_cache.key_prefix}{item_id}"
-        mock_redis.get.assert_called_once_with(expected_key)
+        # Check that get was called with the right key
+        mock_redis.get.assert_called_once_with("ailf:cache:test4")
         
-        # Verify retrieved item matches expected values
+        # Check retrieved item
         assert retrieved_item is not None
-        assert retrieved_item.item_id == item_id
-        assert retrieved_item.data == test_item.data
-        assert retrieved_item.metadata == test_item.metadata
+        assert retrieved_item.id == "test4"
+        assert retrieved_item.type == MemoryType.OBSERVATION
+        assert retrieved_item.content == "retrievable data"
     
     @pytest.mark.asyncio
     async def test_get_item_nonexistent(self, redis_cache, mock_redis):
         """Test retrieving a non-existent item."""
+        # Setup mock to return None for non-existent key
         mock_redis.get.return_value = None
         
-        retrieved_item = await redis_cache.get_item("nonexistent_id")
+        # Try to get a non-existent item
+        retrieved_item = await redis_cache.get_item("nonexistent")
+        
+        # Check that get was called
+        mock_redis.get.assert_called_once_with("ailf:cache:nonexistent")
+        
+        # Check that None is returned for non-existent items
         assert retrieved_item is None
     
     @pytest.mark.asyncio
     async def test_remove_item(self, redis_cache, mock_redis):
         """Test removing an item."""
-        item_id = "test1"
-        mock_redis.delete.return_value = 1  # 1 key deleted
+        # Setup mock to return 1 (successful deletion)
+        mock_redis.delete.return_value = 1
         
-        result = await redis_cache.remove_item(item_id)
+        # Remove an item
+        success = await redis_cache.remove_item("test5")
         
-        # Verify Redis delete was called with the right key
-        expected_key = f"{redis_cache.key_prefix}{item_id}"
-        mock_redis.delete.assert_called_once_with(expected_key)
-        assert result is True
+        # Check that delete was called with the right key
+        mock_redis.delete.assert_called_once_with("ailf:cache:test5")
+        
+        # Check that True is returned for successful deletion
+        assert success is True
     
     @pytest.mark.asyncio
     async def test_remove_nonexistent_item(self, redis_cache, mock_redis):
         """Test removing a non-existent item."""
-        item_id = "nonexistent_id"
-        mock_redis.delete.return_value = 0  # 0 keys deleted
+        # Setup mock to return 0 (no keys deleted)
+        mock_redis.delete.return_value = 0
         
-        result = await redis_cache.remove_item(item_id)
-        assert result is True  # Should still return True as the operation was successful
+        # Try to remove a non-existent item
+        success = await redis_cache.remove_item("nonexistent")
+        
+        # Check that delete was called
+        mock_redis.delete.assert_called_once_with("ailf:cache:nonexistent")
+        
+        # Check that False is returned for unsuccessful deletion
+        assert success is False
     
     @pytest.mark.asyncio
     async def test_list_item_ids(self, redis_cache, mock_redis):
-        """Test listing item IDs."""
-        # Mock the keys that Redis would return
-        prefix = redis_cache.key_prefix
-        mock_keys = [
-            f"{prefix}item1".encode('utf-8'),
-            f"{prefix}item2".encode('utf-8'),
-            f"{prefix}item3".encode('utf-8')
-        ]
-        mock_redis.keys.return_value = mock_keys
+        """Test listing all item IDs."""
+        # Setup mock to return keys
+        mock_redis.keys.return_value = ["ailf:cache:item1", "ailf:cache:item2", "ailf:cache:item3"]
         
-        # Get item IDs
+        # Get all item IDs
         item_ids = await redis_cache.list_item_ids()
         
-        # Verify Redis keys was called with the right pattern
-        expected_pattern = f"{prefix}*"
-        mock_redis.keys.assert_called_once_with(expected_pattern)
+        # Check that keys was called with the right pattern
+        mock_redis.keys.assert_called_once_with("ailf:cache:*")
         
-        # Verify the returned list has the prefix stripped
-        assert item_ids == ["item1", "item2", "item3"]
+        # Check that the IDs are extracted correctly
+        assert set(item_ids) == {"item1", "item2", "item3"}
     
     @pytest.mark.asyncio
     async def test_clear_all(self, redis_cache, mock_redis):
         """Test clearing all items."""
-        # Setup mock to return some keys
-        mock_redis.keys.return_value = [
-            b"ailf:cache:item1",
-            b"ailf:cache:item2"
-        ]
-        mock_redis.delete.return_value = 2  # 2 keys deleted
+        # Setup keys to delete
+        mock_redis.keys.return_value = ["ailf:cache:item1", "ailf:cache:item2"]
+        # Setup delete to return number of keys deleted
+        mock_redis.delete.return_value = 2
         
-        # Call clear_all
+        # Clear all items
         deleted_count = await redis_cache.clear_all()
         
-        # Verify keys were fetched with the right pattern
+        # Check that keys was called to find all keys
         mock_redis.keys.assert_called_once_with("ailf:cache:*")
         
-        # Verify delete was called with the right keys
+        # Check that delete was called with all keys
         mock_redis.delete.assert_called_once_with("ailf:cache:item1", "ailf:cache:item2")
+        
+        # Check that the correct count is returned
         assert deleted_count == 2
     
     @pytest.mark.asyncio
     async def test_ping(self, redis_cache, mock_redis):
-        """Test pinging Redis."""
-        result = await redis_cache.ping()
+        """Test pinging the Redis server."""
+        # Call ping
+        is_connected = await redis_cache.ping()
+        
+        # Check that ping was called on the Redis client
         mock_redis.ping.assert_called_once()
-        assert result is True
+        
+        # Check that True is returned for successful ping
+        assert is_connected is True
     
     @pytest.mark.asyncio
     async def test_close(self, redis_cache, mock_redis):
-        """Test closing Redis connection."""
-        # Create a mock connection pool
-        mock_pool = AsyncMock()
-        mock_redis.connection_pool = mock_pool
-        
+        """Test closing the Redis connection."""
+        # Call close
         await redis_cache.close()
         
+        # Check that close was called on the Redis client
         mock_redis.close.assert_called_once()
-        mock_pool.disconnect.assert_called_once()

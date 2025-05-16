@@ -3,7 +3,8 @@
 import json
 from typing import Any, Dict, List, Optional, Union
 
-import redis.asyncio as redis # type: ignore
+# Updated import pattern to address deprecation warning
+from redis import asyncio as redis
 
 from ailf.schemas.memory import MemoryItem
 
@@ -31,37 +32,33 @@ class RedisDistributedCache:
         """Constructs the full Redis key with the prefix."""
         return f"{self.key_prefix}{item_id}"
 
-    async def add_item(self, item_id: str, data: Any, ttl: Optional[int] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
+    async def add_item(self, memory_item: MemoryItem, ttl: Optional[int] = None) -> None:
         """
-        Adds an item to the Redis cache.
+        Adds a MemoryItem to the Redis cache.
 
-        The item is stored as a JSON serialized MemoryItem.
-
-        :param item_id: Unique identifier for the memory item.
-        :type item_id: str
-        :param data: The data to store.
-        :type data: Any
+        :param memory_item: The memory item to store
+        :type memory_item: MemoryItem
         :param ttl: Time-to-live for this item in seconds. Uses default_ttl if None.
-                            A TTL of 0 or less means the item will not expire (persistent).
+                    A TTL of 0 or less means the item will not expire (persistent).
         :type ttl: Optional[int]
-        :param metadata: Optional metadata associated with the item.
-        :type metadata: Optional[Dict[str, Any]]
         """
         actual_ttl = ttl if ttl is not None else self.default_ttl
-        redis_key = self._get_redis_key(item_id)
+        redis_key = self._get_redis_key(memory_item.id)
         
-        memory_item_obj = MemoryItem(
-            item_id=item_id,
-            data=data,
-            metadata=metadata or {}
-        )
-        # Pydantic v2 uses model_dump_json, v1 uses json()
-        serialized_item = memory_item_obj.model_dump_json() if hasattr(memory_item_obj, 'model_dump_json') else memory_item_obj.json()
-
+        # Serialize to JSON
+        try:
+            serialized_data = memory_item.model_dump_json()
+        except AttributeError:
+            # Fallback for older Pydantic versions
+            serialized_data = memory_item.json()
+            
+        # Store in Redis
         if actual_ttl > 0:
-            await self.redis_client.setex(redis_key, actual_ttl, serialized_item)
+            # With TTL
+            await self.redis_client.setex(redis_key, actual_ttl, serialized_data)
         else:
-            await self.redis_client.set(redis_key, serialized_item) # Persist if ttl <= 0
+            # Persistent (no TTL)
+            await self.redis_client.set(redis_key, serialized_data)
 
     async def get_item(self, item_id: str) -> Optional[MemoryItem]:
         """
@@ -74,11 +71,22 @@ class RedisDistributedCache:
         """
         redis_key = self._get_redis_key(item_id)
         serialized_item = await self.redis_client.get(redis_key)
-        if serialized_item:
-            # Pydantic v2 uses model_validate_json, v1 uses parse_raw
+        
+        if not serialized_item:
+            return None
+            
+        # Convert from bytes if needed
+        if isinstance(serialized_item, bytes):
+            serialized_item = serialized_item.decode('utf-8')
+            
+        try:
+            # Parse JSON into MemoryItem
             item_dict = json.loads(serialized_item)
-            return MemoryItem(**item_dict)
-        return None
+            return MemoryItem.model_validate(item_dict) if hasattr(MemoryItem, 'model_validate') else MemoryItem.parse_obj(item_dict)
+        except Exception as e:
+            # Log the error but don't crash
+            print(f"Error parsing MemoryItem from cache: {e}")
+            return None
 
     async def remove_item(self, item_id: str) -> bool:
         """
@@ -86,12 +94,12 @@ class RedisDistributedCache:
 
         :param item_id: The ID of the item to remove.
         :type item_id: str
-        :return: True if the item was removed (or didn't exist), False on error.
+        :return: True if the item was found and removed, False otherwise.
         :rtype: bool
         """
         redis_key = self._get_redis_key(item_id)
         deleted_count = await self.redis_client.delete(redis_key)
-        return deleted_count >= 0 # delete returns num keys deleted, 0 if key doesn't exist
+        return deleted_count > 0
 
     async def list_item_ids(self, pattern: str = "*") -> List[str]:
         """
@@ -104,9 +112,18 @@ class RedisDistributedCache:
         :rtype: List[str]
         """
         full_pattern = f"{self.key_prefix}{pattern}"
-        keys_as_bytes = await self.redis_client.keys(full_pattern)
-        # Decode and strip prefix
-        return [key.decode('utf-8').replace(self.key_prefix, "", 1) for key in keys_as_bytes]
+        keys = await self.redis_client.keys(full_pattern)
+        
+        # Handle both string and bytes keys
+        result = []
+        for key in keys:
+            if isinstance(key, bytes):
+                key_str = key.decode('utf-8')
+            else:
+                key_str = key
+            result.append(key_str.replace(self.key_prefix, "", 1))
+        
+        return result
 
     async def clear_all(self, pattern: str = "*") -> int:
         """
@@ -121,13 +138,13 @@ class RedisDistributedCache:
         :return: The number of keys deleted.
         :rtype: int
         """
-        keys_to_delete = await self.list_item_ids(pattern) # This already uses the prefix
-        if not keys_to_delete:
+        full_pattern = f"{self.key_prefix}{pattern}"
+        keys = await self.redis_client.keys(full_pattern)
+        
+        if not keys:
             return 0
         
-        # Need to re-add prefix for deletion if list_item_ids strips it
-        full_keys_to_delete = [self._get_redis_key(key_id) for key_id in keys_to_delete]
-        return await self.redis_client.delete(*full_keys_to_delete)
+        return await self.redis_client.delete(*keys)
 
     async def ping(self) -> bool:
         """Checks the connection to Redis."""

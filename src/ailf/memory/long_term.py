@@ -39,8 +39,8 @@ class LongTermMemory:
         :return: The full path to the item's JSON file.
         :rtype: Path
         """
-        # Use a simple name for the subdirectory, e.g., "userprofile", "knowledgefact"
-        model_dir_name = model_cls.__name__.lower()
+        # Use the class name for the subdirectory, preserving case
+        model_dir_name = model_cls.__name__
         storage_dir = self.base_path / model_dir_name
         storage_dir.mkdir(parents=True, exist_ok=True)
         return storage_dir / f"{item_id}.json"
@@ -54,14 +54,36 @@ class LongTermMemory:
         :type item: M
         :raises ValueError: If the item does not have a suitable ID attribute.
         """
-        item_id = self._extract_id(item)
-        file_path = self._get_storage_path(item.__class__, item_id)
+        import sys
+        print(f"DEBUG store_item: Storing item of type {type(item).__name__}", file=sys.stderr)
         
-        # Pydantic v2 uses model_dump_json, v1 uses json()
-        serialized_item = item.model_dump_json(indent=2) if hasattr(item, 'model_dump_json') else item.json(indent=2)
-        
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(serialized_item)
+        try:
+            item_id = self._extract_id(item)
+            print(f"DEBUG store_item: Extracted ID: {item_id}", file=sys.stderr)
+            
+            file_path = self._get_storage_path(item.__class__, item_id)
+            print(f"DEBUG store_item: File path: {file_path}", file=sys.stderr)
+            
+            # Pydantic v2 uses model_dump_json, v1 uses json()
+            serialized_item = item.model_dump_json(indent=2) if hasattr(item, 'model_dump_json') else item.json(indent=2)
+            print(f"DEBUG store_item: Serialized item: {serialized_item[:100]}...", file=sys.stderr)
+            
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(serialized_item)
+                print(f"DEBUG store_item: Successfully wrote to {file_path}", file=sys.stderr)
+            
+            # Verify file exists after write
+            import os
+            if os.path.exists(file_path):
+                print(f"DEBUG store_item: Verified file exists at {file_path}", file=sys.stderr)
+            else:
+                print(f"DEBUG store_item: ERROR - File does not exist after write: {file_path}", file=sys.stderr)
+                
+        except Exception as e:
+            print(f"DEBUG store_item: Exception: {str(e)}", file=sys.stderr)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            raise
 
     async def retrieve_item(self, model_cls: Type[M], item_id: str) -> Optional[M]:
         """
@@ -74,14 +96,65 @@ class LongTermMemory:
         :return: The deserialized Pydantic model instance if found, else None.
         :rtype: Optional[M]
         """
-        file_path = self._get_storage_path(model_cls, item_id)
-        if not file_path.exists():
-            return None
+        import sys
+        print(f"DEBUG retrieve_item: Looking for {model_cls.__name__} with ID {item_id}", file=sys.stderr)
         
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data_dict = json.load(f)
+        try:
+            file_path = self._get_storage_path(model_cls, item_id)
+            print(f"DEBUG retrieve_item: Path to check: {file_path}", file=sys.stderr)
+            
+            if not file_path.exists():
+                print(f"DEBUG retrieve_item: File not found at {file_path}", file=sys.stderr)
+                
+                # Debug: List all files in the directory to check what's there
+                dir_path = file_path.parent
+                if dir_path.exists():
+                    print(f"DEBUG retrieve_item: Files in directory {dir_path}:", file=sys.stderr)
+                    for f in dir_path.iterdir():
+                        print(f"  - {f.name}", file=sys.stderr)
+                else:
+                    print(f"DEBUG retrieve_item: Directory {dir_path} does not exist", file=sys.stderr)
+                return None
+            
+            print(f"DEBUG retrieve_item: File found at {file_path}", file=sys.stderr)
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = f.read()
+                print(f"DEBUG retrieve_item: Raw content: {data[:100]}...", file=sys.stderr)
+                # Re-open the file for json.load
+                f.seek(0)
+                data_dict = json.load(f)
+            
             # Pydantic v2 uses model_validate, v1 uses parse_obj
-            return model_cls.model_validate(data_dict) if hasattr(model_cls, 'model_validate') else model_cls.parse_obj(data_dict)
+            if hasattr(model_cls, 'model_validate'):
+                result = model_cls.model_validate(data_dict) 
+            else:
+                result = model_cls.parse_obj(data_dict)
+                
+            print(f"DEBUG retrieve_item: Successfully loaded {model_cls.__name__}: {result}", file=sys.stderr)
+            return result
+        except Exception as e:
+            print(f"DEBUG retrieve_item: Exception: {str(e)}", file=sys.stderr)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            
+            # Try parsing the JSON string directly
+            try:
+                print(f"DEBUG retrieve_item: Trying to parse from raw data", file=sys.stderr)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = f.read()
+                    data_dict = json.loads(data)
+                    
+                # Pydantic v2 uses model_validate, v1 uses parse_obj
+                if hasattr(model_cls, 'model_validate'):
+                    result = model_cls.model_validate(data_dict) 
+                else:
+                    result = model_cls.parse_obj(data_dict)
+                    
+                print(f"DEBUG retrieve_item: Successfully loaded from raw data: {result}", file=sys.stderr)
+                return result
+            except Exception as e2:
+                print(f"DEBUG retrieve_item: Second attempt failed: {str(e2)}", file=sys.stderr)
+                return None
 
     async def delete_item(self, model_cls: Type[M], item_id: str) -> bool:
         """
@@ -109,7 +182,7 @@ class LongTermMemory:
         :return: A list of item IDs (filenames without .json extension).
         :rtype: List[str]
         """
-        model_dir_name = model_cls.__name__.lower()
+        model_dir_name = model_cls.__name__
         storage_dir = self.base_path / model_dir_name
         if not storage_dir.exists():
             return []
@@ -117,8 +190,8 @@ class LongTermMemory:
 
     def _extract_id(self, item: M) -> str:
         """Helper to extract a suitable ID from a Pydantic model instance."""
-        # Try common ID field names
-        possible_id_fields = ['item_id', f'{item.__class__.__name__.lower()}_id', 'id']
+        # Prioritize 'id' over legacy fields
+        possible_id_fields = ['id', f'{item.__class__.__name__.lower()}_id', 'item_id']
         for field_name in possible_id_fields:
             if hasattr(item, field_name):
                 item_id_val = getattr(item, field_name)
@@ -128,10 +201,6 @@ class LongTermMemory:
         # Fallback for specific models if needed, or raise error
         if isinstance(item, UserProfile):
             return item.user_id # Already checked by 'userprofile_id' if class name is UserProfile
-        if isinstance(item, KnowledgeFact):
-            return item.fact_id
-        if isinstance(item, MemoryItem): # Though MemoryItem is more for short-term/cache
-            return item.item_id
 
         raise ValueError(
             f"Item of type {item.__class__.__name__} must have a string ID attribute "
@@ -159,17 +228,17 @@ async def example_ltm_usage():
     # --- KnowledgeFact Example ---
     fact_id = "ailf_is_cool_fact"
     fact_data = KnowledgeFact(
-        fact_id=fact_id,
+        id=fact_id,
         content="AILF is a framework for building AI agents.",
         source="Developer Documentation",
-        tags=["ailf", "framework", "ai"]
+        metadata={"tags": ["ailf", "framework", "ai"]}
     )
     await ltm_store.store_item(fact_data)
     print(f"Stored: {fact_id}")
 
     retrieved_fact = await ltm_store.retrieve_item(KnowledgeFact, fact_id)
     if retrieved_fact:
-        print(f"Retrieved KnowledgeFact: {retrieved_fact.fact_id}, Content: {retrieved_fact.content}")
+        print(f"Retrieved KnowledgeFact: {retrieved_fact.id}, Content: {retrieved_fact.content}")
 
     # List items
     user_profiles = await ltm_store.list_item_ids(UserProfile)
