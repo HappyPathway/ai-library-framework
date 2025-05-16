@@ -1,5 +1,6 @@
 """Google Cloud Storage Config Stash
 
+Original Description:
 This module provides a Python equivalent to the Terraform Clover Config Stash,
 allowing storage and retrieval of arbitrary configuration data in GCS buckets.
 It supports:
@@ -13,7 +14,7 @@ It supports:
 
 Example:
     ```python
-    from ailf.gcs_config_stash import ConfigStash
+    from ailf.cloud.gcs_config_stash import ConfigStash
     
     # Initialize stash
     stash = ConfigStash(bucket_name="my-config-bucket")

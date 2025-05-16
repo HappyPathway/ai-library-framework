@@ -39,5 +39,14 @@
 		],
 		"python.analysis.autoImportCompletions": true,
 		"python.analysis.indexing": true
+	},
+	"mcp": {
+		"servers": {
+			"py-docs": {
+				"type": "stdio",
+				"command": "/workspaces/template-python-dev/src/ailf/documentation.py",
+				"args": []
+			}
+		}
 	}
 }

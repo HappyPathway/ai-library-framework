@@ -27,13 +27,13 @@ import sys
 import textwrap
 from contextlib import redirect_stdout
 from io import StringIO
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
 from ailf import BaseMCP, Context
 from ailf.core.logging import setup_logging
-from ailf.ai_engine import AIEngine
+from ailf.ai.engine import AIEngine
 
 # Initialize logging
 logger = setup_logging("doc_helper")
@@ -167,7 +167,7 @@ def get_object_documentation(obj: Any, obj_type: str, obj_name: str) -> Dict[str
     Returns:
         Dictionary containing extracted documentation
     """
-    doc_data = {
+    doc_data: Dict[str, Any] = {
         "object_name": obj_name,
         "object_type": obj_type,
         "docstring": inspect.getdoc(obj) or "",
@@ -176,21 +176,31 @@ def get_object_documentation(obj: Any, obj_type: str, obj_name: str) -> Dict[str
     
     # Add specific information based on object type
     if obj_type == "module":
-        doc_data.update({
-            "functions": [name for name, _ in inspect.getmembers(obj, inspect.isfunction)],
-            "classes": [name for name, _ in inspect.getmembers(obj, inspect.isclass)],
-            "attributes": {name: str(value) for name, value in inspect.getmembers(obj) 
-                          if not name.startswith("__") and not inspect.isfunction(value) 
-                          and not inspect.isclass(value) and not inspect.ismodule(value)},
-        })
+        doc_data["functions"] = [name for name, _ in inspect.getmembers(obj, inspect.isfunction)]
+        doc_data["classes"] = [name for name, _ in inspect.getmembers(obj, inspect.isclass)]
+        doc_data["attributes"] = {
+            name: str(value)
+            for name, value in inspect.getmembers(obj)
+            if not name.startswith("__")
+            and not inspect.isfunction(value)
+            and not inspect.isclass(value)
+            and not inspect.ismodule(value)
+        }
     elif obj_type == "class":
-        doc_data.update({
-            "bases": [base.__name__ for base in obj.__bases__],
-            "methods": [name for name, _ in inspect.getmembers(obj, inspect.isfunction)],
-            "attributes": {name: str(value) for name, value in inspect.getmembers(obj) 
-                          if not name.startswith("__") and not inspect.isfunction(value) 
-                          and not inspect.isclass(value) and not inspect.ismethod(value)},
-        })
+        doc_data.update(
+            {
+                "bases": [base.__name__ for base in obj.__bases__],
+                "methods": [name for name, _ in inspect.getmembers(obj, inspect.isfunction)],
+                "attributes": {
+                    name: str(value)
+                    for name, value in inspect.getmembers(obj)
+                    if not name.startswith("__")
+                    and not inspect.isfunction(value)
+                    and not inspect.isclass(value)
+                    and not inspect.ismethod(value)
+                },
+            }
+        )
     elif obj_type in ("function", "method"):
         # Get signature
         try:
@@ -233,8 +243,11 @@ async def get_documentation(ctx: Context, object_name: str) -> DocumentationResu
         doc = await get_documentation("json.loads")
         ```
     """
-    await ctx.info(f"Getting documentation for {object_name}")
+    logger.info(f"Getting documentation for {object_name}")
     
+    # Initialize obj_type to ensure it's defined in case of early exception
+    obj_type = "unknown"
+    prompt: str = ""  # Initialize prompt here
     try:
         # Import the object
         obj, obj_type = safe_import(object_name)
@@ -252,43 +265,42 @@ async def get_documentation(ctx: Context, object_name: str) -> DocumentationResu
         prompt = textwrap.dedent(f"""
         Parse and structure the following Python documentation for '{object_name}' 
         (type: {obj_type}). Extract key information into a structured format.
-        
-        Documentation:
-        ```
-        {raw_doc_data.get('docstring', '')}
-        
-        Help text:
-        {raw_doc_data.get('help_text', '')}
-        ```
-        
-        Additional information:
-        {raw_doc_data}
         """)
         
         # Generate structured documentation
-        result = await ai_engine.generate(
+        result_from_ai = await ai_engine.generate(
             prompt=prompt,
             output_schema=DocumentationResult
         )
         
+        if not isinstance(result_from_ai, DocumentationResult):
+            error_message = f"AI generation returned an unexpected type: {type(result_from_ai)}. Expected DocumentationResult."
+            logger.error(error_message)
+            return DocumentationResult(
+                object_name=object_name,
+                object_type=obj_type, 
+                summary="Failed to process AI response due to unexpected format.",
+                error=error_message
+            )
+        
         # Return the structured documentation
-        return result
+        return result_from_ai
     
     except ImportError as e:
         # Return error information in the result
-        await ctx.error(f"Import error: {str(e)}")
+        logger.error(f"Import error: {str(e)}")
         return DocumentationResult(
             object_name=object_name,
-            object_type="unknown",
+            object_type="unknown", # obj_type would not be set here
             summary="",
             error=f"Import error: {str(e)}"
         )
     except Exception as e:
         # Return error information in the result
-        await ctx.error(f"Error getting documentation: {str(e)}")
+        logger.error(f"Error getting documentation: {str(e)}")
         return DocumentationResult(
             object_name=object_name,
-            object_type="unknown",
+            object_type=obj_type, # Use determined obj_type if available
             summary="",
             error=f"Error: {str(e)}"
         )
@@ -302,7 +314,7 @@ async def start_server(host: str = "0.0.0.0", port: int = 8000) -> None:
         host: Host address to bind to
         port: Port number to listen on
     """
-    await mcp.serve(host=host, port=port)
+    await mcp.serve(host=host, port=port)  # type: ignore[attr-defined]
 
 
 if __name__ == "__main__":

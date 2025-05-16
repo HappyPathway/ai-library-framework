@@ -45,10 +45,10 @@ Example:
 
 import json
 import logging
-from typing import Any, Dict, List, Optional, Union, Callable
+from typing import Any, Dict, List, Optional, Union
 from google.cloud import storage
 from google.cloud.exceptions import NotFound
-import retry
+from google.api_core import retry
 
 from ailf.core.logging import setup_logging
 
@@ -65,7 +65,7 @@ class ConfigStash:
         self,
         bucket_name: str,
         client: Optional[storage.Client] = None,
-        retry_config: Optional[Callable] = None
+        retry_config: Optional[retry.Retry] = None
     ):
         """Initialize the config stash.
         
@@ -77,9 +77,9 @@ class ConfigStash:
         self.bucket_name = bucket_name
         self.client = client or storage.Client()
         self.bucket = self.client.bucket(bucket_name)
-        self.retry = retry_config or retry.retry(Exception) # Corrected retry call
+        self.retry = retry_config or retry.Retry(predicate=retry.if_exception_type(Exception))
         
-    @retry.retry(Exception) # Corrected decorator
+    @retry.Retry(predicate=retry.if_exception_type(Exception))
     async def get_config(
         self,
         path: str,
@@ -106,7 +106,7 @@ class ConfigStash:
             logger.error(f"Error reading config from {path}: {str(e)}")
             raise
             
-    @retry.retry(Exception) # Corrected decorator
+    @retry.Retry(predicate=retry.if_exception_type(Exception))
     async def set_config(
         self,
         path: str,
@@ -139,7 +139,7 @@ class ConfigStash:
             logger.error(f"Error writing config to {path}: {str(e)}")
             raise
             
-    @retry.retry(Exception) # Corrected decorator
+    @retry.Retry(predicate=retry.if_exception_type(Exception))
     async def update_config(
         self,
         path: str,
