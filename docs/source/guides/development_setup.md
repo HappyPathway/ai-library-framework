@@ -35,19 +35,25 @@ pip install -e ".[all]"     # All available dependencies
 
 ## Common Issues
 
-### Problematic `src` Directory Structure
+### Understanding the `src`-based Directory Structure
 
-Previously, the project installation could sometimes create a problematic `src/template-python-dev` directory containing a duplicate of the project. This structure could cause:
+The project now follows a standard Python `src`-based layout structure. This means the main package code lives in:
 
-1. Import confusion with conflicting module paths
-2. Linting errors due to duplicate code detection
-3. Git issues when the directory contained its own `.git` folder
+```
+src/ailf/
+```
 
-This issue has been fixed, but if you encounter it:
+This structure provides several benefits:
+1. Cleaner separation between package code and supporting files
+2. Prevents accidental imports from the development environment
+3. Better compatibility with automated build tools and packaging
 
-1. Uninstall the package: `pip uninstall template-python-dev`
-2. Remove the `src` directory: `rm -rf src`
-3. Install the package from the root directory: `pip install -e .`
+When installing the package in development mode, the command:
+```bash
+pip install -e .
+```
+
+Will automatically create the right linking to the package in the `src` directory.
 
 ## Using the Makefile
 

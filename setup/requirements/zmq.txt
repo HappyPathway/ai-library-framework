@@ -1,0 +1,2 @@
+# ZMQ dependencies
+pyzmq>=25.1.2

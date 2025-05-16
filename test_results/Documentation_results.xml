@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="0.140" timestamp="2025-05-14T04:41:30.915661" hostname="d5d1c67e5751"><testcase classname="tests.docs.test_a2a_documentation.TestA2ADocumentation" name="test_a2a_code_examples" time="0.074"><failure message="AssertionError: 53 code examples failed validation&#10;assert 53 == 0&#10; +  where 53 = len([('kagent-integration.md', 0, 'Import error'), ('kagent-integration.md', 1, 'Import error'), ('kagent-integration.md', 2, 'Import error'), ('migration_guide.md', 0, 'Import error'), ('ai_module_example.md', 2, 'Import error'), ('ai_module_example.md', 3, 'Import error'), ...])">self = &lt;tests.docs.test_a2a_documentation.TestA2ADocumentation object at 0xffff6d4ad5b0&gt;
+
+    def test_a2a_code_examples(self):
+        """Validate A2A code examples in documentation."""
+        # Get documentation directory
+        docs_dir = os.path.join(os.path.dirname(__file__), "../../docs")
+    
+        if not os.path.exists(docs_dir):
+            pytest.skip(f"Documentation directory not found: {docs_dir}")
+    
+        # Run validation
+        validator = DocsCodeValidator()
+        results = validator.validate_a2a_examples(docs_dir)
+    
+        # Report results
+        print(f"\nValidation Results:")
+        print(f"Passed: {len(results['passed'])}")
+        print(f"Failed: {len(results['failed'])}")
+        print(f"Skipped: {len(results['skipped'])}")
+    
+        # Log failures
+        if results["failed"]:
+            print("\nFailures:")
+            for file_name, block_index, reason in results["failed"]:
+                print(f"- {file_name}, Block #{block_index + 1}: {reason}")
+    
+        # Assert that there are no failures
+&gt;       assert len(results["failed"]) == 0, f"{len(results['failed'])} code examples failed validation"
+E       AssertionError: 53 code examples failed validation
+E       assert 53 == 0
+E        +  where 53 = len([('kagent-integration.md', 0, 'Import error'), ('kagent-integration.md', 1, 'Import error'), ('kagent-integration.md', 2, 'Import error'), ('migration_guide.md', 0, 'Import error'), ('ai_module_example.md', 2, 'Import error'), ('ai_module_example.md', 3, 'Import error'), ...])
+
+tests/docs/test_a2a_documentation.py:183: AssertionError</failure></testcase><testcase classname="tests.docs.test_a2a_documentation.TestA2ADocumentation" name="test_client_code_sample" time="0.001" /></testsuite></testsuites>

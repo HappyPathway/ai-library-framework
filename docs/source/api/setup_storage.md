@@ -1,7 +1,7 @@
-# Setup Storage Module
+# Setup Storage
 
 ```{eval-rst}
-.. automodule:: utils.setup_storage
+.. automodule:: ailf.setup_storage
    :members:
    :undoc-members:
    :show-inheritance:

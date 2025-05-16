@@ -1,0 +1,304 @@
+"""Tests for output adapters.
+
+This module contains tests for the output adapters in the ailf.interaction.adapters module.
+"""
+import json
+import pytest
+from typing import Any, Dict
+from unittest.mock import AsyncMock
+
+from ailf.interaction.adapters import BaseOutputAdapter
+from ailf.schemas.interaction import (
+    TextMessage,
+    StructuredDataMessage,
+    BinaryMessage,
+    MultiModalMessage,
+    StandardMessageHeader,
+    TextMessagePayload,
+    StructuredDataMessagePayload,
+    BinaryMessagePayload,
+    MultiModalMessagePayload,
+    MultiModalPart,
+    MessageModality,
+)ck
+
+from ailf.interaction.adapters import BaseOutputAdapter
+from ailf.schemas.interaction import (
+    TextMessage,
+    StructuredDataMessage,
+    BinaryMessage,
+    MultiModalMessage,
+    StandardMessageHeader,
+    TextMessagePayload,
+    StructuredDataMessagePayload,
+    BinaryMessagePayload,
+    MultiModalMessagePayload,
+    MultiModalPart,
+    MessageModality,
+)
+        """Test formatting MultiModalMessage."""
+        adapter = GenericOutputAdapter()
+        
+        # Create a multi-modal message with text and structured data parts
+        text_part = MultiModalPart(
+            part_id="text_part",
+            modality=MessageModality.TEXT,
+            data="Check out this data"
+        )
+        data_part = MultiModalPart(
+            part_id="data_part",
+            modality=MessageModality.STRUCTURED_DATA,
+            data={"key": "value"} ailf.interaction.adapters import BaseOutputAdapter
+from ailf.schemas.interaction import (
+    TextMessage,
+    StructuredDataMessage,
+    BinaryMessage,
+    MultiModalMessage,
+    StandardMessageHeader,
+    TextMessagePayload,
+    StructuredDataMessagePayload,
+    BinaryMessagePayload,
+    MultiModalMessagePayload,
+    MultiModalPart,
+)
+
+
+class TestBaseOutputAdapter:
+    """Tests for the BaseOutputAdapter abstract class."""
+    
+    def test_abstract_class(self):
+        """Test that BaseOutputAdapter is an abstract class that cannot be instantiated."""
+        with pytest.raises(TypeError):
+            BaseOutputAdapter()
+
+
+class MockTextOutputAdapter(BaseOutputAdapter[str]):
+    """Mock text output adapter for testing."""
+    
+    async def format(self, message: TextMessage) -> str:
+        """Format TextMessage to raw text."""
+        return message.payload.text
+
+
+class MockJsonOutputAdapter(BaseOutputAdapter[str]):
+    """Mock JSON output adapter for testing."""
+    
+    async def format(self, message: StructuredDataMessage) -> str:
+        """Format StructuredDataMessage to JSON string."""
+        return json.dumps(message.payload.data)
+
+
+class MockBinaryOutputAdapter(BaseOutputAdapter[bytes]):
+    """Mock binary output adapter for testing."""
+    
+    async def format(self, message: BinaryMessage) -> bytes:
+        """Format BinaryMessage to raw bytes."""
+        return message.payload.data
+
+
+class TestTextOutputAdapter:
+    """Tests for text output adapter implementation."""
+    
+    @pytest.mark.asyncio
+    async def test_format_text(self):
+        """Test formatting TextMessage to raw text."""
+        adapter = MockTextOutputAdapter()
+        message = TextMessage(payload=TextMessagePayload(text="Hello, world!"))
+        
+        result = await adapter.format(message)
+        
+        assert result == "Hello, world!"
+    
+    @pytest.mark.asyncio
+    async def test_with_header_metadata(self):
+        """Test formatting with header metadata (should not affect output)."""
+        adapter = MockTextOutputAdapter()
+        header = StandardMessageHeader(
+            modality=MessageModality.TEXT,
+            session_id="test-session",
+            user_id="user123",
+        )
+        message = TextMessage(
+            payload=TextMessagePayload(text="Hello, world!"),
+            header=header,
+        )
+        
+        result = await adapter.format(message)
+        
+        # Header should not affect the formatted output
+        assert result == "Hello, world!"
+
+
+class TestJsonOutputAdapter:
+    """Tests for JSON output adapter implementation."""
+    
+    @pytest.mark.asyncio
+    async def test_format_simple_data(self):
+        """Test formatting simple structured data to JSON."""
+        adapter = MockJsonOutputAdapter()
+        message = StructuredDataMessage(payload=StructuredDataMessagePayload(data={"name": "Test User", "age": 30}))
+        
+        result = await adapter.format(message)
+        
+        # Parse the JSON result to verify it's valid
+        parsed = json.loads(result)
+        assert parsed == {"name": "Test User", "age": 30}
+    
+    @pytest.mark.asyncio
+    async def test_format_complex_data(self):
+        """Test formatting complex nested data to JSON."""
+        adapter = MockJsonOutputAdapter()
+        data = {
+            "user": {
+                "name": "Test User",
+                "profile": {
+                    "interests": ["AI", "Python", "Testing"],
+                    "metrics": {
+                        "activity_score": 98.6,
+                        "login_count": 42
+                    }
+                }
+            },
+            "settings": {
+                "notifications": True,
+                "theme": "dark"
+            }
+        }
+        message = StructuredDataMessage(payload=StructuredDataMessagePayload(data=data))
+        
+        result = await adapter.format(message)
+        
+        # Parse the JSON result to verify it's valid
+        parsed = json.loads(result)
+        assert parsed == data
+        assert parsed["user"]["profile"]["interests"] == ["AI", "Python", "Testing"]
+
+
+class TestBinaryOutputAdapter:
+    """Tests for binary output adapter implementation."""
+    
+    @pytest.mark.asyncio
+    async def test_format_binary(self):
+        """Test formatting BinaryMessage to raw bytes."""
+        adapter = MockBinaryOutputAdapter()
+        binary_data = b'\x00\x01\x02\x03\x04'
+        message = BinaryMessage(
+            payload=BinaryMessagePayload(
+                data=binary_data,
+                content_type="application/octet-stream",
+            )
+        )
+        
+        result = await adapter.format(message)
+        
+        assert result == binary_data
+
+
+class GenericOutputAdapter(BaseOutputAdapter[Dict[str, Any]]):
+    """Generic output adapter that can handle multiple message types."""
+    
+    async def format(self, message: Any) -> Dict[str, Any]:
+        """Format any message type to a dictionary."""
+        if isinstance(message, TextMessage):
+            return {"type": "text", "content": message.payload.text}
+        elif isinstance(message, StructuredDataMessage):
+            return {"type": "data", "content": message.payload.data}
+        elif isinstance(message, BinaryMessage):
+            # For binary, return a placeholder - in real adapter you might base64 encode
+            return {"type": "binary", "content": "binary_data_placeholder"}
+        elif isinstance(message, MultiModalMessage):
+            # For multi-modal, create a dict for each part
+            parts = []
+            for part in message.payload.parts:
+                if part.modality == MessageModality.TEXT:
+                    parts.append({"type": "text", "content": part.data})
+                elif part.modality == MessageModality.STRUCTURED_DATA:
+                    parts.append({"type": "data", "content": part.data})
+                else:
+                    parts.append({"type": part.modality.value, "content": "data_placeholder"})
+            return {"type": "multi_modal", "parts": parts}
+        else:
+            raise ValueError(f"Unsupported message type: {type(message)}")
+
+
+class TestGenericOutputAdapter:
+    """Tests for a generic output adapter that can handle multiple message types."""
+    
+    @pytest.mark.asyncio
+    async def test_format_text_message(self):
+        """Test formatting TextMessage."""
+        adapter = GenericOutputAdapter()
+        message = TextMessage(payload=TextMessagePayload(text="Hello, world!"))
+        
+        result = await adapter.format(message)
+        
+        assert result == {"type": "text", "content": "Hello, world!"}
+    
+    @pytest.mark.asyncio
+    async def test_format_structured_data_message(self):
+        """Test formatting StructuredDataMessage."""
+        adapter = GenericOutputAdapter()
+        message = StructuredDataMessage(payload=StructuredDataMessagePayload(data={"name": "Test", "value": 42}))
+        
+        result = await adapter.format(message)
+        
+        assert result == {"type": "data", "content": {"name": "Test", "value": 42}}
+    
+    @pytest.mark.asyncio
+    async def test_format_binary_message(self):
+        """Test formatting BinaryMessage."""
+        adapter = GenericOutputAdapter()
+        message = BinaryMessage(
+            payload=BinaryMessagePayload(
+                data=b'\x00\x01\x02\x03',
+                content_type="application/octet-stream",
+            )
+        )
+        
+        result = await adapter.format(message)
+        
+        assert result == {"type": "binary", "content": "binary_data_placeholder"}
+    
+    @pytest.mark.asyncio
+    async def test_format_multi_modal_message(self):
+        """Test formatting MultiModalMessage."""
+        adapter = GenericOutputAdapter()
+        
+        # Create a multi-modal message with text and structured data parts
+        text_part = MultiModalPart(
+            part_id="text_part",
+            modality=MessageModality.TEXT,
+            data="Check out this data"
+        )
+        data_part = MultiModalPart(
+            part_id="data_part",
+            modality=MessageModality.STRUCTURED_DATA,
+            data={"stats": [1, 2, 3]}
+        )
+        message = MultiModalMessage(payload=MultiModalMessagePayload(parts=[text_part, data_part]))
+        
+        result = await adapter.format(message)
+        
+        expected = {
+            "type": "multi_modal",
+            "parts": [
+                {"type": "text", "content": "Check out this data"},
+                {"type": "data", "content": {"stats": [1, 2, 3]}}
+            ]
+        }
+        
+        assert result == expected
+    
+    @pytest.mark.asyncio
+    async def test_unsupported_message_type(self):
+        """Test handling of unsupported message types."""
+        adapter = GenericOutputAdapter()
+        
+        # Create a message-like object that doesn't match any of the expected types
+        class UnsupportedMessage:
+            pass
+        
+        message = UnsupportedMessage()
+        
+        with pytest.raises(ValueError, match="Unsupported message type"):
+            await adapter.format(message)

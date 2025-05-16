@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="1" tests="2" time="0.270" timestamp="2025-05-14T04:41:27.740196" hostname="d5d1c67e5751"><testcase classname="" name="tests.integration.communication.test_a2a_interoperability" time="0.000"><skipped message="collection skipped">('/workspaces/template-python-dev/tests/integration/communication/test_a2a_interoperability.py', 23, 'Skipped: Skipping A2A interoperability tests due to missing libraries: crewai, langgraph')</skipped></testcase><testcase classname="" name="tests.integration.communication.test_a2a_orchestration_flow" time="0.000"><error message="collection failure">ImportError while importing test module '/workspaces/template-python-dev/tests/integration/communication/test_a2a_orchestration_flow.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/integration/communication/test_a2a_orchestration_flow.py:35: in &lt;module&gt;
+    from ailf.communication.a2a_server import AILFASA2AServer, A2AAgentExecutor, A2ARequestContext, A2ATaskManager
+E   ImportError: cannot import name 'A2ATaskManager' from 'ailf.communication.a2a_server' (/workspaces/template-python-dev/ailf/communication/a2a_server.py)</error></testcase></testsuite></testsuites>

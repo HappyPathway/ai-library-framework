@@ -1,7 +1,7 @@
 # Web Scraper
 
 ```{eval-rst}
-.. automodule:: utils.web_scraper
+.. automodule:: ailf.web_scraper
    :members:
    :undoc-members:
    :show-inheritance:

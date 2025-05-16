@@ -1,0 +1,75 @@
+/* Custom CSS for AILF Documentation */
+
+/* Improve code block readability */
+div.highlight {
+    background-color: #f8f8f8;
+    border-radius: 4px;
+    margin-bottom: 1.5em;
+}
+
+pre {
+    padding: 12px 15px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Better table styling */
+table.docutils {
+    border-collapse: collapse;
+    margin-bottom: 1.5em;
+    width: 100%;
+}
+
+table.docutils th,
+table.docutils td {
+    padding: 8px 10px;
+    border: 1px solid #e1e4e5;
+}
+
+table.docutils th {
+    background-color: #f3f6f6;
+    font-weight: bold;
+}
+
+/* Adjust heading spacing */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+}
+
+/* Make the sidebar navigation more readable */
+div.sphinxsidebarwrapper ul li {
+    margin-bottom: 5px;
+}
+
+/* Improve admonitions (note, warning blocks) */
+div.admonition {
+    padding: 12px 15px;
+    margin-bottom: 1.5em;
+    border-radius: 4px;
+}
+
+div.admonition p.admonition-title {
+    font-weight: bold;
+    margin-top: 0;
+}
+
+div.note {
+    background-color: #eef7fa;
+    border-left: 5px solid #5bc0de;
+}
+
+div.warning {
+    background-color: #fcf8e3;
+    border-left: 5px solid #f0ad4e;
+}
+
+div.danger {
+    background-color: #f2dede;
+    border-left: 5px solid #d9534f;
+}

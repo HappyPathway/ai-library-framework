@@ -1,7 +1,7 @@
-# GCS Config Stash Module
+# Gcs Config Stash
 
 ```{eval-rst}
-.. automodule:: utils.gcs_config_stash
+.. automodule:: ailf.gcs_config_stash
    :members:
    :undoc-members:
    :show-inheritance:
