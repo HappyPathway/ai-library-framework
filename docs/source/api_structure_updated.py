@@ -9,7 +9,8 @@ import sys
 from pathlib import Path
 
 # Root directories
-PROJECT_ROOT = Path('/workspaces/template-python-dev')
+# Use a relative path from this script to get the project root
+PROJECT_ROOT = Path(__file__).resolve().parents[2]  # Go up from docs/source to project root
 SRC_DIR = PROJECT_ROOT / 'src' / 'ailf'  # Main package location in src-based structure
 UTILS_DIR = PROJECT_ROOT / 'utils'  # Legacy utils directory
 AGENT_DIR = PROJECT_ROOT / 'agent'  # Legacy agent directory 

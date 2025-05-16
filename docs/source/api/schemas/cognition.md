@@ -1,6 +1,4 @@
-# Cognition Schemas
-
-This module contains the schemas for AI cognitive capabilities including ReAct reasoning, task planning, intent refinement, and prompt management.
+# Cognition
 
 ```{eval-rst}
 .. automodule:: ailf.schemas.cognition

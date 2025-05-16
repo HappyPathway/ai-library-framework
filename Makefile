@@ -4,7 +4,7 @@ PIP := pip3
 PYTEST := pytest
 
 # Project directories
-SRC_DIR := core utils
+SRC_DIR := src/ailf
 TEST_DIR := tests
 DOC_DIR := docs
 

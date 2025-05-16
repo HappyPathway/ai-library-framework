@@ -1,7 +1,7 @@
 # Base
 
 ```{eval-rst}
-.. automodule:: api.agent.base
+.. automodule:: ailf.agent.base
    :members:
    :undoc-members:
    :show-inheritance:

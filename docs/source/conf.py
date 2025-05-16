@@ -45,12 +45,12 @@ os.environ['GOOGLE_CLOUD_PROJECT'] = 'mock-project-id'
 os.environ['AILF_CONFIG_PATH'] = '/tmp/mock-config'
 
 # Add project directories to path for autodoc
-# Add examples directory to path for autodoc
-sys.path.insert(0, os.path.abspath('../../examples'))
 # Add src directory for src-based imports (primary)
 sys.path.insert(0, os.path.abspath('../../src'))
-# Comment out the legacy path to avoid conflicts
-# sys.path.insert(0, os.path.abspath('../..'))
+# Add examples directory
+sys.path.insert(0, os.path.abspath('../../examples'))
+# Include project root for any package-level imports
+sys.path.insert(0, os.path.abspath('../..'))
 
 # Project information
 project = 'AI Library Framework (AILF)'
@@ -97,15 +97,14 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'venv']
 
 # HTML output settings
-html_theme = 'groundwork'
+html_theme = 'alabaster'  # Using a standard Sphinx theme to avoid theme errors
 html_theme_options = {
     'github_user': 'HappyPathway',  # Your GitHub username
     'github_repo': 'ai-library-framework',  # Your repository name
     'github_banner': True,  # Show GitHub banner
     'show_related': True,  # Show related links
     'sidebar_width': '240px',  # Width of the sidebar
-    'sidebar_collapse': False,  # Collapse the sidebar by default
-    'stickysidebar': True,  # Make the sidebar sticky
+    'fixed_sidebar': True,  # Make the sidebar fixed
     'logo': "logo.png",  # Path to your logo, relative to _static
     'logo_name': False,  # Display the project name under the logo
     'description': 'AI Agent Development Framework',  # Project description

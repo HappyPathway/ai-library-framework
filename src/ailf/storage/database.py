@@ -1,30 +1,61 @@
-"""Database Configuration and Session Management.
+"""Database Configuration and Session Management for AI Agents.
 
-This module provides essential database functionality built on SQLAlchemy.
-It offers:
-- Configuration: Centralized database setup and connection management
-- Session Management: Context manager for handling database sessions
-- Base Model: Declarative base for defining database models
-- DatabaseStorage: A storage implementation using a database backend
+This module provides a robust SQLAlchemy-based database infrastructure for AI agents,
+enabling persistent storage of agent state, conversation history, and other data.
+It implements the storage backend pattern defined in the AILF framework.
+
+Features:
+- Dynamic Connection Configuration: Support for multiple database backends (SQLite, PostgreSQL, MySQL)
+- Cloud SQL Integration: Seamless connection to GCP Cloud SQL instances using ADC
+- Secure Credential Management: Integration with ailf.cloud.secrets for secure password retrieval
+- Session Management: Thread-safe database session handling with automatic commit/rollback
+- ORM Foundation: Declarative base for defining strongly-typed database models
+- Timestamp Tracking: Mixin for automatic creation/update timestamp tracking
 
 Key Components:
-- `engine`: SQLAlchemy engine for database connections
-- `SessionLocal`: Factory for creating database sessions
-- `Base`: Declarative base for ORM models
-- `get_session`: Context manager for database sessions
-- `DatabaseStorage`: Class for storing and retrieving data from a database
+- `engine`: Configured SQLAlchemy engine for database connections
+- `SessionLocal`: Factory for creating properly configured database sessions
+- `Base`: Declarative base for creating ORM models with SQLAlchemy
+- `get_session`: Context manager for safe database session handling
+- `TimestampMixin`: Mixin class to add creation/update timestamps to models
+- `create_db_engine`: Factory function for creating database engines with custom configurations
 
 Example Usage:
     >>> from ailf.storage.database import get_session, Base
+    >>> from sqlalchemy import Column, Integer, String
     >>> 
+    >>> # Define a model
+    >>> class User(Base):
+    ...     __tablename__ = "users"
+    ...     id = Column(Integer, primary_key=True)
+    ...     name = Column(String, nullable=False)
+    ... 
+    >>> # Use the session context manager
     >>> with get_session() as session:
     ...     users = session.query(User).all()
 
-Note:
-    This module uses SQLAlchemy. Install with `pip install sqlalchemy`.
+Configuration:
+    Database connection parameters can be configured via environment variables:
+    - DB_DIALECT: Database dialect (sqlite, postgresql, mysql, etc.)
+    - DB_DRIVER: Optional database driver (psycopg2, pymysql, etc.)
+    - DB_HOST: Database server hostname
+    - DB_PORT: Database server port
+    - DB_USER: Database username
+    - DB_PASSWORD: Database password (or use password_secret for secure retrieval)
+    - DB_NAME: Database name or path (for SQLite)
     
-    For GCP Cloud SQL connections, it uses Application Default Credentials (ADC).
+    For SQLite databases, relative paths are resolved relative to the current working directory.
+
+Dependencies:
+    - sqlalchemy: Core ORM functionality
+    - Optional dialect-specific drivers (psycopg2-binary, pymysql, etc.)
+
+Security Notes:
+    For GCP Cloud SQL connections, this module uses Application Default Credentials (ADC).
     Local setup requires running `gcloud auth application-default login`.
+    
+    Passwords can be securely retrieved from a secrets manager by specifying a
+    password_secret key in the configuration instead of a direct password.
 """
 import os
 import logging
