@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="6" failures="0" skipped="0" tests="6" time="0.511" timestamp="2025-05-14T04:41:24.229867" hostname="d5d1c67e5751"><testcase classname="" name="tests.unit.messaging.test_redis" time="0.000"><error message="collection failure">ImportError while importing test module '/workspaces/template-python-dev/tests/unit/messaging/test_redis.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/messaging/test_redis.py:9: in &lt;module&gt;
+    from src.ailf.messaging.redis import RedisClient, RedisPubSub, RedisStream
+src/ailf/__init__.py:11: in &lt;module&gt;
+    from .async_tasks import TaskManager, TaskStatus
+src/ailf/async_tasks.py:52: in &lt;module&gt;
+    from ailf.core.logging import setup_logging
+E   ModuleNotFoundError: No module named 'ailf.core'</error></testcase><testcase classname="" name="tests.unit.messaging.test_zmq" time="0.000"><error message="collection failure">ImportError while importing test module '/workspaces/template-python-dev/tests/unit/messaging/test_zmq.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/messaging/test_zmq.py:14: in &lt;module&gt;
+    from ailf.messaging.zmq import ZMQBase, ZMQPublisher, ZMQSubscriber, ZMQClient, ZMQServer
+E   ModuleNotFoundError: No module named 'ailf.messaging.zmq'</error></testcase><testcase classname="" name="tests.unit.messaging.test_zmq_device_manager" time="0.000"><error message="collection failure">ImportError while importing test module '/workspaces/template-python-dev/tests/unit/messaging/test_zmq_device_manager.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/messaging/test_zmq_device_manager.py:14: in &lt;module&gt;
+    from ailf.messaging.zmq_device_manager import DeviceManager, DeviceError, create_device
+E   ModuleNotFoundError: No module named 'ailf.messaging.zmq_device_manager'</error></testcase><testcase classname="" name="tests.unit.utils.routing.test_enhanced_routing" time="0.000"><error message="collection failure">tests/unit/utils/routing/test_enhanced_routing.py:11: in &lt;module&gt;
+    class MockInteractionMessage(AnyInteractionMessage):
+/usr/local/lib/python3.12/typing.py:1444: in __mro_entries__
+    raise TypeError(f"Cannot subclass {self!r}")
+E   TypeError: Cannot subclass typing.Union[ailf.schemas.interaction.TextMessage, ailf.schemas.interaction.StructuredDataMessage, ailf.schemas.interaction.BinaryMessage, ailf.schemas.interaction.MultiModalMessage]</error></testcase><testcase classname="" name="tests.unit.utils.test_ai_engine_unit" time="0.000"><error message="collection failure">ImportError while importing test module '/workspaces/template-python-dev/tests/unit/utils/test_ai_engine_unit.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/utils/test_ai_engine_unit.py:6: in &lt;module&gt;
+    from utils.ai_engine import AIEngine
+utils/__init__.py:6: in &lt;module&gt;
+    from .storage import local
+utils/storage/__init__.py:3: in &lt;module&gt;
+    from . import setup
+utils/storage/setup.py:51: in &lt;module&gt;
+    from ..cloud.secrets import secret_manager
+utils/cloud/__init__.py:3: in &lt;module&gt;
+    from . import secrets
+utils/cloud/secrets.py:16: in &lt;module&gt;
+    from .logging import setup_logging
+E   ModuleNotFoundError: No module named 'utils.cloud.logging'</error></testcase><testcase classname="" name="tests.unit.utils.test_generate_text_unit" time="0.000"><error message="collection failure">ImportError while importing test module '/workspaces/template-python-dev/tests/unit/utils/test_generate_text_unit.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests/unit/utils/test_generate_text_unit.py:6: in &lt;module&gt;
+    from utils.ai_engine import AIEngine
+utils/__init__.py:6: in &lt;module&gt;
+    from .storage import local
+utils/storage/__init__.py:3: in &lt;module&gt;
+    from . import setup
+utils/storage/setup.py:51: in &lt;module&gt;
+    from ..cloud.secrets import secret_manager
+utils/cloud/__init__.py:3: in &lt;module&gt;
+    from . import secrets
+utils/cloud/secrets.py:16: in &lt;module&gt;
+    from .logging import setup_logging
+E   ModuleNotFoundError: No module named 'utils.cloud.logging'</error></testcase></testsuite></testsuites>

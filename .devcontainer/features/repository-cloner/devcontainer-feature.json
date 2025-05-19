@@ -1,0 +1,18 @@
+{
+    "name": "Repository Cloner",
+    "id": "repository-cloner",
+    "version": "1.0.0",
+    "description": "Clones required repositories for development",
+    "options": {
+        "repositories": {
+            "type": "string",
+            "default": "kagent/kagent,a2a-dev/a2a",
+            "description": "Comma-separated list of repositories to clone (format: owner/repo)"
+        },
+        "targetDir": {
+            "type": "string",
+            "default": "/workspaces/repositories",
+            "description": "Directory where repositories will be cloned"
+        }
+    }
+}

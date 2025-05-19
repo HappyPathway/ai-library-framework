@@ -1,0 +1,52 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../A2A",
+			"name": "protocols/a2a"
+		},
+		{
+			"path": "../ag-ui",
+			"name": "protocols/ag-ui"
+		},
+		{
+			"path": "../acp",
+			"name": "protocols/acp"
+		},
+		{
+			"path": "../anthropic-sdk-python",
+			"name": "models/claude"
+		},
+		{
+			"path": "../python-genai",
+			"name": "models/gemini"
+		},
+		{
+			"path": "../openai-python",
+			"name": "models/gpt"
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "/usr/local/python/current/bin/python3",
+		"python.languageServer": "Jedi",
+		"python.analysis.typeCheckingMode": "basic",
+		"python.linting.enabled": true,
+		"python.analysis.extraPaths": [
+			"/usr/local/python/current/lib/python3.12/site-packages",
+			"/usr/local/python/3.12.10/lib/python3.12/site-packages"
+		],
+		"python.analysis.autoImportCompletions": true,
+		"python.analysis.indexing": true
+	},
+	"mcp": {
+		"servers": {
+			"py-docs": {
+				"type": "stdio",
+				"command": "/workspaces/template-python-dev/src/ailf/documentation.py",
+				"args": []
+			}
+		}
+	}
+}

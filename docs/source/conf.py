@@ -12,18 +12,48 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ['anthropic', 'google.cloud', 'google.cloud.storage', 'google.cloud.secretmanager',
-                'google.cloud.exceptions', 'openai', 'pydantic_ai']
+MOCK_MODULES = [
+    # External AI services
+    'anthropic', 'openai', 'google.generativeai', 'pydantic_ai', 
+    
+    # Google Cloud modules
+    'google.cloud', 'google.cloud.storage', 'google.cloud.secretmanager',
+    'google.cloud.exceptions', 'google.api_core', 'google.oauth2',
+    
+    # Messaging and network modules
+    'zmq', 'redis', 'fastapi', 'mcp', 'websockets', 'aiohttp',
+    
+    # Database and storage
+    'sqlalchemy', 'sqlalchemy.orm', 'sqlalchemy.ext',
+    
+    # External/utility modules
+    'ai', 'cloud', 'utils', 'utils.ai', 'utils.core', 'utils.cloud', 
+    'utils.messaging', 'utils.storage', 'messaging', 'storage', 'workers',
+    'agent', 'documentation', 'test', 'schemas',
+    'cognition',
+    
+    # Redis-related modules that cause import errors
+    'redis.asyncio',
+    
+    # NOTE: We're no longer mocking the internal ailf modules below, so they can be properly documented
+    # If you get import errors during doc builds, add specific problematic modules
+]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-# Set GOOGLE_CLOUD_PROJECT environment variable to prevent errors
+# Set environment variables to prevent errors
 os.environ['GOOGLE_CLOUD_PROJECT'] = 'mock-project-id'
+os.environ['AILF_CONFIG_PATH'] = '/tmp/mock-config'
 
-# Add project root to path
+# Add project directories to path for autodoc
+# Add src directory for src-based imports (primary)
+sys.path.insert(0, os.path.abspath('../../src'))
+# Add examples directory
+sys.path.insert(0, os.path.abspath('../../examples'))
+# Include project root for any package-level imports
 sys.path.insert(0, os.path.abspath('../..'))
 
 # Project information
-project = 'Python Template Dev'
+project = 'AI Library Framework (AILF)'
 copyright = '2025, David Arnold'
 author = 'David Arnold'
 version = '1.0'
@@ -65,3 +95,19 @@ napoleon_use_rtype = True
 # Other settings
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'venv']
+
+# HTML output settings
+html_theme = 'alabaster'  # Using a standard Sphinx theme to avoid theme errors
+html_theme_options = {
+    'github_user': 'HappyPathway',  # Your GitHub username
+    'github_repo': 'ai-library-framework',  # Your repository name
+    'github_banner': True,  # Show GitHub banner
+    'show_related': True,  # Show related links
+    'sidebar_width': '240px',  # Width of the sidebar
+    'fixed_sidebar': True,  # Make the sidebar fixed
+    'logo': "logo.png",  # Path to your logo, relative to _static
+    'logo_name': False,  # Display the project name under the logo
+    'description': 'AI Agent Development Framework',  # Project description
+}
+html_static_path = ['_static']
+html_css_files = ['custom.css']
