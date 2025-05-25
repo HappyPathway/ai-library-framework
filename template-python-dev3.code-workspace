@@ -26,6 +26,18 @@
 		{
 			"path": "../openai-python",
 			"name": "models/gpt"
+		},
+		{
+			"path": "../feature-planner"
+		},
+		{
+			"path": "../av-rental"
+		},
+		{
+			"path": "../terraform-prompt-template"
+		},
+		{
+			"path": "../gemini-update"
 		}
 	],
 	"settings": {
